@@ -3,21 +3,18 @@ import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCYdeigPuvdKyVj0rG53IoUZHaVyawyVZY",
+  apiKey: "AIzaSyB--KSDIQ_rkc1myOfFBgNjUka30VAKOtM",
 
-  authDomain: "genzconnect-f5082.firebaseapp.com",
+  authDomain: "fragveda.firebaseapp.com",
 
-  databaseURL: "https://genzconnect-f5082-default-rtdb.firebaseio.com",
+  projectId: "fragveda",
 
-  projectId: "genzconnect-f5082",
+  storageBucket: "fragveda.appspot.com",
 
-  storageBucket: "genzconnect-f5082.appspot.com",
+  messagingSenderId: "709002213779",
 
-  messagingSenderId: "761396074376",
+  appId: "1:709002213779:web:314ffb4f33c4b117cd5066"
 
-  appId: "1:761396074376:web:ce2c9a3560a78194698c3d",
-
-  measurementId: "G-ZFNR03PDPM"
 
 
 };
