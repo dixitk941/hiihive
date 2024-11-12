@@ -1,70 +1,130 @@
-# Getting Started with Create React App
+# HiiHive
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Welcome to **HiiHive**, a platform where students, developers, and professionals can connect, share knowledge, and grow together. HiiHive brings community-driven knowledge hubs, real-time chat, and personalized profiles into one elegant, user-friendly environment.
 
-## Available Scripts
+## Table of Contents
 
-In the project directory, you can run:
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Project Structure](#project-structure)
+- [Technologies Used](#technologies-used)
+- [Contributing](#contributing)
+- [License](#license)
 
-### `npm start`
+---
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Features
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- **User Authentication**: Simple login with Google OAuth.
+- **Community and Knowledge Hub**: Connect with like-minded individuals and share resources.
+- **Real-Time Chat**: Interact with your network through a live chat sidebar.
+- **Responsive Design**: Optimized for both mobile and desktop views.
+- **Story Feature**: Share updates with friends through an Instagram-like story feature.
 
-### `npm test`
+---
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Installation
 
-### `npm run build`
+### Prerequisites
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- [Node.js](https://nodejs.org/) (v14 or above)
+- [Firebase](https://firebase.google.com/) account for OAuth configuration
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Steps
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+1. **Clone the Repository**
+   ```bash
+   git clone https://github.com/dixitk941/hiihive.git
+   cd hiihive
+   ```
 
-### `npm run eject`
+2. **Install Dependencies**
+   ```bash
+   npm install
+   ```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+3. **Setup Firebase**
+   - Create a Firebase project at [Firebase Console](https://console.firebase.google.com/).
+   - Enable Google Authentication in Firebase Authentication settings.
+   - Copy your Firebase configuration details into a `firebaseConfig.js` file in the root directory.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+4. **Start the Development Server**
+   ```bash
+   npm start
+   ```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+5. **Access the App**
+   - The app runs on `http://localhost:3000`.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+---
 
-## Learn More
+## Usage
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+1. **Login**: Sign in using Google to create an account or log in.
+2. **Navigation**:
+   - **Feed**: View community posts and updates.
+   - **Stories**: Check out recent stories from your network.
+   - **Chat Sidebar**: Engage in real-time chats.
+3. **Create a Post**: Use the bottom-right hoverable icon to create a post, join a community, or access notifications.
+4. **Responsive Experience**:
+   - Desktop: A landscape split-view with login on the left and app description on the right.
+   - Mobile: Top-and-bottom stacking for easy navigation.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+---
 
-### Code Splitting
+## Project Structure
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+```plaintext
+├── public
+│   └── index.html              # Main HTML template
+├── src
+│   ├── assets                  # Static assets (e.g., logo, images)
+│   ├── components              # Reusable UI components
+│   │   ├── StoryIcon.js
+│   │   ├── SearchBar.js
+│   │   └── ...
+│   ├── firebaseConfig.js       # Firebase configuration (gitignored)
+│   ├── App.js                  # Main application component
+│   ├── index.js                # Entry point
+│   └── styles                  # TailwindCSS custom styles
+└── README.md
+```
 
-### Analyzing the Bundle Size
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## Technologies Used
 
-### Making a Progressive Web App
+- **React**: For building the user interface.
+- **Tailwind CSS**: For utility-first styling.
+- **Firebase**: For authentication and real-time database support.
+- **React Router**: For routing within the application.
+- **React Icons**: For iconography.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+---
 
-### Advanced Configuration
+## Contributing
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+We welcome contributions! To contribute:
 
-### Deployment
+1. Fork the repository.
+2. Create a new branch: `git checkout -b feature/YourFeature`.
+3. Make your changes and commit them.
+4. Push to your branch: `git push origin feature/YourFeature`.
+5. Open a pull request.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+---
 
-### `npm run build` fails to minify
+## License
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+This project is licensed under the MIT License.
+
+---
+
+## Contact
+
+For any questions or feedback, please reach out to the HiiHive team at **dixitk941@gmail.com**.
+
+---
+
+**Thank you for visiting HiiHive!** Join the community, expand your knowledge, and connect with others.
