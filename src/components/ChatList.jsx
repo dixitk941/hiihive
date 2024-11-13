@@ -88,7 +88,7 @@ const ChatList = ({ setSelectedChat }) => {
       createdAt: new Date().toISOString(),
     });
 
-    window.location.href = `/chat/${chatRoomId}`;
+    // No need to redirect here, as the parent component will handle the rendering of ChatInterface
   };
 
   if (loading) {

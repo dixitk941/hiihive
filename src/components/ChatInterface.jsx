@@ -13,7 +13,6 @@ const ChatInterface = ({ chatRoomId, currentUser }) => {
     const db = getDatabase();
     const messagesRef = ref(db, `chatRooms/${chatRoomId}/messages`);
 
-    // Listen for new messages
     onValue(messagesRef, (snapshot) => {
       const data = snapshot.val();
       const messagesList = data ? Object.values(data) : [];
@@ -48,47 +47,56 @@ const ChatInterface = ({ chatRoomId, currentUser }) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-100">
-      <div className="flex items-center p-4 bg-white shadow-md sticky top-0 z-10">
-        <button onClick={handleBack} className="mr-4 text-blue-500 hover:text-blue-700">
+    <div className="flex flex-col h-full max-w-md mx-auto bg-gray-50 border rounded-lg shadow-md">
+      {/* Header */}
+      <div className="flex items-center p-4 bg-white shadow sticky top-0 z-10">
+        <button onClick={handleBack} className="mr-4 text-gray-800 hover:text-gray-900">
           <FiArrowLeft size={24} />
         </button>
-        <h2 className="text-xl font-semibold">Chat Room</h2>
+        <h2 className="text-lg font-semibold text-gray-900">Chat Room</h2>
       </div>
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 mb-24">
+
+      {/* Messages Container */}
+      <div className="flex-1 flex flex-col p-4 space-y-2 overflow-y-auto" style={{ paddingBottom: '120px' }}>
         {messages.map((message, index) => (
           <div
             key={index}
             className={`flex ${message.senderId === currentUser.uid ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`p-3 rounded-lg max-w-xs md:max-w-md lg:max-w-lg ${
-                message.senderId === currentUser.uid ? 'bg-blue-500 text-white' : 'bg-white text-gray-800'
-              } shadow-md`}
+              className={`p-3 rounded-2xl max-w-xs md:max-w-md ${
+                message.senderId === currentUser.uid
+                  ? 'bg-blue-500 text-white rounded-br-none'
+                  : 'bg-gray-200 text-gray-800 rounded-bl-none'
+              } shadow-sm`}
             >
               <p>{message.text}</p>
               <span className="text-xs text-gray-400 mt-1 block">
-                {new Date(message.timestamp).toLocaleTimeString()}
+                {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </span>
             </div>
           </div>
         ))}
       </div>
-      <div className="flex items-center p-4 bg-white border-t border-gray-200 fixed bottom-0 left-0 right-0 z-10 w-full md:mx-4 lg:mx-32">
-        <input
-          type="text"
-          value={messageInput}
-          onChange={(e) => setMessageInput(e.target.value)}
-          onKeyPress={handleKeyPress}
-          placeholder="Type your message"
-          className="flex-1 p-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        <button
-          onClick={handleSendMessage}
-          className="ml-2 p-2 text-white bg-blue-500 hover:bg-blue-600 rounded-full transition duration-200"
-        >
-          <FaPaperPlane />
-        </button>
+
+      {/* Input Field */}
+      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-gray-50 p-3">
+        <div className="flex items-center p-2 bg-white rounded-full border border-gray-300 shadow-inner">
+          <input
+            type="text"
+            value={messageInput}
+            onChange={(e) => setMessageInput(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Message..."
+            className="flex-1 p-2 bg-transparent border-none focus:outline-none"
+          />
+          <button
+            onClick={handleSendMessage}
+            className="ml-3 p-2 bg-blue-500 text-white rounded-full transition duration-200 hover:bg-blue-600"
+          >
+            <FaPaperPlane />
+          </button>
+        </div>
       </div>
     </div>
   );

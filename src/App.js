@@ -11,6 +11,7 @@ import ChatList from "./Pages/ChatList"; // Import ChatList
 function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true); // Add loading state
+  const [selectedChat, setSelectedChat] = useState(null); // Add selectedChat state
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -23,6 +24,10 @@ function App() {
   if (loading) {
     return <p>Loading...</p>; // Show loading indicator while determining auth state
   }
+
+  const handleBackToChatList = () => {
+    setSelectedChat(null);
+  };
 
   return (
     <Router>
@@ -46,7 +51,15 @@ function App() {
         />
         <Route
           path="/chatlist"
-          element={user ? <ChatList /> : <Navigate to="/login" />} // Redirect to login if user is not logged in
+          element={user ? (
+            !selectedChat ? (
+              <ChatList currentUser={user} setSelectedChat={setSelectedChat} />
+            ) : (
+              <ChatInterface currentUser={user} chatRoomId={selectedChat} onBack={handleBackToChatList} />
+            )
+          ) : (
+            <Navigate to="/login" />
+          )} // Redirect to login if user is not logged in
         />
       </Routes>
     </Router>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from './firebaseConfig'; // Import your Firebase config
@@ -14,6 +14,8 @@ const HomePage = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [selectedChat, setSelectedChat] = useState(null);
   const [loading, setLoading] = useState(true); // Manage loading state
+  const [isSidebarRightVisible, setIsSidebarRightVisible] = useState(false); // Manage SidebarRight visibility
+  const sidebarRightRef = useRef(null);
 
   useEffect(() => {
     const auth = getAuth();
@@ -36,8 +38,39 @@ const HomePage = () => {
     return () => unsubscribe();
   }, []);
 
+  useEffect(() => {
+    let timeout;
+    const handleActivity = () => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        setIsSidebarRightVisible(false);
+      }, 10000); // 10 seconds of inactivity
+    };
+
+    const handleClickOutside = (event) => {
+      if (sidebarRightRef.current && !sidebarRightRef.current.contains(event.target)) {
+        setIsSidebarRightVisible(false);
+      }
+    };
+
+    if (isSidebarRightVisible) {
+      document.addEventListener('mousemove', handleActivity);
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      clearTimeout(timeout);
+      document.removeEventListener('mousemove', handleActivity);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isSidebarRightVisible]);
+
   const handleBackToSidebar = () => {
     setSelectedChat(null);
+  };
+
+  const toggleSidebarRight = () => {
+    setIsSidebarRightVisible(!isSidebarRightVisible);
   };
 
   if (loading) {
@@ -53,10 +86,12 @@ const HomePage = () => {
         </div>
         
         {/* Main content section with SearchBar and Feeds */}
-        <main className="flex-1 p-4 overflow-auto">
-          <SearchBar currentUser={currentUser} /> {/* Pass currentUser to SearchBar */}
-          <Feeds currentUser={currentUser} /> {/* Pass currentUser to Feeds */}
-        </main>
+        {!selectedChat && (
+          <main className="flex-1 p-4 overflow-auto">
+            <SearchBar currentUser={currentUser} /> {/* Pass currentUser to SearchBar */}
+            <Feeds currentUser={currentUser} /> {/* Pass currentUser to Feeds */}
+          </main>
+        )}
 
         {/* Conditionally render SidebarRight or ChatInterface */}
         <div className="hidden lg:flex flex-col w-96">
@@ -68,20 +103,25 @@ const HomePage = () => {
           )}
         </div>
 
-        {/* Show ChatInterface on mobile if chat is selected */}
-        {selectedChat && (
-          <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white shadow-lg z-50 p-4">
-            <ChatInterface currentUser={currentUser} chatRoomId={selectedChat} onBack={handleBackToSidebar} />
+        {/* Show SidebarRight on mobile if isSidebarRightVisible is true */}
+        {isSidebarRightVisible && (
+          <div ref={sidebarRightRef} className="lg:hidden fixed bottom-0 left-0 right-0 bg-white shadow-lg z-50 p-4">
+            <SidebarRight currentUser={currentUser} setSelectedChat={setSelectedChat} />
           </div>
         )}
       </div>
 
       {/* Floating menu for additional options */}
-     {/* Bottom Bar for mobile */}
-<div className="lg:hidden fixed bottom-0 left-0 right-0 z-50">
-  <BottomBar currentUser={currentUser} />
-</div>
+      {!selectedChat && (
+        <div className="lg:hidden">
+          <FloatingMenu currentUser={currentUser} /> {/* Pass currentUser to FloatingMenu */}
+        </div>
+      )}
 
+      {/* Bottom Bar for mobile, visible only if no chat is selected */}
+      {!selectedChat && (
+        <BottomBar toggleSidebarRight={toggleSidebarRight} /> 
+      )}
     </div>
   );
 };
