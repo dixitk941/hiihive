@@ -1,97 +1,96 @@
 import React, { useState, useEffect } from 'react';
-import { FaPaperPlane, FaChevronLeft, FaChevronRight } from 'react-icons/fa'; // Send icon, Collapse/Expand icons
+import { getDatabase, ref, push, onValue } from 'firebase/database';
+import { FaPaperPlane } from 'react-icons/fa';
+import { FiArrowLeft } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
 
-const ChatInterface = ({ selectedChat }) => {
+const ChatInterface = ({ chatRoomId, currentUser }) => {
   const [messages, setMessages] = useState([]);
   const [messageInput, setMessageInput] = useState('');
-  const [isCollapsed, setIsCollapsed] = useState(false); // State to manage collapse/expand
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // Load chat messages based on the selected chat
-    if (selectedChat === 'chat1') {
-      setMessages([
-        { sender: 'other', text: 'Hello! How can I help you today?' },
-        { sender: 'user', text: 'Hi, I have a question about your services.' },
-      ]);
-    } else if (selectedChat === 'chat2') {
-      setMessages([
-        { sender: 'other', text: 'Good afternoon! What do you need help with?' },
-        { sender: 'user', text: 'I wanted to know more about your plans.' },
-      ]);
-    } else if (selectedChat === 'chat3') {
-      setMessages([
-        { sender: 'other', text: 'Hi! Feel free to ask me anything.' },
-        { sender: 'user', text: 'What are your available products?' },
-      ]);
-    }
-  }, [selectedChat]);
+    const db = getDatabase();
+    const messagesRef = ref(db, `chatRooms/${chatRoomId}/messages`);
 
-  const handleSendMessage = () => {
-    if (messageInput.trim()) {
-      setMessages([...messages, { sender: 'user', text: messageInput }]);
-      setMessageInput('');
+    // Listen for new messages
+    onValue(messagesRef, (snapshot) => {
+      const data = snapshot.val();
+      const messagesList = data ? Object.values(data) : [];
+      setMessages(messagesList);
+    });
+  }, [chatRoomId]);
+
+  const handleSendMessage = async () => {
+    if (messageInput.trim() === '') return;
+
+    const db = getDatabase();
+    const messagesRef = ref(db, `chatRooms/${chatRoomId}/messages`);
+
+    const newMessage = {
+      senderId: currentUser.uid,
+      text: messageInput,
+      timestamp: new Date().toISOString(),
+    };
+
+    await push(messagesRef, newMessage);
+    setMessageInput('');
+  };
+
+  const handleBack = () => {
+    navigate('/'); // Navigate to the home page
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSendMessage();
     }
   };
 
   return (
-    <aside
-      className={`${
-        isCollapsed ? 'w-20' : 'w-64'
-      } fixed right-0 top-24 h-[calc(100vh-6rem)] bg-white text-gray-800 flex flex-col justify-between p-4 shadow-md border-l border-gray-200 transition-all duration-300`}
-    >
-      {/* Collapse button */}
-      <div className="flex justify-end p-2">
+    <div className="flex flex-col h-full bg-gray-100">
+      <div className="flex items-center p-4 bg-white shadow-md sticky top-0 z-10">
+        <button onClick={handleBack} className="mr-4 text-blue-500 hover:text-blue-700">
+          <FiArrowLeft size={24} />
+        </button>
+        <h2 className="text-xl font-semibold">Chat Room</h2>
+      </div>
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 mb-24">
+        {messages.map((message, index) => (
+          <div
+            key={index}
+            className={`flex ${message.senderId === currentUser.uid ? 'justify-end' : 'justify-start'}`}
+          >
+            <div
+              className={`p-3 rounded-lg max-w-xs md:max-w-md lg:max-w-lg ${
+                message.senderId === currentUser.uid ? 'bg-blue-500 text-white' : 'bg-white text-gray-800'
+              } shadow-md`}
+            >
+              <p>{message.text}</p>
+              <span className="text-xs text-gray-400 mt-1 block">
+                {new Date(message.timestamp).toLocaleTimeString()}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="flex items-center p-4 bg-white border-t border-gray-200 fixed bottom-0 left-0 right-0 z-10 w-full md:mx-4 lg:mx-32">
+        <input
+          type="text"
+          value={messageInput}
+          onChange={(e) => setMessageInput(e.target.value)}
+          onKeyPress={handleKeyPress}
+          placeholder="Type your message"
+          className="flex-1 p-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
         <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="p-2 rounded-full hover:bg-gray-200 transition duration-200"
+          onClick={handleSendMessage}
+          className="ml-2 p-2 text-white bg-blue-500 hover:bg-blue-600 rounded-full transition duration-200"
         >
-          {isCollapsed ? (
-            <FaChevronRight className="w-6 h-6" />
-          ) : (
-            <FaChevronLeft className="w-6 h-6" />
-          )}
+          <FaPaperPlane />
         </button>
       </div>
-
-      {/* Chat messages container */}
-      {!isCollapsed && (
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-100">
-          {messages.map((message, index) => (
-            <div
-              key={index}
-              className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`max-w-xs p-3 rounded-lg ${
-                  message.sender === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'
-                }`}
-              >
-                <p>{message.text}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Message input section */}
-      {!isCollapsed && (
-        <div className="flex items-center p-4 bg-white border-t border-gray-300">
-          <input
-            type="text"
-            className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Type a message"
-            value={messageInput}
-            onChange={(e) => setMessageInput(e.target.value)}
-          />
-          <button
-            onClick={handleSendMessage}
-            className="ml-3 p-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors duration-200"
-          >
-            <FaPaperPlane className="w-5 h-5" />
-          </button>
-        </div>
-      )}
-    </aside>
+    </div>
   );
 };
 

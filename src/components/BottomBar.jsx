@@ -7,7 +7,7 @@ const BottomBar = () => {
       <a href="#" className="flex items-center p-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-300">
         <FiHome size={24} />
       </a>
-      <a href="#" className="flex items-center p-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-300">
+      <a href="/chatlist" className="flex items-center p-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-300">
         <FiMessageSquare size={24} />
       </a>
       <a href="#" className="flex items-center p-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-300">

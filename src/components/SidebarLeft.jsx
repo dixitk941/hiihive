@@ -18,10 +18,10 @@ const SidebarLeft = () => {
 
         {/* Navigation for larger screens */}
         <nav className="space-y-3">
-          <a href="#" className={`flex items-center p-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-300 ${isCollapsed ? 'justify-center' : ''}`}>
+          <a href="" className={`flex items-center p-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-300 ${isCollapsed ? 'justify-center' : ''}`}>
             <span className={`${isCollapsed ? 'hidden' : 'ml-2 font-semibold'}`}>Home</span>
           </a>
-          <a href="#" className={`flex items-center p-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-300 ${isCollapsed ? 'justify-center' : ''}`}>
+          <a href="/explore" className={`flex items-center p-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-300 ${isCollapsed ? 'justify-center' : ''}`}>
             <span className={`${isCollapsed ? 'hidden' : 'ml-2 font-semibold'}`}>Explore</span>
           </a>
           <a href="#" className={`flex items-center p-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-300 ${isCollapsed ? 'justify-center' : ''}`}>
@@ -44,10 +44,10 @@ const SidebarLeft = () => {
 
       {/* Bottom bar for mobile screens */}
       <aside className="sm:hidden fixed bottom-0 left-0 right-0 bg-white text-gray-800 flex justify-between items-center p-4 shadow-md border-t border-gray-200">
-        <a href="#" className="flex items-center p-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-300">
+        <a href="/" className="flex items-center p-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-300">
           <FiHome size={24} />
         </a>
-        <a href="#" className="flex items-center p-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-300">
+        <a href="/chatlist" className="flex items-center p-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-300">
           <FiMessageSquare size={24} />
         </a>
         <a href="#" className="flex items-center p-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-300">

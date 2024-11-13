@@ -1,31 +1,36 @@
+// UserList.js
 import React, { useState, useEffect } from 'react';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from './firebaseConfig'; // Import your Firebase config
+import { auth, db } from './firebaseConfig'; // Adjust the import path as necessary
 import SidebarLeft from '../components/SidebarLeft';
 import SidebarRight from '../components/SidebarRight';
 import SearchBar from '../components/SearchBar';
-import Feeds from '../components/Feeds';
+import UsersList from '../components/UserList'; // Replace Feeds with UsersList
 import FloatingMenu from '../components/FloatingMenu';
 import ChatInterface from '../components/ChatInterface';
 import BottomBar from '../components/BottomBar';
 
-const HomePage = () => {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [selectedChat, setSelectedChat] = useState(null);
+function UserList() {
+  const [selectedChat, setSelectedChat] = useState(null); // Manage selected chat
+  const [currentUser, setCurrentUser] = useState(null); // Manage current user
   const [loading, setLoading] = useState(true); // Manage loading state
 
+  // Function to go back to SidebarRight
+  const handleBackToSidebar = () => {
+    setSelectedChat(null);
+  };
+
+  // Fetch current user data
   useEffect(() => {
-    const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        setCurrentUser(user);
         const userRef = doc(db, 'users', user.uid);
-        const userDoc = await getDoc(userRef);
-        if (userDoc.exists()) {
-          setCurrentUser({ ...user, ...userDoc.data() });
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+          setCurrentUser({ id: user.uid, ...userSnap.data() });
         } else {
-          console.log('No such document!');
+          console.error('No such document!');
         }
       } else {
         setCurrentUser(null);
@@ -36,10 +41,6 @@ const HomePage = () => {
     return () => unsubscribe();
   }, []);
 
-  const handleBackToSidebar = () => {
-    setSelectedChat(null);
-  };
-
   if (loading) {
     return <p>Loading...</p>;
   }
@@ -49,41 +50,42 @@ const HomePage = () => {
       <div className="flex flex-1 pt-24"> {/* Add padding-top to avoid being hidden by the header */}
         {/* SidebarLeft for main navigation */}
         <div className="hidden lg:block w-[250px]">
-          <SidebarLeft currentUser={currentUser} /> {/* Pass currentUser to SidebarLeft */}
+          <SidebarLeft />
         </div>
         
-        {/* Main content section with SearchBar and Feeds */}
+        {/* Main content section with SearchBar and UsersList */}
         <main className="flex-1 p-4 overflow-auto">
-          <SearchBar currentUser={currentUser} /> {/* Pass currentUser to SearchBar */}
-          <Feeds currentUser={currentUser} /> {/* Pass currentUser to Feeds */}
+          <SearchBar />
+          {currentUser && <UsersList currentUser={currentUser} />} {/* Pass currentUser to UsersList */}
         </main>
 
         {/* Conditionally render SidebarRight or ChatInterface */}
         <div className="hidden lg:flex flex-col w-96">
           {/* If no chat is selected, show SidebarRight */}
           {!selectedChat ? (
-            <SidebarRight currentUser={currentUser} setSelectedChat={setSelectedChat} /> 
+            <SidebarRight setSelectedChat={setSelectedChat} />
           ) : (
-            <ChatInterface currentUser={currentUser} chatRoomId={selectedChat} onBack={handleBackToSidebar} /> 
+            <ChatInterface selectedChat={selectedChat} onBack={handleBackToSidebar} /> // Pass handleBackToSidebar to ChatInterface
           )}
         </div>
 
         {/* Show ChatInterface on mobile if chat is selected */}
         {selectedChat && (
           <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white shadow-lg z-50 p-4">
-            <ChatInterface currentUser={currentUser} chatRoomId={selectedChat} onBack={handleBackToSidebar} />
+            <ChatInterface selectedChat={selectedChat} onBack={handleBackToSidebar} /> {/* Pass handleBackToSidebar */}
           </div>
         )}
       </div>
 
       {/* Floating menu for additional options */}
-     {/* Bottom Bar for mobile */}
-<div className="lg:hidden fixed bottom-0 left-0 right-0 z-50">
-  <BottomBar currentUser={currentUser} />
-</div>
+      <div className="lg:hidden">
+        <FloatingMenu /> {/* FloatingMenu is hidden on mobile */}
+      </div>
 
+      {/* Bottom Bar for mobile */}
+      <BottomBar /> {/* Use BottomBar for mobile */}
     </div>
   );
-};
+}
 
-export default HomePage;
+export default UserList;

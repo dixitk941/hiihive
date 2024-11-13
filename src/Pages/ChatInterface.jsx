@@ -5,7 +5,7 @@ import { db } from './firebaseConfig'; // Import your Firebase config
 import SidebarLeft from '../components/SidebarLeft';
 import SidebarRight from '../components/SidebarRight';
 import SearchBar from '../components/SearchBar';
-import Feeds from '../components/Feeds';
+import Feeds from '../components/ChatInterface';
 import FloatingMenu from '../components/FloatingMenu';
 import ChatInterface from '../components/ChatInterface';
 import BottomBar from '../components/BottomBar';
@@ -77,11 +77,12 @@ const HomePage = () => {
       </div>
 
       {/* Floating menu for additional options */}
-     {/* Bottom Bar for mobile */}
-<div className="lg:hidden fixed bottom-0 left-0 right-0 z-50">
-  <BottomBar currentUser={currentUser} />
-</div>
+      <div className="lg:hidden">
+        <FloatingMenu currentUser={currentUser} /> {/* Pass currentUser to FloatingMenu */}
+      </div>
 
+      {/* Bottom Bar for mobile */}
+      <BottomBar currentUser={currentUser} /> {/* Pass currentUser to BottomBar */}
     </div>
   );
 };
