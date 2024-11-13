@@ -76,13 +76,13 @@ const HomePage = () => {
         )}
       </div>
 
-      {/* Floating menu for additional options */}
+      {/* Floating menu for additional options *
       <div className="lg:hidden">
         <FloatingMenu currentUser={currentUser} /> {/* Pass currentUser to FloatingMenu */}
-      </div>
+
 
       {/* Bottom Bar for mobile */}
-      <BottomBar currentUser={currentUser} /> {/* Pass currentUser to BottomBar */}
+      {/* <BottomBar currentUser={currentUser} /> Pass currentUser to BottomBar */}
     </div>
   );
 };
