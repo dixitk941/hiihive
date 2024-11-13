@@ -7,6 +7,7 @@ import { auth } from './Pages/firebaseConfig'; // Import Firebase auth
 import Explore from './Pages/UserList';
 import ChatInterface from './Pages/ChatInterface'; // Import ChatInterface
 import ChatList from "./Pages/ChatList"; // Import ChatList
+import UploadPost from './Pages/UploadPost'; // Import UploadPost
 
 function App() {
   const [user, setUser] = useState(null);
@@ -60,6 +61,10 @@ function App() {
           ) : (
             <Navigate to="/login" />
           )} // Redirect to login if user is not logged in
+        />
+        <Route
+          path="/upload"
+          element={user ? <UploadPost currentUser={user} /> : <Navigate to="/login" />} // Redirect to login if user is not logged in
         />
       </Routes>
     </Router>

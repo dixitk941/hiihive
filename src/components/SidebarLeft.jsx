@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { FiSettings, FiLogOut, FiChevronLeft, FiChevronRight, FiHome, FiMessageSquare, FiUpload, FiUsers } from 'react-icons/fi';
+import { FiSettings, FiLogOut, FiChevronLeft, FiChevronRight, FiHome, FiMessageSquare, FiUpload, FiUsers, FiCompass, FiBell } from 'react-icons/fi';
+import { Link } from 'react-router-dom';
 
 const SidebarLeft = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -18,27 +19,46 @@ const SidebarLeft = () => {
 
         {/* Navigation for larger screens */}
         <nav className="space-y-3">
-          <a href="" className={`flex items-center p-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-300 ${isCollapsed ? 'justify-center' : ''}`}>
-            <span className={`${isCollapsed ? 'hidden' : 'ml-2 font-semibold'}`}>Home</span>
-          </a>
-          <a href="/explore" className={`flex items-center p-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-300 ${isCollapsed ? 'justify-center' : ''}`}>
-            <span className={`${isCollapsed ? 'hidden' : 'ml-2 font-semibold'}`}>Explore</span>
-          </a>
-          <a href="#" className={`flex items-center p-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-300 ${isCollapsed ? 'justify-center' : ''}`}>
-            <span className={`${isCollapsed ? 'hidden' : 'ml-2 font-semibold'}`}>Notifications</span>
-          </a>
+          <Link to="/">
+            <button className={`flex items-center p-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-300 ${isCollapsed ? 'justify-center' : ''}`}>
+              <FiHome size={20} />
+              <span className={`${isCollapsed ? 'hidden' : 'ml-2 font-semibold'}`}>Home</span>
+            </button>
+          </Link>
+          <Link to="/explore">
+            <button className={`flex items-center p-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-300 ${isCollapsed ? 'justify-center' : ''}`}>
+              <FiCompass size={20} />
+              <span className={`${isCollapsed ? 'hidden' : 'ml-2 font-semibold'}`}>Explore</span>
+            </button>
+          </Link>
+          <Link to="/notifications">
+            <button className={`flex items-center p-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-300 ${isCollapsed ? 'justify-center' : ''}`}>
+              <FiBell size={20} />
+              <span className={`${isCollapsed ? 'hidden' : 'ml-2 font-semibold'}`}>Notifications</span>
+            </button>
+          </Link>
+          <Link to="/upload">
+            <button className={`flex items-center p-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-300 ${isCollapsed ? 'justify-center' : ''}`}>
+              <FiUpload size={20} />
+              <span className={`${isCollapsed ? 'hidden' : 'ml-2 font-semibold'}`}>Upload</span>
+            </button>
+          </Link>
         </nav>
 
         {/* Settings and Logout links */}
         <div className="space-y-3">
-          <a href="#" className={`flex items-center p-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-300 ${isCollapsed ? 'justify-center' : ''}`}>
-            <FiSettings size={20} />
-            <span className={`${isCollapsed ? 'hidden' : 'ml-2 font-semibold'}`}>Settings</span>
-          </a>
-          <a href="#" className={`flex items-center p-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-300 ${isCollapsed ? 'justify-center' : ''}`}>
-            <FiLogOut size={20} />
-            <span className={`${isCollapsed ? 'hidden' : 'ml-2 font-semibold'}`}>Logout</span>
-          </a>
+          <Link to="/settings">
+            <button className={`flex items-center p-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-300 ${isCollapsed ? 'justify-center' : ''}`}>
+              <FiSettings size={20} />
+              <span className={`${isCollapsed ? 'hidden' : 'ml-2 font-semibold'}`}>Settings</span>
+            </button>
+          </Link>
+          <Link to="/logout">
+            <button className={`flex items-center p-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-300 ${isCollapsed ? 'justify-center' : ''}`}>
+              <FiLogOut size={20} />
+              <span className={`${isCollapsed ? 'hidden' : 'ml-2 font-semibold'}`}>Logout</span>
+            </button>
+          </Link>
         </div>
       </aside>
 
