@@ -8,6 +8,8 @@ import Explore from './Pages/UserList';
 import ChatInterface from './Pages/ChatInterface'; // Import ChatInterface
 import ChatList from "./Pages/ChatList"; // Import ChatList
 import UploadPost from './Pages/UploadPost'; // Import UploadPost
+import { RotateLoader } from 'react-spinners';
+
 
 function App() {
   const [user, setUser] = useState(null);
@@ -23,7 +25,11 @@ function App() {
   }, []);
 
   if (loading) {
-    return <p>Loading...</p>; // Show loading indicator while determining auth state
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <RotateLoader color="#36d7b7" />
+      </div>
+    );
   }
 
   const handleBackToChatList = () => {

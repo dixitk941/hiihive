@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { collection, getDocs, updateDoc, doc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { db } from './firebaseConfig';
+import { RotateLoader } from 'react-spinners';
+
 
 const UsersList = ({ currentUser }) => {
   const [users, setUsers] = useState([]);
@@ -65,8 +67,12 @@ const UsersList = ({ currentUser }) => {
     }
   };
 
-  if (loading) {
-    return <div>Loading users...</div>;
+   if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <RotateLoader color="#36d7b7" />
+      </div>
+    );
   }
 
   return (

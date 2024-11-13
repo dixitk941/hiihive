@@ -9,6 +9,7 @@ import Feeds from '../components/Feeds';
 import FloatingMenu from '../components/FloatingMenu';
 import ChatInterface from '../components/ChatInterface';
 import BottomBar from '../components/BottomBar';
+import { RotateLoader } from 'react-spinners';
 
 const HomePage = () => {
   const [currentUser, setCurrentUser] = useState(null);
@@ -74,7 +75,11 @@ const HomePage = () => {
   };
 
   if (loading) {
-    return <p>Loading...</p>;
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <RotateLoader color="#36d7b7" />
+      </div>
+    );
   }
 
   return (
