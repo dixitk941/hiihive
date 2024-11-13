@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiHome, FiMessageSquare, FiUpload, FiUsers } from 'react-icons/fi';
+import { FiHome, FiMessageSquare, FiUpload, FiUsers, FiCompass } from 'react-icons/fi'; // Import FiCompass for Explore icon
 
 const BottomBar = ({ toggleSidebarRight }) => {
   const navigate = useNavigate();
@@ -16,8 +16,8 @@ const BottomBar = ({ toggleSidebarRight }) => {
       <button onClick={() => navigate('/upload')} className="flex items-center p-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-300">
         <FiUpload size={24} />
       </button>
-      <button onClick={() => navigate('/users')} className="flex items-center p-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-300">
-        <FiUsers size={24} />
+      <button onClick={() => navigate('/explore')} className="flex items-center p-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-300">
+      <FiCompass size={24} />
       </button>
     </aside>
   );
