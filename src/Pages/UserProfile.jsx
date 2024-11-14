@@ -5,7 +5,7 @@ import { db } from './firebaseConfig'; // Import your Firebase config
 import SidebarLeft from '../components/SidebarLeft';
 import SidebarRight from '../components/SidebarRight';
 import Feeds from '../components/UserProfile';
-import FloatingMenu from '../components/FloatingMenu';
+// import FloatingMenu from '../components/FloatingMenu';
 import ChatInterface from '../components/ChatInterface';
 import BottomBar from '../components/BottomBar';
 import { RotateLoader } from 'react-spinners';

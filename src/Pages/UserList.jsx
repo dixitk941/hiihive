@@ -7,7 +7,7 @@ import SidebarLeft from '../components/SidebarLeft';
 import SidebarRight from '../components/SidebarRight';
 import SearchBar from '../components/SearchBar';
 import UsersList from '../components/UserList'; // Replace Feeds with UsersList
-import FloatingMenu from '../components/FloatingMenu';
+// import FloatingMenu from '../components/FloatingMenu';
 import ChatInterface from '../components/ChatInterface';
 import BottomBar from '../components/BottomBar';
 
@@ -78,9 +78,7 @@ function UserList() {
       </div>
 
       {/* Floating menu for additional options */}
-      <div className="lg:hidden">
-        <FloatingMenu /> {/* FloatingMenu is hidden on mobile */}
-      </div>
+     
 
       {/* Bottom Bar for mobile */}
       <BottomBar /> {/* Use BottomBar for mobile */}

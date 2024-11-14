@@ -6,7 +6,7 @@ import SidebarLeft from '../components/SidebarLeft';
 import SidebarRight from '../components/SidebarRight';
 import SearchBar from '../components/SearchBar';
 import Feeds from '../components/UploadPost';
-import FloatingMenu from '../components/FloatingMenu';
+// import FloatingMenu from '../components/FloatingMenu';
 import ChatInterface from '../components/ChatInterface';
 import BottomBar from '../components/BottomBar';
 
@@ -112,11 +112,7 @@ const HomePage = () => {
       </div>
 
       {/* Floating menu for additional options */}
-      {!selectedChat && (
-        <div className="lg:hidden">
-          <FloatingMenu currentUser={currentUser} /> {/* Pass currentUser to FloatingMenu */}
-        </div>
-      )}
+
 
       {/* Bottom Bar for mobile, visible only if no chat is selected */}
       {!selectedChat && (

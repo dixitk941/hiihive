@@ -6,7 +6,7 @@ import SidebarLeft from '../components/SidebarLeft';
 import SidebarRight from '../components/SidebarRight';
 import SearchBar from '../components/SearchBar';
 import Feeds from '../components/ChatInterface';
-import FloatingMenu from '../components/FloatingMenu';
+// import FloatingMenu from '../components/FloatingMenu';
 import ChatInterface from '../components/ChatInterface';
 import BottomBar from '../components/BottomBar';
 

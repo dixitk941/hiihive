@@ -5,7 +5,7 @@ import { db } from './firebaseConfig'; // Import your Firebase config
 import SidebarLeft from '../components/SidebarLeft';
 import SidebarRight from '../components/SidebarRight';
 import Feeds from '../components/Feeds';
-import FloatingMenu from '../components/FloatingMenu';
+// import FloatingMenu from '../components/FloatingMenu';
 import ChatInterface from '../components/ChatInterface';
 import BottomBar from '../components/BottomBar';
 import { RotateLoader } from 'react-spinners';
@@ -115,11 +115,7 @@ const HomePage = () => {
       </div>
 
       {/* Floating menu for additional options */}
-      {!selectedChat && (
-        <div className="lg:hidden">
-          <FloatingMenu currentUser={currentUser} /> {/* Pass currentUser to FloatingMenu */}
-        </div>
-      )}
+
 
       {/* Bottom Bar for mobile, visible only if no chat is selected */}
       {!selectedChat && (
