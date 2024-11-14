@@ -18,14 +18,29 @@ const UserProfile = () => {
   const [userPosts, setUserPosts] = useState([]);
   const [currentUserId, setCurrentUserId] = useState(null);
   const [isFollowing, setIsFollowing] = useState(false);
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isProfilePicModalOpen, setIsProfilePicModalOpen] = useState(false);
+
+  const openModal = (post) => {
+    setSelectedPost(post);
+  };
+
+  const closeModal = () => {
+    setSelectedPost(null);
+  };
+
+  const openProfilePicModal = () => {
+    setIsProfilePicModalOpen(true);
+  };
+
+  const closeProfilePicModal = () => {
+    setIsProfilePicModalOpen(false);
+  };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setCurrentUserId(user.uid);
-      } else {
-        setCurrentUserId(null);
-      }
+      setCurrentUserId(user ? user.uid : null);
     });
     return () => unsubscribe();
   }, []);
@@ -49,10 +64,12 @@ const UserProfile = () => {
               username: userData.username || '',
               bio: userData.bio || '',
             });
-            setIsFollowing(userData.followers?.includes(currentUserId) || false); // Check if the current user is following
+            setIsFollowing(userData.followers?.includes(currentUserId) || false);
           }
         } catch (error) {
           console.error('Error fetching user data:', error);
+        } finally {
+          setLoading(false);
         }
       }
     };
@@ -81,7 +98,6 @@ const UserProfile = () => {
 
     try {
       if (isFollowing) {
-        // Unfollow
         await updateDoc(currentUserRef, {
           following: arrayRemove({ id: userId, fullName: userDetails.displayName })
         });
@@ -89,7 +105,6 @@ const UserProfile = () => {
           followers: arrayRemove(currentUserId)
         });
       } else {
-        // Follow
         await updateDoc(currentUserRef, {
           following: arrayUnion({ id: userId, fullName: userDetails.displayName })
         });
@@ -97,57 +112,126 @@ const UserProfile = () => {
           followers: arrayUnion(currentUserId)
         });
       }
-      setIsFollowing(!isFollowing); // Toggle follow state
+      setIsFollowing(!isFollowing);
     } catch (error) {
       console.error("Error toggling follow status: ", error);
     }
   };
 
+  const shareProfile = () => {
+    const profileLink = `https://hiihive.vercel.app/user/${userId}`;
+    navigator.clipboard.writeText(profileLink);
+    alert('Profile link copied to clipboard!');
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p className="text-gray-500">Loading...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-screen-lg mx-auto p-4 sm:p-6 bg-white shadow-lg rounded-lg border border-gray-300">
-      <div className="flex flex-col items-center md:flex-row md:items-start justify-between border-b border-gray-200 pb-6 mb-6">
-        <div className="flex flex-col items-center md:items-start md:flex-row space-y-4 md:space-y-0 md:space-x-6">
-          <Avatar
-            src={userDetails.avatar || ''}
-            alt="Profile"
-            className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border border-gray-300 object-cover"
-            style={{ width: '96px', height: '96px' }}
+    <div className="max-w-screen-lg mx-auto p-4 sm:p-6 bg-white">
+      <div className="flex flex-col items-center text-center pb-6 mb-6 border-b border-gray-300">
+      <Avatar
+  src={userDetails.avatar || ''}
+  alt="Profile"
+  className="rounded-full border border-gray-300 cursor-pointer"
+  style={{ width: '128px', height: '128px' }} // 128px is equivalent to 8rem (64 * 2)
+  onClick={openProfilePicModal}
+>
+  {!userDetails.avatar && userDetails.username[0]?.toUpperCase()}
+</Avatar>
+        <h2 className="text-2xl font-semibold text-gray-900 mt-4">{userDetails.username}</h2>
+        <p className="text-gray-500">{userDetails.displayName}</p>
+        <p className="text-sm text-gray-400 mt-2">{userDetails.bio}</p>
+        <div className="flex space-x-6 mt-4">
+          <span className="text-sm font-semibold">
+            <span className="text-gray-900">{userPosts.length}</span> posts
+          </span>
+          <span className="text-sm font-semibold">
+            <span className="text-gray-900">{userDetails.followers?.length || 0}</span> followers
+          </span>
+          <span className="text-sm font-semibold">
+            <span className="text-gray-900">{userDetails.following?.length || 0}</span> following
+          </span>
+        </div>
+        {userId !== currentUserId && (
+          <button
+            onClick={handleFollowToggle}
+            className={`mt-4 px-6 py-2 text-sm font-semibold rounded-md ${
+              isFollowing ? 'bg-gray-300 text-gray-700' : 'bg-blue-500 text-white'
+            }`}
           >
-            {!userDetails.avatar && userDetails.username[0]?.toUpperCase()}
-          </Avatar>
-          <div className="text-center md:text-left space-y-2">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-800">{userDetails.username}</h2>
-            <p className="text-gray-600">{userDetails.displayName}</p>
-            <p className="text-sm text-gray-500">{userDetails.bio}</p>
-          </div>
-        </div>
-        <div className="flex flex-col items-center md:items-end mt-4 md:mt-0">
-          {userId !== currentUserId && (
-            <button
-              onClick={handleFollowToggle}
-              className={`px-4 py-2 text-sm font-semibold rounded-lg border ${
-                isFollowing ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'
-              }`}
-            >
-              {isFollowing ? 'Following' : 'Follow'}
-            </button>
-          )}
-          <div className="mt-2 text-gray-500 text-sm">
-            <span className="font-semibold">{userPosts.length}</span> Posts
-          </div>
-        </div>
+            {isFollowing ? 'Following' : 'Follow'}
+          </button>
+        )}
+        {/* Share Profile Button */}
+        <button
+          onClick={shareProfile}
+          className="mt-4 px-6 py-2 text-sm font-semibold rounded-md bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:bg-blue-600 transition duration-300 ease-in-out"
+        >
+          Share Profile
+        </button>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4 border-t border-gray-200 pt-4">
+      {/* Modal for Profile Picture */}
+      {isProfilePicModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+          onClick={closeProfilePicModal}
+        >
+          <div className="bg-white rounded-lg overflow-hidden shadow-lg w-full max-w-lg">
+            <img
+              src={userDetails.avatar || ''}
+              alt="Profile"
+              className="w-full h-full object-cover"
+            />
+            <button
+              className="absolute top-0 right-0 m-2 text-white font-semibold"
+              onClick={closeProfilePicModal}
+            >
+              X
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-3 gap-1 sm:gap-4 border-t border-gray-200 pt-4 sm:grid-cols-2 md:grid-cols-3">
         {userPosts.map(post => (
-          <div key={post.id} className="relative group border border-gray-300 rounded-lg overflow-hidden shadow-sm">
-            <img src={post.imageUrl} alt={post.caption} className="w-full h-40 sm:h-64 object-cover transition-transform duration-300 ease-in-out transform group-hover:scale-105" />
-            <div className="absolute inset-0 bg-black bg-opacity-25 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300">
-              <p className="text-white text-center p-2 text-xs sm:text-sm">{post.caption}</p>
-            </div>
+          <div key={post.id} className="relative group">
+            <img
+              src={post.imageUrl}
+              alt={post.caption}
+              className="w-full h-40 sm:h-64 object-cover transition-transform duration-300 ease-in-out transform group-hover:scale-105 cursor-pointer"
+              onClick={() => openModal(post)}
+            />
           </div>
         ))}
       </div>
+
+      {/* Modal for Post Details */}
+      {selectedPost && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg overflow-hidden shadow-lg w-full max-w-4xl flex flex-col md:flex-row">
+            <img
+              src={selectedPost.imageUrl}
+              alt={selectedPost.caption}
+              className="w-full md:w-1/2 h-64 md:h-auto object-cover"
+            />
+            <div className="p-4 w-full md:w-1/2">
+              <p className="text-gray-800 font-semibold">{selectedPost.caption}</p>
+              <div className="mt-4">
+                <button onClick={closeModal} className="text-blue-500">
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
