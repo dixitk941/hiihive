@@ -27,7 +27,9 @@ const LoginPage = () => {
   };
 
   const handleAvatarChange = (e) => {
-    setFormData({ ...formData, avatar: e.target.files[0] });
+    if (e.target.files && e.target.files[0]) {
+      setFormData({ ...formData, avatar: e.target.files[0] });
+    }
   };
 
   const handleSignUp = async () => {
@@ -96,66 +98,199 @@ const LoginPage = () => {
       setLoading(false);
     }
   };
-
-  return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-r from-white via-blue-50 to-blue-200 text-gray-900">
-      <div className="flex justify-start items-center p-4 space-x-4 mt-4">
-        <img src={logo} alt="Logo" className="h-12 w-12 rounded-full" />
-        <div>
-          <h1 className="text-4xl font-extrabold text-black">Hii</h1>
-          <h1 className="text-4xl font-extrabold text-blue-600">Hive</h1>
-        </div>
-      </div>
-
-      <div className="flex-grow flex flex-col md:flex-row p-8 space-y-6 md:space-y-0 md:space-x-12">
-        <div className="w-full md:w-2/5 flex justify-center items-center md:mr-12 p-8">
-          <div className="w-full max-w-md p-8 rounded-xl bg-white shadow-lg space-y-6 relative z-10">
-            <h2 className="text-3xl font-bold text-center text-gray-900 mb-6">
-              {isSignUp ? "Create an Account" : "Welcome Back to HiiHive"}
-            </h2>
-
-            {error && <p className="text-red-500 text-center">{error}</p>}
-
-            {isSignUp ? (
-              <>
-                <input type="text" name="fullName" placeholder="Full Name" value={formData.fullName} onChange={handleChange} className="w-full p-4 rounded-xl bg-gray-100 border" />
-                <input type="text" name="username" placeholder="Username" value={formData.username} onChange={handleChange} className="w-full p-4 rounded-xl bg-gray-100 border" />
-                <input type="number" name="age" placeholder="Age" value={formData.age} onChange={handleChange} className="w-full p-4 rounded-xl bg-gray-100 border" />
-                <input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} className="w-full p-4 rounded-xl bg-gray-100 border" />
-                <input type="password" name="password" placeholder="Password" value={formData.password} onChange={handleChange} className="w-full p-4 rounded-xl bg-gray-100 border" />
-                <textarea name="bio" placeholder="Bio" value={formData.bio} onChange={handleChange} className="w-full p-4 rounded-xl bg-gray-100 border" rows="3"></textarea>
-                <div>
-                  <label className="text-gray-700">Select Avatar</label>
-                  <input type="file" onChange={handleAvatarChange} className="w-full p-4 rounded-xl bg-gray-100 border" />
-                </div>
-                <button onClick={handleSignUp} disabled={loading} className="bg-blue-500 text-white w-full py-3 rounded-lg">
-                  {loading ? "Signing Up..." : "Sign Up"}
+    return (
+      <div className="flex flex-col min-h-screen bg-gradient-to-r from-white via-blue-50 to-blue-200 text-gray-900">
+        {/* Top Logo and Name (Always at the top on all views) */}
+        {/* <div className="flex justify-start items-center p-4 space-x-4 mt-4">
+          <img src={logo} alt="Logo" className="h-12 w-12 rounded-full" />
+          <div>
+            <h1 className="text-4xl font-extrabold text-black">Hii</h1>
+            <h1 className="text-4xl font-extrabold text-blue-600">Hive</h1>
+          </div>
+        </div> */}
+  
+        {/* Main Content Section */}
+        <div className="flex-grow flex flex-col md:flex-row p-8 space-y-6 md:space-y-0 md:space-x-12">
+          {/* Login/Sign-Up Form */}
+          <div className="w-full md:w-2/5 flex justify-center items-center p-8">
+            <div className="w-full max-w-md p-8 rounded-xl bg-white shadow-lg transition-shadow hover:shadow-2xl space-y-6">
+              <h2 className="text-3xl font-bold text-center text-gray-900 mb-4">
+                {isSignUp ? "Create an Account" : "Welcome Back to HiiHive"}
+              </h2>
+  
+              {error && <p className="text-red-500 text-center">{error}</p>}
+  
+              <form className="space-y-4">
+                {isSignUp && (
+                  <>
+                    <input
+                      type="text"
+                      name="fullName"
+                      placeholder="Full Name"
+                      value={formData.fullName}
+                      onChange={handleChange}
+                      className="w-full p-3 rounded-lg bg-gray-100 border focus:outline-none focus:ring-2 focus:ring-blue-300"
+                    />
+                    <input
+                      type="text"
+                      name="username"
+                      placeholder="Username"
+                      value={formData.username}
+                      onChange={handleChange}
+                      className="w-full p-3 rounded-lg bg-gray-100 border focus:outline-none focus:ring-2 focus:ring-blue-300"
+                    />
+                    <input
+                      type="number"
+                      name="age"
+                      placeholder="Age"
+                      value={formData.age}
+                      onChange={handleChange}
+                      className="w-full p-3 rounded-lg bg-gray-100 border focus:outline-none focus:ring-2 focus:ring-blue-300"
+                    />
+                  </>
+                )}
+  
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full p-3 rounded-lg bg-gray-100 border focus:outline-none focus:ring-2 focus:ring-blue-300"
+                />
+                <input
+                  type="password"
+                  name="password"
+                  placeholder="Password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="w-full p-3 rounded-lg bg-gray-100 border focus:outline-none focus:ring-2 focus:ring-blue-300"
+                />
+  
+                {isSignUp && (
+                  <>
+                    <textarea
+                      name="bio"
+                      placeholder="Bio"
+                      value={formData.bio}
+                      onChange={handleChange}
+                      className="w-full p-3 rounded-lg bg-gray-100 border focus:outline-none focus:ring-2 focus:ring-blue-300"
+                      rows="3"
+                    />
+                    <div>
+                      <label className="text-gray-700">Select Avatar</label>
+                      <input
+                        type="file"
+                        onChange={handleAvatarChange}
+                        className="w-full p-3 rounded-lg bg-gray-100 border focus:outline-none focus:ring-2 focus:ring-blue-300"
+                      />
+                    </div>
+                  </>
+                )}
+  
+                <button
+                  type="button"
+                  onClick={isSignUp ? handleSignUp : handleLogin}
+                  disabled={loading}
+                  className="bg-blue-500 hover:bg-blue-600 text-white w-full py-3 rounded-lg transition-colors"
+                >
+                  {loading
+                    ? isSignUp
+                      ? "Signing Up..."
+                      : "Logging In..."
+                    : isSignUp
+                    ? "Sign Up"
+                    : "Log In"}
                 </button>
-                <p className="text-center mt-4 text-gray-600">Already have an account? <span className="text-blue-500 cursor-pointer" onClick={() => setIsSignUp(false)}>Log In</span></p>
-              </>
-            ) : (
-              <>
-                <input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} className="w-full p-4 rounded-xl bg-gray-100 border" />
-                <input type="password" name="password" placeholder="Password" value={formData.password} onChange={handleChange} className="w-full p-4 rounded-xl bg-gray-100 border" />
-                <button onClick={handleLogin} disabled={loading} className="bg-blue-500 text-white w-full py-3 rounded-lg">
-                  {loading ? "Logging In..." : "Log In"}
-                </button>
-                <p className="text-center mt-4 text-gray-600">Don’t have an account? <span className="text-blue-500 cursor-pointer" onClick={() => setIsSignUp(true)}>Sign Up</span></p>
-              </>
-            )}
+              </form>
+  
+              <p className="text-center text-gray-600 mt-4">
+                {isSignUp ? (
+                  <>
+                    Already have an account?{" "}
+                    <span
+                      className="text-blue-500 cursor-pointer"
+                      onClick={() => setIsSignUp(false)}
+                    >
+                      Log In
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    Don’t have an account?{" "}
+                    <span
+                      className="text-blue-500 cursor-pointer"
+                      onClick={() => setIsSignUp(true)}
+                    >
+                      Sign Up
+                    </span>
+                  </>
+                )}
+              </p>
+            </div>
+          </div>
+  
+          {/* Right Section: App Description */}
+          <div className="w-full md:w-3/5 flex flex-col justify-center items-start p-8 space-y-8">
+            {/* App Description Content */}
+            <h2 className="text-3xl font-semibold text-gray-900">What is HiiHive?</h2>
+            <p className="text-lg text-gray-600">
+              HiiHive is your all-in-one community platform for learning, connecting, and growing together. Stay updated, join dynamic communities, and explore knowledge-rich content in an elegant, seamless environment.
+            </p>
+  
+            {/* Features / Benefits */}
+            <div className="flex justify-start space-x-8 mt-8">
+              <div className="flex flex-col items-center space-y-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-12 w-12 text-blue-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 2v20m10-10H2" />
+                </svg>
+                <p className="mt-2 text-lg font-medium text-gray-900">Communities</p>
+              </div>
+              <div className="flex flex-col items-center space-y-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-12 w-12 text-green-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                </svg>
+                <p className="mt-2 text-lg font-medium text-gray-900">Knowledge Hub</p>
+              </div>
+              <div className="flex flex-col items-center space-y-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-12 w-12 text-yellow-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                </svg>
+                <p className="mt-2 text-lg font-medium text-gray-900">Explore</p>
+              </div>
+            </div>
           </div>
         </div>
+  
+        {/* Footer Section */}
+        <footer className="w-full bg-transparent text-black py-6 mt-8">
+          <div className="flex justify-center md:justify-end items-center space-x-6">
+            <p className="text-sm text-black">Created by <strong>DixitK941</strong></p>
+            <img src={logo} alt="Logo" className="h-12 w-12 rounded-full" />
+            <p className="text-sm text-black">Powered by <strong>AINOR</strong></p>
+          </div>
+        </footer>
       </div>
-
-      <footer className="w-full bg-transparent text-black py-6 mt-8 md:mt-auto">
-        <div className="flex justify-center md:justify-end items-center space-x-6">
-          <p className="text-sm text-black">Created by <strong>DixitK941</strong></p>
-          <img src={logo} alt="Logo" className="h-12 w-12 rounded-full" />
-          <p className="text-sm text-black">Powered by <strong>AINOR</strong></p>
-        </div>
-      </footer>
-    </div>
-  );
-};
-
-export default LoginPage;
+    );
+  };
+  
+  export default LoginPage;
+  
