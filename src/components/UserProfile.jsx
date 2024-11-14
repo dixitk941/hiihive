@@ -6,6 +6,8 @@ import { getDownloadURL, ref as storageRef } from "firebase/storage";
 import { useParams } from 'react-router-dom';
 import { arrayUnion, arrayRemove } from 'firebase/firestore';
 import Avatar from '@mui/material/Avatar';
+import loaderGif from '../assets/normload.gif'; // Adjust the path according to your project structure
+
 
 const UserProfile = () => {
   const { userId } = useParams();
@@ -126,9 +128,12 @@ const UserProfile = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <p className="text-gray-500">Loading...</p>
+      <div className="h-screen flex flex-col justify-center items-center bg-gray-100">
+      {/* Loader GIF in the center */}
+      <div className="flex items-center justify-center mb-4">
+        <img src={loaderGif} alt="Loading" className="w-32 h-32" /> {/* Increased size */}
       </div>
+    </div>
     );
   }
 
@@ -232,6 +237,10 @@ const UserProfile = () => {
           </div>
         </div>
       )}
+
+<footer className="text-center mt-8 text-sm text-gray-500">
+        <p>Developed by dixitk941 | Powered by AINOR</p>
+      </footer>
     </div>
   );
 };

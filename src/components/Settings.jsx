@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db, auth } from './firebaseConfig'; // Firebase setup
 import { reauthenticateWithCredential, EmailAuthProvider, updatePassword, getAuth, signOut } from 'firebase/auth';
+import loaderGif from '../assets/normload.gif'; // Adjust the path according to your project structure
 
 const Settings = () => {
   const [user, setUser] = useState(null);
@@ -83,8 +84,16 @@ const Settings = () => {
   };
 
   if (!user) {
-    return <div>Loading...</div>;
+    return (
+      <div className="h-screen flex flex-col justify-center items-center bg-gray-100">
+        {/* Loader GIF in the center */}
+        <div className="flex items-center justify-center mb-4">
+          <img src={loaderGif} alt="Loading" className="w-32 h-32" /> {/* Increased size */}
+        </div>
+      </div>
+    );
   }
+
 
   return (
     <div className="max-w-4xl mx-auto p-4">
@@ -225,7 +234,34 @@ const Settings = () => {
             </div>
           </div>
         </div>
-      )}
+      )} {/* Enhanced Project Promotion Section */}
+      <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
+        <h3 className="text-xl font-medium mb-4">Explore More Apps</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {[
+            { name: "AINOR", link: "https://ainor.vercel.app" },
+            { name: "NeoCodeNex", link: "https://neocodenex.tech" },
+            { name: "MentorConnect", link: "https://mentorconnectt.vercel.app" },
+            { name: "GenZHub", link: "https://genzhub.vercel.app" },
+            { name: "HiiHive", link: "https://hiiHive.vercel.app" }
+          ].map((project, index) => (
+            <a
+              key={index}
+              href={project.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block bg-gradient-to-r from-blue-500 to-purple-600 p-4 rounded-lg shadow-lg text-white font-semibold hover:shadow-xl hover:scale-105 transition-transform duration-300"
+            >
+              {project.name}
+            </a>
+          ))}
+        </div>
+      </div>
+
+      {/* Footer Section for Credit */}
+      <footer className="text-center mt-8 text-sm text-gray-500">
+        <p>Developed by dixitk941 | Powered by AINOR</p>
+      </footer>
     </div>
   );
 };

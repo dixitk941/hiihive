@@ -9,6 +9,7 @@ import Feeds from '../components/UploadPost';
 // import FloatingMenu from '../components/FloatingMenu';
 import ChatInterface from '../components/ChatInterface';
 import BottomBar from '../components/BottomBar';
+import loaderGif from '../assets/normload.gif'; // Adjust the path according to your project structure
 
 const HomePage = () => {
   const [currentUser, setCurrentUser] = useState(null);
@@ -74,7 +75,12 @@ const HomePage = () => {
   };
 
   if (loading) {
-    return <p>Loading...</p>;
+    return  <div className="h-screen flex flex-col justify-center items-center bg-gray-100">
+    {/* Loader GIF in the center */}
+    <div className="flex items-center justify-center mb-4">
+      <img src={loaderGif} alt="Loading" className="w-32 h-32" /> {/* Increased size */}
+    </div>
+  </div>
   }
 
   return (

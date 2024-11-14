@@ -8,7 +8,7 @@ import Feeds from '../components/UserProfile';
 // import FloatingMenu from '../components/FloatingMenu';
 import ChatInterface from '../components/ChatInterface';
 import BottomBar from '../components/BottomBar';
-import { RotateLoader } from 'react-spinners';
+import loaderGif from '../assets/normload.gif'; // Adjust the path according to your project structure
 
 const UserProfile = () => {
   const [currentUser, setCurrentUser] = useState(null);
@@ -76,8 +76,8 @@ const UserProfile = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <RotateLoader color="#36d7b7" />
-      </div>
+          <img src={loaderGif} alt="Loading" className="w-32 h-32" /> {/* Increased size */}
+          </div>
     );
   }
 

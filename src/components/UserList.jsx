@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { collection, getDocs, updateDoc, doc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { db } from './firebaseConfig';
-import { RotateLoader } from 'react-spinners';
+import loaderGif from '../assets/normload.gif'; // Adjust the path according to your project structure
 import { useNavigate } from 'react-router-dom';
 
 const UsersList = ({ currentUser }) => {
@@ -71,8 +71,8 @@ const UsersList = ({ currentUser }) => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <RotateLoader color="#36d7b7" />
-      </div>
+          <img src={loaderGif} alt="Loading" className="w-32 h-32" /> {/* Increased size */}
+          </div>
     );
   }
 

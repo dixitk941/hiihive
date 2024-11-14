@@ -12,6 +12,7 @@ const ChatList = React.lazy(() => import('./Pages/ChatList'));
 const UploadPost = React.lazy(() => import('./Pages/UploadPost'));
 const UserProfile = React.lazy(() => import('./Pages/UserProfile'));
 const Settings = React.lazy(() => import('./Pages/SettingPage'));
+const Notification = React.lazy(() => import('./components/Notifications'));
 
 function App() {
   const [user, setUser] = useState(null);
@@ -80,7 +81,12 @@ function App() {
             path="/upload"
             element={user ? <UploadPost currentUser={user} /> : <Navigate to="/login" />}
           />
-        </Routes>
+          <Route
+            path="/notifications"
+            element={user ? <Notification currentUser={user} /> : <Navigate to="/login" />}
+       />
+       
+            </Routes>
       </Router>
     </Suspense>
   );

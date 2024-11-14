@@ -8,7 +8,8 @@ import Feeds from '../components/Settings';
 // import FloatingMenu from '../components/FloatingMenu';
 import ChatInterface from '../components/ChatInterface';
 import BottomBar from '../components/BottomBar';
-import { RotateLoader } from 'react-spinners';
+import loaderGif from '../assets/normload.gif'; // Adjust the path according to your project structure
+
 
 const Settings = () => {
   const [currentUser, setCurrentUser] = useState(null);
@@ -76,10 +77,12 @@ const Settings = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <RotateLoader color="#36d7b7" />
-      </div>
+          <img src={loaderGif} alt="Loading" className="w-32 h-32" /> {/* Increased size */}
+          </div>
     );
   }
+
+
 
   return (
     <div className="flex flex-col h-screen">
