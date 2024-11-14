@@ -4,7 +4,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from './firebaseConfig'; // Import your Firebase config
 import SidebarLeft from '../components/SidebarLeft';
 import SidebarRight from '../components/SidebarRight';
-import SearchBar from '../components/SearchBar';
+// import SearchBar from '../components/SearchBar';
 import Feeds from '../components/ChatInterface';
 // import FloatingMenu from '../components/FloatingMenu';
 import ChatInterface from '../components/ChatInterface';
@@ -54,7 +54,7 @@ const HomePage = () => {
         
         {/* Main content section with SearchBar and Feeds */}
         <main className="flex-1 p-4 overflow-auto">
-          <SearchBar currentUser={currentUser} /> {/* Pass currentUser to SearchBar */}
+          {/* <SearchBar currentUser={currentUser} /> Pass currentUser to SearchBar */}
           <Feeds currentUser={currentUser} /> {/* Pass currentUser to Feeds */}
         </main>
 

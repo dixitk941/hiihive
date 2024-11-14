@@ -47,28 +47,28 @@ const ChatInterface = ({ chatRoomId, currentUser }) => {
   };
 
   return (
-    <div className="flex flex-col h-full max-w-md mx-auto bg-gray-50 border rounded-lg shadow-md">
+    <div className="flex flex-col h-full max-w-md mx-auto bg-white border rounded-lg shadow-xl">
       {/* Header */}
-      <div className="flex items-center p-4 bg-white shadow sticky top-0 z-10">
-        <button onClick={handleBack} className="mr-4 text-gray-800 hover:text-gray-900">
+      <div className="flex items-center p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg sticky top-0 z-10 rounded-t-lg">
+        <button onClick={handleBack} className="mr-4 text-white hover:text-gray-300">
           <FiArrowLeft size={24} />
         </button>
-        <h2 className="text-lg font-semibold text-gray-900">Chat Room</h2>
+        <h2 className="text-xl font-semibold">Chat Room</h2>
       </div>
 
       {/* Messages Container */}
-      <div className="flex-1 flex flex-col p-4 space-y-2 overflow-y-auto" style={{ paddingBottom: '120px' }}>
+      <div className="flex-1 flex flex-col p-4 space-y-4 overflow-y-auto mb-20">
         {messages.map((message, index) => (
           <div
             key={index}
             className={`flex ${message.senderId === currentUser.uid ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`p-3 rounded-2xl max-w-xs md:max-w-md ${
+              className={`p-4 rounded-lg max-w-xs md:max-w-md ${
                 message.senderId === currentUser.uid
-                  ? 'bg-blue-500 text-white rounded-br-none'
-                  : 'bg-gray-200 text-gray-800 rounded-bl-none'
-              } shadow-sm`}
+                  ? 'bg-blue-500 text-white rounded-bl-none'
+                  : 'bg-gray-200 text-gray-800 rounded-br-none'
+              } shadow-md`}
             >
               <p>{message.text}</p>
               <span className="text-xs text-gray-400 mt-1 block">
@@ -80,21 +80,21 @@ const ChatInterface = ({ chatRoomId, currentUser }) => {
       </div>
 
       {/* Input Field */}
-      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-gray-50 p-3">
-        <div className="flex items-center p-2 bg-white rounded-full border border-gray-300 shadow-inner">
+      <div className="p-4 bg-gray-100 rounded-b-lg border-t border-gray-300">
+        <div className="flex items-center w-full space-x-3">
           <input
             type="text"
             value={messageInput}
             onChange={(e) => setMessageInput(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Message..."
-            className="flex-1 p-2 bg-transparent border-none focus:outline-none"
+            placeholder="Type a message..."
+            className="flex-1 p-3 bg-white border rounded-full shadow-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <button
             onClick={handleSendMessage}
-            className="ml-3 p-2 bg-blue-500 text-white rounded-full transition duration-200 hover:bg-blue-600"
+            className="p-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full shadow-lg transition-all duration-200 hover:scale-105"
           >
-            <FaPaperPlane />
+            <FaPaperPlane size={18} />
           </button>
         </div>
       </div>
