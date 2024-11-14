@@ -9,6 +9,8 @@ import ChatInterface from './Pages/ChatInterface'; // Import ChatInterface
 import ChatList from "./Pages/ChatList"; // Import ChatList
 import UploadPost from './Pages/UploadPost'; // Import UploadPost
 import { RotateLoader } from 'react-spinners';
+import UserProfile from "./Pages/UserProfile";
+import Settings from "./Pages/SettingPage";
 
 
 function App() {
@@ -55,6 +57,14 @@ function App() {
         <Route
           path="/explore"
           element={user ? <Explore /> : <Navigate to="/login" />} // Redirect to login if user is not logged in
+        />
+        <Route
+          path="/settings"
+          element={user ? <Settings /> : <Navigate to="/login" />} // Redirect to login if user is not logged in
+        />
+         <Route
+          path="/user/:userId"
+          element={user ? <UserProfile /> : <Navigate to="/login" />} // Redirect to login if user is not logged in
         />
         <Route
           path="/chatlist"

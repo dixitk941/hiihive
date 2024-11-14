@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import StoryIcon from './StoryIcon';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from './firebaseConfig'; // Import your Firebase config
+import StoryIcon from '../components/StoryIcon'; // Assuming you have a StoryIcon component
 
 const SearchBar = () => {
   const [expanded, setExpanded] = useState(false);

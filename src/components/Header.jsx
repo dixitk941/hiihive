@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { db, auth, storage } from './firebaseConfig';
 import { doc, getDoc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
-import { getDownloadURL, ref } from "firebase/storage";
-import { Link } from 'react-router-dom'; // Import Link from react-router-dom
+import { getDownloadURL, ref } from 'firebase/storage';
+import { Link } from 'react-router-dom';
 import logo from '../assets/logo.svg';
 
 const Header = () => {
@@ -69,21 +69,35 @@ const Header = () => {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 flex items-center justify-between px-8 py-5 bg-white shadow-md border-b border-gray-200 z-50 transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 flex items-center justify-between px-3 sm:px-6 py-2 sm:py-3 bg-white shadow-md border-b border-gray-200 z-50 transition-all duration-300 ${
         isScrolled ? 'bg-opacity-90 backdrop-blur-md' : ''
       }`}
     >
-      <div className="flex items-center space-x-4">
-        <Link to="/"> {/* Wrap logo in a Link */}
-          <img src={logo} alt="Logo" className="w-16 h-16" />
+      <div className="flex items-center space-x-3">
+        <Link to="/">
+          <img src={logo} alt="Logo" className="w-12 h-12 sm:w-14 sm:h-14" />
         </Link>
-        <h1 className="text-3xl font-extrabold tracking-wide text-gray-800 animate-fadeIn">
+        <h1 className="text-lg sm:text-2xl font-bold tracking-wide text-gray-800 animate-fadeIn">
           Hii<span className="text-blue-500">Hive</span>
         </h1>
       </div>
-      <div className="flex items-center space-x-4">
-        {user.avatar && <img src={user.avatar} alt="User Avatar" className="w-10 h-10 rounded-full" />}
-        {user.username && <span className="text-lg font-semibold text-gray-800 hidden lg:inline">{user.username}</span>}
+      <div className="flex items-center space-x-3">
+        {user.avatar && (
+          <Link to={`/user/${currentUserId}`}>
+            <img
+              src={user.avatar}
+              alt="User Avatar"
+              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full cursor-pointer"
+            />
+          </Link>
+        )}
+        {user.username && (
+          <Link to={`/user/${currentUserId}`}>
+            <span className="text-base sm:text-lg font-semibold text-gray-800 hidden sm:inline cursor-pointer">
+              {user.username}
+            </span>
+          </Link>
+        )}
       </div>
     </header>
   );

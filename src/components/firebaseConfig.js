@@ -5,6 +5,7 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getDatabase } from "firebase/database"; // Import Realtime Database
 
+
 const firebaseConfig = {
   apiKey: "AIzaSyB--KSDIQ_rkc1myOfFBgNjUka30VAKOtM",
   authDomain: "fragveda.firebaseapp.com",

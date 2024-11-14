@@ -1,9 +1,26 @@
 import React, { useState } from 'react';
 import { FiSettings, FiLogOut, FiChevronLeft, FiChevronRight, FiHome, FiMessageSquare, FiUpload, FiUsers, FiCompass, FiBell } from 'react-icons/fi';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { signOut } from 'firebase/auth';
+import { auth } from './firebaseConfig';  // Your firebase config file to access auth
 
 const SidebarLeft = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [showLogoutWarning, setShowLogoutWarning] = useState(false); // State to toggle logout warning modal
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth); // Sign out from Firebase
+      navigate('/login'); // Navigate to the login page
+    } catch (error) {
+      console.error("Error during logout", error);
+    }
+  };
+
+  const toggleLogoutWarning = () => {
+    setShowLogoutWarning(!showLogoutWarning); // Toggle logout warning modal visibility
+  };
 
   return (
     <>
@@ -53,14 +70,35 @@ const SidebarLeft = () => {
               <span className={`${isCollapsed ? 'hidden' : 'ml-2 font-semibold'}`}>Settings</span>
             </button>
           </Link>
-          <Link to="/logout">
-            <button className={`flex items-center p-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-300 ${isCollapsed ? 'justify-center' : ''}`}>
-              <FiLogOut size={20} />
-              <span className={`${isCollapsed ? 'hidden' : 'ml-2 font-semibold'}`}>Logout</span>
-            </button>
-          </Link>
+          <button onClick={toggleLogoutWarning} className={`flex items-center p-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-300 ${isCollapsed ? 'justify-center' : ''}`}>
+            <FiLogOut size={20} />
+            <span className={`${isCollapsed ? 'hidden' : 'ml-2 font-semibold'}`}>Logout</span>
+          </button>
         </div>
       </aside>
+
+      {/* Logout Warning Modal */}
+      {showLogoutWarning && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+            <h3 className="text-lg font-semibold mb-4">Are you sure you want to log out?</h3>
+            <div className="flex justify-between">
+              <button 
+                onClick={handleLogout} 
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                Yes
+              </button>
+              <button 
+                onClick={toggleLogoutWarning} 
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+              >
+                No
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

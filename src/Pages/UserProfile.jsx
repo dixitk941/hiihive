@@ -4,13 +4,13 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from './firebaseConfig'; // Import your Firebase config
 import SidebarLeft from '../components/SidebarLeft';
 import SidebarRight from '../components/SidebarRight';
-import Feeds from '../components/Feeds';
+import Feeds from '../components/UserProfile';
 import FloatingMenu from '../components/FloatingMenu';
 import ChatInterface from '../components/ChatInterface';
 import BottomBar from '../components/BottomBar';
 import { RotateLoader } from 'react-spinners';
 
-const HomePage = () => {
+const UserProfile = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [selectedChat, setSelectedChat] = useState(null);
   const [loading, setLoading] = useState(true); // Manage loading state
@@ -89,22 +89,22 @@ const HomePage = () => {
           <SidebarLeft currentUser={currentUser} /> {/* Pass currentUser to SidebarLeft */}
         </div>
         
-        {/* Main content section with Feeds */}
+        {/* Main content section without SearchBar and Stories */}
         {!selectedChat && (
           <main className="flex-1 p-4 overflow-auto">
+            {/* <SearchBar currentUser={currentUser} />  Pass currentUser to SearchBar */}
             <Feeds currentUser={currentUser} /> {/* Pass currentUser to Feeds */}
           </main>
         )}
 
-        {/* Conditionally render SidebarRight or ChatInterface */}
+        {/* Conditionally render SidebarRight or ChatInterface 
         <div className="hidden lg:flex flex-col w-96">
-          {/* If no chat is selected, show SidebarRight */}
           {!selectedChat ? (
             <SidebarRight currentUser={currentUser} setSelectedChat={setSelectedChat} /> 
           ) : (
             <ChatInterface currentUser={currentUser} chatRoomId={selectedChat} onBack={handleBackToSidebar} /> 
           )}
-        </div>
+        </div>*/}
 
         {/* Show SidebarRight on mobile if isSidebarRightVisible is true */}
         {isSidebarRightVisible && (
@@ -114,12 +114,7 @@ const HomePage = () => {
         )}
       </div>
 
-      {/* Floating menu for additional options */}
-      {!selectedChat && (
-        <div className="lg:hidden">
-          <FloatingMenu currentUser={currentUser} /> {/* Pass currentUser to FloatingMenu */}
-        </div>
-      )}
+     
 
       {/* Bottom Bar for mobile, visible only if no chat is selected */}
       {!selectedChat && (
@@ -129,4 +124,4 @@ const HomePage = () => {
   );
 };
 
-export default HomePage;
+export default UserProfile;
