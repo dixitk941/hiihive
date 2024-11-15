@@ -31,7 +31,7 @@ const Settings = () => {
         setUsername(docSnap.data().username);
         setBio(docSnap.data().bio);
       } else {
-        console.log("No such document!");
+        // console.log("No such document!");
       }
     };
     
@@ -61,7 +61,7 @@ const Settings = () => {
       alert('Password updated successfully');
       setIsPasswordEditMode(false); // Exit password edit mode
     } catch (error) {
-      console.error("Error updating password", error);
+      // console.error("Error updating password", error);
       alert("Error updating password");
     }
   };
@@ -71,7 +71,7 @@ const Settings = () => {
       await signOut(auth);
       navigate('/login'); // Redirect to login page after logout
     } catch (error) {
-      console.error('Error logging out:', error);
+      // console.error('Error logging out:', error);
     }
   };
 

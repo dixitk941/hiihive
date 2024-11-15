@@ -23,7 +23,7 @@ const SidebarRight = ({ setSelectedChat }) => {
       } else {
         // If no user is logged in, you can redirect to login or handle accordingly
         setLoading(false);
-        console.log('No user logged in');
+        // console.log('No user logged in');
       }
     });
 
@@ -39,7 +39,7 @@ const SidebarRight = ({ setSelectedChat }) => {
       }
 
       try {
-        console.log('Fetching user data for:', currentUser?.uid);
+        // console.log('Fetching user data for:', currentUser?.uid);
 
         const userRef = doc(db, 'users', currentUser.uid); // Use uid from currentUser
         const userDoc = await getDoc(userRef);
@@ -53,19 +53,19 @@ const SidebarRight = ({ setSelectedChat }) => {
 
           setFollowers(fetchedFollowers);
           setFollowing(fetchedFollowing);
-          console.log('User data fetched:', userData);
+          // console.log('User data fetched:', userData);
 
           // Fetch names of followers and following in bulk
           const allUserIds = [...fetchedFollowers.map(f => f.id), ...fetchedFollowing.map(f => f.id)]; // Combine the userIds
-          console.log('User IDs to fetch names for:', allUserIds); // Debugging line
+          // console.log('User IDs to fetch names for:', allUserIds); // Debugging line
           const names = await fetchUserNamesInBulk(allUserIds);
-          console.log('Fetched names:', names); // Debugging line
+          // console.log('Fetched names:', names); // Debugging line
           setUserNames(names);
         } else {
-          console.log('User not found');
+          // console.log('User not found');
         }
       } catch (error) {
-        console.error('Error fetching user data:', error);
+        // console.error('Error fetching user data:', error);
       } finally {
         setLoading(false); // Set loading to false once data is fetched
       }
@@ -90,7 +90,7 @@ const SidebarRight = ({ setSelectedChat }) => {
           names[userId] = 'Unknown'; // Default to 'Unknown' if user doesn't exist
         }
       }).catch((error) => {
-        console.error(`Error fetching name for ${userId}:`, error);
+        // console.error(`Error fetching name for ${userId}:`, error);
         names[userId] = 'Error'; // Handle errors gracefully
       });
     });

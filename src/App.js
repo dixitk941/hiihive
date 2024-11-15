@@ -51,6 +51,48 @@ function App() {
     };
   }, []);
 
+  useEffect(() => {
+    // Disable zooming
+    document.addEventListener('wheel', (e) => {
+      if (e.ctrlKey) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '-' || e.key === '0')) {
+        e.preventDefault();
+      }
+    });
+
+    // Disable opening developer tools
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && (e.shiftKey && e.key === 'I' || e.key === 'J') || e.key === 'U') {
+        e.preventDefault();
+      }
+    });
+
+    return () => {
+      document.removeEventListener('wheel', (e) => {
+        if (e.ctrlKey) {
+          e.preventDefault();
+        }
+      });
+
+      document.removeEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '-' || e.key === '0')) {
+          e.preventDefault();
+        }
+      });
+
+      document.removeEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && (e.shiftKey && e.key === 'I' || e.key === 'J') || e.key === 'U') {
+          e.preventDefault();
+        }
+      });
+    };
+  }, []);
+
   // Show loading screen if authentication or app loading is still in progress
   if (authLoading || appLoading) {
     return <Loading />;

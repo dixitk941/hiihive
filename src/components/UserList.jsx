@@ -25,7 +25,7 @@ const UsersList = ({ currentUser }) => {
         setUsers(usersData);
         setFollowing(new Set(currentUser.following?.map((f) => f.id) || [])); // Preload followed users
       } catch (error) {
-        console.error("Error fetching users: ", error);
+        // console.error("Error fetching users: ", error);
       } finally {
         setLoading(false);
       }
@@ -64,7 +64,7 @@ const UsersList = ({ currentUser }) => {
         setFollowing((prev) => new Set(prev).add(userId));
       }
     } catch (error) {
-      console.error("Error toggling follow status: ", error);
+      // console.error("Error toggling follow status: ", error);
     }
   };
 

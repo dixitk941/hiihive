@@ -44,7 +44,7 @@ const ChatList = ({ setSelectedChat }) => {
           setUserNames(names);
         }
       } catch (error) {
-        console.error('Error fetching user data:', error);
+        // console.error('Error fetching user data:', error);
       } finally {
         setLoading(false);
       }
@@ -65,7 +65,7 @@ const ChatList = ({ setSelectedChat }) => {
           names[userId] = 'Unknown';
         }
       }).catch((error) => {
-        console.error(`Error fetching name for ${userId}:`, error);
+        // console.error(`Error fetching name for ${userId}:`, error);
         names[userId] = 'Error';
       })
     );

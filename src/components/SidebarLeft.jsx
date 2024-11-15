@@ -14,7 +14,7 @@ const SidebarLeft = () => {
       await signOut(auth); // Sign out from Firebase
       navigate('/login'); // Navigate to the login page
     } catch (error) {
-      console.error("Error during logout", error);
+      // console.error("Error during logout", error);
     }
   };
 

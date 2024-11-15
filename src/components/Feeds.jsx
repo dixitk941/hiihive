@@ -91,7 +91,7 @@ const Feeds = () => {
 
   const closeStory = () => {
     setActiveStoryIndex(null);
-    console.log("Close button clicked");
+    // console.log("Close button clicked");
   };
 
   return (

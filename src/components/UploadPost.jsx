@@ -71,7 +71,7 @@ const UploadPost = () => {
       setPreviewUrl(null);
       alert('Post uploaded successfully!');
     } catch (error) {
-      console.error('Error uploading post:', error);
+      // console.error('Error uploading post:', error);
       alert('Failed to upload post.');
     } finally {
       setIsUploading(false);

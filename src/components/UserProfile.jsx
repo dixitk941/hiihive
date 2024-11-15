@@ -69,7 +69,7 @@ const UserProfile = () => {
             setIsFollowing(userData.followers?.includes(currentUserId) || false);
           }
         } catch (error) {
-          console.error('Error fetching user data:', error);
+          // console.error('Error fetching user data:', error);
         } finally {
           setLoading(false);
         }
@@ -87,7 +87,7 @@ const UserProfile = () => {
           const posts = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
           setUserPosts(posts);
         } catch (error) {
-          console.error('Error fetching user posts:', error);
+          // console.error('Error fetching user posts:', error);
         }
       }
     };
@@ -116,7 +116,7 @@ const UserProfile = () => {
       }
       setIsFollowing(!isFollowing);
     } catch (error) {
-      console.error("Error toggling follow status: ", error);
+      // console.error("Error toggling follow status: ", error);
     }
   };
 

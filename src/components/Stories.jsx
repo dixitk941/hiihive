@@ -19,7 +19,7 @@ import { ref as dbRef, set, remove, onValue } from "firebase/database";
 const Stories = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [userStories, setUserStories] = useState([]);
-  const [activeStoryIndex, setActiveStoryIndex] = useState(0);
+  const [activeStoryIndex, setActiveStoryIndex] = useState(null);
   const [progress, setProgress] = useState(0);
   const [showAddStory, setShowAddStory] = useState(false);
   const videoRef = useRef(null);
@@ -31,10 +31,6 @@ const Stories = () => {
 
   const toggleMute = () => {
     setIsMuted(!isMuted);
-  };
-
-  const handleVideoEnd = () => {
-    setActiveStoryIndex((prevIndex) => (prevIndex + 1) % userStories.length);
   };
 
   useEffect(() => {
@@ -93,7 +89,7 @@ const Stories = () => {
         setProgress(progress);
       },
       (error) => {
-        console.error("Upload failed:", error);
+        // console.error("Upload failed:", error);
       },
       async () => {
         const downloadURL = await getDownloadURL(storageRef);
@@ -143,7 +139,7 @@ const Stories = () => {
   };
 
   const closeStory = () => {
-    console.log("Close button clicked");
+    // console.log("Close button clicked");
     setActiveStoryIndex(null);
   };
 
@@ -298,7 +294,6 @@ const Stories = () => {
                 autoPlay
                 muted={isMuted}
                 ref={(video) => (videoRef.current = video)}
-                onEnded={handleVideoEnd}
               />
             ) : (
               <img
