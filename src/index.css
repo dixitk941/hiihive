@@ -28,4 +28,15 @@ code {
 
 .search-bar:focus {
   width: 100%;
+}button {
+  min-width: 40px;
+  min-height: 40px;
+}
+
+button:hover {
+  scale: 1.1; /* Slightly enlarge on hover for better interaction */
+}
+
+.absolute {
+  pointer-events: auto; /* Ensure buttons respond to clicks */
 }

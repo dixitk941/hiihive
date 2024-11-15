@@ -2,11 +2,15 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiHome, FiMessageSquare, FiUpload, FiSettings, FiCompass } from 'react-icons/fi';
 
-const BottomBar = ({ toggleSidebarRight }) => {
+const BottomBar = ({ toggleSidebarRight, isStoryActive }) => {
   const navigate = useNavigate();
 
   return (
-    <aside className="sm:hidden fixed bottom-0 left-0 right-0 bg-white text-gray-800 flex justify-between items-center p-2 shadow-lg border-t border-gray-200 z-50 opacity-90">
+    <aside
+      className={`sm:hidden fixed bottom-0 left-0 right-0 bg-white text-gray-800 flex justify-between items-center p-2 shadow-lg border-t border-gray-200 z-50 opacity-90 ${
+        isStoryActive ? 'hidden' : ''
+      }`}
+    >
       <button
         onClick={() => navigate('/')}
         className="flex flex-col items-center p-2 rounded-lg hover:bg-gray-100 hover:text-blue-600 transition-all duration-300"
