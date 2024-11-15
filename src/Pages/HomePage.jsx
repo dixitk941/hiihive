@@ -13,10 +13,9 @@ import loaderGif from '../assets/normload.gif'; // Adjust the path according to 
 const HomePage = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [selectedChat, setSelectedChat] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [isSidebarRightVisible, setIsSidebarRightVisible] = useState(false);
+  const [loading, setLoading] = useState(true); // Manage loading state
+  const [isSidebarRightVisible, setIsSidebarRightVisible] = useState(false); // Manage SidebarRight visibility
   const sidebarRightRef = useRef(null);
-  const [activeStoryIndex, setActiveStoryIndex] = useState(null); // Manage active story index
 
   useEffect(() => {
     const auth = getAuth();
@@ -74,42 +73,36 @@ const HomePage = () => {
     setIsSidebarRightVisible(!isSidebarRightVisible);
   };
 
-  const closeStory = () => {
-    setActiveStoryIndex(null); // Close the story by setting the index to null
-  };
-
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <img src={loaderGif} alt="Loading" className="w-32 h-32" />
-      </div>
+          <img src={loaderGif} alt="Loading" className="w-32 h-32" /> {/* Increased size */}
+          </div>
     );
   }
 
   return (
     <div className="flex flex-col h-screen">
-      <div className="flex flex-1 pt-24">
+      <div className="flex flex-1 pt-24"> {/* Add padding-top to avoid being hidden by the header */}
         {/* SidebarLeft for main navigation */}
         <div className="hidden lg:block w-[250px]">
-          <SidebarLeft currentUser={currentUser} />
+          <SidebarLeft currentUser={currentUser} /> {/* Pass currentUser to SidebarLeft */}
         </div>
-
+        
         {/* Main content section with Feeds */}
         {!selectedChat && (
           <main className="flex-1 p-4 overflow-auto">
-            <Feeds 
-              currentUser={currentUser} 
-              setActiveStoryIndex={setActiveStoryIndex} // Pass setActiveStoryIndex to Feeds component
-            />
+            <Feeds currentUser={currentUser} /> {/* Pass currentUser to Feeds */}
           </main>
         )}
 
         {/* Conditionally render SidebarRight or ChatInterface */}
         <div className="hidden lg:flex flex-col w-96">
+          {/* If no chat is selected, show SidebarRight */}
           {!selectedChat ? (
-            <SidebarRight currentUser={currentUser} setSelectedChat={setSelectedChat} />
+            <SidebarRight currentUser={currentUser} setSelectedChat={setSelectedChat} /> 
           ) : (
-            <ChatInterface currentUser={currentUser} chatRoomId={selectedChat} onBack={handleBackToSidebar} />
+            <ChatInterface currentUser={currentUser} chatRoomId={selectedChat} onBack={handleBackToSidebar} /> 
           )}
         </div>
 
@@ -121,9 +114,12 @@ const HomePage = () => {
         )}
       </div>
 
-      {/* Bottom Bar for mobile, only show if no chat is selected and no story is active */}
-      {!selectedChat && activeStoryIndex === null && (
-        <BottomBar toggleSidebarRight={toggleSidebarRight} isStoryActive={activeStoryIndex !== null} />
+      {/* Floating menu for additional options */}
+
+
+      {/* Bottom Bar for mobile, visible only if no chat is selected */}
+      {!selectedChat && (
+        <BottomBar toggleSidebarRight={toggleSidebarRight} /> 
       )}
     </div>
   );
