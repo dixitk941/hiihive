@@ -13,6 +13,7 @@ const UploadPost = React.lazy(() => import('./Pages/UploadPost'));
 const UserProfile = React.lazy(() => import('./Pages/UserProfile'));
 const Settings = React.lazy(() => import('./Pages/SettingPage'));
 const Notification = React.lazy(() => import('./components/Notifications'));
+const Stories = React.lazy(() => import('./components/Stories'));
 
 function App() {
   const [user, setUser] = useState(null);
@@ -38,6 +39,17 @@ function App() {
       return () => clearTimeout(loadingDelay); // Cleanup timeout on unmount
     }
   }, [authLoading]);
+
+  // Prevent right-click globally
+  useEffect(() => {
+    const preventRightClick = (e) => e.preventDefault();
+    document.addEventListener("contextmenu", preventRightClick);
+
+    // Cleanup the event listener on component unmount
+    return () => {
+      document.removeEventListener("contextmenu", preventRightClick);
+    };
+  }, []);
 
   // Show loading screen if authentication or app loading is still in progress
   if (authLoading || appLoading) {
@@ -84,9 +96,12 @@ function App() {
           <Route
             path="/notifications"
             element={user ? <Notification currentUser={user} /> : <Navigate to="/login" />}
-       />
-       
-            </Routes>
+          />
+          <Route
+            path="/stories"
+            element={user ? <Stories currentUser={user} /> : <Navigate to="/login" />}
+            />
+        </Routes>
       </Router>
     </Suspense>
   );

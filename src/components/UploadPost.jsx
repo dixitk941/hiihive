@@ -1,28 +1,30 @@
 import React, { useState } from 'react';
-import { FaCamera } from 'react-icons/fa';
+import { FaCamera, FaFileVideo, FaFileAudio, FaPen } from 'react-icons/fa';
 import { getFirestore, collection, addDoc } from 'firebase/firestore';
-import { getDatabase, ref, set } from 'firebase/database';  // Use `set()` instead of `push()`
+import { getDatabase, ref, set } from 'firebase/database';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getAuth } from 'firebase/auth';
 
 const UploadPost = () => {
-  const [image, setImage] = useState(null);
+  const [file, setFile] = useState(null);
   const [caption, setCaption] = useState('');
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [fileType, setFileType] = useState('');
   const [isUploading, setIsUploading] = useState(false);
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImage(file);
-      setPreviewUrl(URL.createObjectURL(file));
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+      setFileType(selectedFile.type.split('/')[0]); // Detect file type (e.g., image, video, audio)
+      setPreviewUrl(URL.createObjectURL(selectedFile));
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!image || !caption) {
-      alert('Please select an image and enter a caption.');
+    if (!file || !caption) {
+      alert('Please select a file and enter a caption.');
       return;
     }
 
@@ -40,37 +42,31 @@ const UploadPost = () => {
     }
 
     try {
-      // Upload image to Firebase Storage
-      const imageRef = storageRef(storage, `posts/${user.uid}/${image.name}`);
-      await uploadBytes(imageRef, image);
-      const imageUrl = await getDownloadURL(imageRef);
+      const fileRef = storageRef(storage, `posts/${user.uid}/${file.name}`);
+      await uploadBytes(fileRef, file);
+      const fileUrl = await getDownloadURL(fileRef);
 
-      // Create post object with extra fields like likes, comments, and shareCount
       const newPost = {
         userId: user.uid,
         caption,
-        imageUrl,
+        fileUrl,
+        fileType,
         timestamp: new Date().toISOString(),
-        likes: 0,           // Likes count
-        comments: [],       // Comments array
-        shareCount: 0,      // Share count
-        likesList: [],      // List of userIds who liked the post
-        commentsList: [],   // List of comments (could be objects with userId and text)
+        likes: 0,
+        comments: [],
+        shareCount: 0,
       };
 
-      // Save to Firestore under the current user's profile
       const docRef = await addDoc(collection(firestore, `users/${user.uid}/posts`), newPost);
-      const postId = docRef.id;  // Get the unique Firestore document ID
+      const postId = docRef.id;
 
-      // Save to Realtime Database using `set()` with the Firestore-generated ID
       await set(ref(realtimeDb, 'feeds/' + postId), {
         ...newPost,
         username: user.displayName || user.email,
-        id: postId,  // Store the post's Firestore document ID for reference
+        id: postId,
       });
 
-      // Clear the form and preview
-      setImage(null);
+      setFile(null);
       setCaption('');
       setPreviewUrl(null);
       alert('Post uploaded successfully!');
@@ -84,46 +80,41 @@ const UploadPost = () => {
 
   return (
     <div className="max-w-lg mx-auto mt-6 p-4 bg-white shadow-lg rounded-lg">
-      {/* Header */}
       <h2 className="text-lg font-semibold text-gray-800 mb-4">New Post</h2>
-      
-      {/* Image Upload Section */}
       <div className="mb-4">
         {previewUrl ? (
-          <img
-            src={previewUrl}
-            alt="Preview"
-            className="w-full h-64 object-cover rounded-lg"
-          />
+          fileType === 'image' ? (
+            <img src={previewUrl} alt="Preview" className="w-full h-64 object-cover rounded-lg" />
+          ) : fileType === 'video' ? (
+            <video src={previewUrl} controls className="w-full h-64 rounded-lg" />
+          ) : fileType === 'audio' ? (
+            <audio src={previewUrl} controls className="w-full rounded-lg" />
+          ) : (
+            <p className="text-gray-600">{caption}</p>
+          )
         ) : (
-          <div className="flex justify-center items-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer hover:border-gray-400">
-            <label className="cursor-pointer text-gray-500 flex flex-col items-center">
-              <FaCamera size={48} />
-              <span>Select Image</span>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="hidden"
-              />
-            </label>
-          </div>
+          <label className="cursor-pointer flex flex-col items-center text-gray-500">
+            <FaCamera size={48} />
+            <span>Select File (Image, Video, Audio, or Text)</span>
+            <input
+              type="file"
+              accept="image/*,video/*,audio/*,.txt"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+          </label>
         )}
       </div>
-
-      {/* Caption Input */}
       <textarea
         value={caption}
         onChange={(e) => setCaption(e.target.value)}
         placeholder="Write a caption..."
-        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 mb-4"
+        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none mb-4"
         rows={3}
       />
-
-      {/* Submit Button */}
       <button
         onClick={handleSubmit}
-        className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg font-semibold transition duration-200"
+        className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg font-semibold"
         disabled={isUploading}
       >
         {isUploading ? 'Uploading...' : 'Post'}
