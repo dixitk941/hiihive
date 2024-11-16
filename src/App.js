@@ -2,6 +2,7 @@ import React, { useState, useEffect, Suspense } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { auth } from './Pages/firebaseConfig';
 import Loading from './components/Loading';
+import KnowledgeHub from "./components/KnowledgeHub/KnowledgeHub";
 
 const HomePage = React.lazy(() => import('./Pages/HomePage'));
 const LoginPage = React.lazy(() => import('./Pages/Login'));
@@ -143,6 +144,11 @@ function App() {
             path="/stories"
             element={user ? <Stories currentUser={user} /> : <Navigate to="/login" />}
             />
+
+          <Route
+          path="/knowledgehub"
+          element={user ? <KnowledgeHub /> : <Navigate to="/login" />}
+          />
         </Routes>
       </Router>
     </Suspense>

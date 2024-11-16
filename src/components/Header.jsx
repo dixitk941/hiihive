@@ -3,7 +3,9 @@ import { db, auth, storage } from './firebaseConfig';
 import { doc, getDoc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { getDownloadURL, ref } from 'firebase/storage';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faHome, faBook } from '@fortawesome/free-solid-svg-icons';
 import logo from '../assets/logo.svg';
 
 const Header = () => {
@@ -15,6 +17,8 @@ const Header = () => {
     age: '',
   });
   const [currentUserId, setCurrentUserId] = useState(null);
+
+  const location = useLocation();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -49,7 +53,7 @@ const Header = () => {
             });
           }
         } catch (error) {
-          // console.error('Error fetching user data:', error);
+          console.error('Error fetching user data:', error);
         }
       }
     };
@@ -69,8 +73,10 @@ const Header = () => {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 flex items-center justify-between px-3 sm:px-6 py-2 sm:py-3 bg-white shadow-md border-b border-gray-200 z-50 transition-all duration-300 ${
-        isScrolled ? 'bg-opacity-90 backdrop-blur-md' : ''
+      className={`fixed top-0 left-0 right-0 flex items-center justify-between px-3 sm:px-6 py-2 sm:py-3 z-50 transition-all duration-300 ${
+        isScrolled
+          ? 'bg-white bg-opacity-80 backdrop-blur-md shadow-md border-b border-gray-200'
+          : 'bg-transparent'
       }`}
     >
       <div className="flex items-center space-x-3">
@@ -81,6 +87,52 @@ const Header = () => {
           Hii<span className="text-blue-500">Hive</span>
         </h1>
       </div>
+
+      {/* Navigation Links */}
+      <nav className="flex space-x-6">
+        <Link
+          to="/"
+          className={`text-base sm:text-lg font-medium hidden sm:inline ${
+            location.pathname === '/'
+              ? 'text-blue-500 underline'
+              : 'text-gray-600 hover:text-gray-800'
+          }`}
+        >
+          Home
+        </Link>
+        <Link
+          to="/knowledgehub"
+          className={`text-base sm:text-lg font-medium hidden sm:inline ${
+            location.pathname === '/knowledgehub'
+              ? 'text-blue-500 underline'
+              : 'text-gray-600 hover:text-gray-800'
+          }`}
+        >
+          Knowledge Hub
+        </Link>
+        <Link
+          to="/"
+          className={`text-base sm:text-lg font-medium sm:hidden ${
+            location.pathname === '/'
+              ? 'text-blue-500 underline'
+              : 'text-gray-600 hover:text-gray-800'
+          }`}
+        >
+          <FontAwesomeIcon icon={faHome} className="text-xl" />
+        </Link>
+        <Link
+          to="/knowledgehub"
+          className={`text-base sm:text-lg font-medium sm:hidden ${
+            location.pathname === '/knowledgehub'
+              ? 'text-blue-500 underline'
+              : 'text-gray-600 hover:text-gray-800'
+          }`}
+        >
+          <FontAwesomeIcon icon={faBook} className="text-xl" />
+        </Link>
+      </nav>
+
+      {/* User Info */}
       <div className="flex items-center space-x-3">
         {user.avatar && (
           <Link to={`/user/${currentUserId}`}>

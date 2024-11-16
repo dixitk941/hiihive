@@ -1,165 +1,216 @@
 import React, { useEffect, useState } from 'react';
-import { getDatabase, ref, onValue, update, get } from 'firebase/database';
-import { getFirestore, doc, getDoc } from 'firebase/firestore';
-import { FiThumbsUp, FiMessageSquare, FiShare2, FiUserPlus } from 'react-icons/fi';
+import {
+  getDatabase,
+  ref,
+  onValue,
+  update,
+  push,
+  serverTimestamp,
+} from 'firebase/database';
+import { FiThumbsUp, FiMessageSquare, FiShare2 } from 'react-icons/fi';
 import { auth } from './firebaseConfig';
 import { onAuthStateChanged } from 'firebase/auth';
 import Stories from './Stories';
 
-
 const Feeds = () => {
   const [posts, setPosts] = useState([]);
-  const [likedPosts, setLikedPosts] = useState({});
-  const [avatars, setAvatars] = useState({});
-  const [shareMessage, setShareMessage] = useState("");
   const [user, setUser] = useState(null);
   const [activeStoryIndex, setActiveStoryIndex] = useState(null);
+  const [commentText, setCommentText] = useState("");
+  const [comments, setComments] = useState({});
   const db = getDatabase();
-  const firestore = getFirestore();
 
+  // Listen for authentication state changes
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) setUser(user);
-      else setUser(null);
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser || null);
     });
     return () => unsubscribe();
   }, []);
 
+  // Fetch posts from Realtime Database
   useEffect(() => {
-    if (!user) return;
+    if (!user) return; // Prevent unauthorized reads
     const feedsRef = ref(db, 'feeds');
-    const unsubscribe = onValue(feedsRef, async (snapshot) => {
+    const unsubscribe = onValue(feedsRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
-        const postsArray = Object.values(data);
+        const postsArray = Object.entries(data).map(([id, post]) => ({
+          id,
+          ...post,
+        }));
         setPosts(postsArray);
-
-        const avatarPromises = postsArray.map(async (post) => {
-          const avatar = await getUserAvatar(post.userId);
-          setAvatars((prevAvatars) => ({
-            ...prevAvatars,
-            [post.userId]: avatar,
-          }));
-        });
-        await Promise.all(avatarPromises);
       }
     });
     return () => unsubscribe();
   }, [user]);
 
-  const getUserAvatar = async (userId) => {
+  // Handle like functionality
+  const handleLike = async (post) => {
+    if (!user) return alert("You must be logged in to like posts.");
+    const postRef = ref(db, `feeds/${post.id}/likes`);
+    const isLiked = post.likes?.[user.uid];
+
     try {
-      const userRef = doc(firestore, 'users', userId);
-      const docSnap = await getDoc(userRef);
-      return docSnap.exists() ? docSnap.data().avatar || 'https://via.placeholder.com/40' : 'https://via.placeholder.com/40';
-    } catch {
-      return 'https://via.placeholder.com/40';
+      if (!isLiked) {
+        await update(postRef, { [user.uid]: true });
+      } else {
+        await update(postRef, { [user.uid]: null }); // Remove the like
+      }
+    } catch (error) {
+      console.error("Failed to update likes:", error);
     }
   };
 
-  const handleLike = async (post, userId) => {
-    const postRef = ref(db, `feeds/${post.id}`);
-    const currentLikes = likedPosts[post.id] || {};
-    const isLikedByUser = currentLikes[userId];
-    const updatedLikes = { ...currentLikes, [userId]: !isLikedByUser };
+  // Handle adding a comment
+  const handleAddComment = async (postId) => {
+    if (!commentText.trim()) return;
+    if (!user) return alert("You must be logged in to comment.");
 
-    setLikedPosts((prevState) => ({
-      ...prevState,
-      [post.id]: updatedLikes,
-    }));
-    await update(postRef, { likes: Object.keys(updatedLikes).length });
+    const commentsRef = ref(db, `feeds/${postId}/comments`);
+    const newComment = {
+      userId: user.uid,
+      username: user.displayName || "Anonymous",
+      fullName: user.email || "Unknown User",
+      text: commentText,
+      timestamp: serverTimestamp(),
+    };
+
+    try {
+      await push(commentsRef, newComment);
+      setCommentText(""); // Reset comment input
+    } catch (error) {
+      console.error("Failed to add comment:", error);
+    }
   };
 
-  const handleShare = (post) => {
-    const shareableLink = `https://hiihive.vercel.app/${post.id}`;
+  // Fetch comments in real-time
+  useEffect(() => {
+    if (!user) return; // Prevent unauthorized reads
+    const feedsRef = ref(db, 'feeds');
+    const unsubscribe = onValue(feedsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const allComments = Object.keys(data).reduce((acc, postId) => {
+          acc[postId] = data[postId]?.comments || {};
+          return acc;
+        }, {});
+        setComments(allComments);
+      }
+    });
+    return () => unsubscribe();
+  }, [user]);
+
+  // Handle sharing posts
+  const handleShare = (postId) => {
+    const shareableLink = `https://hiihive.vercel.app/post/${postId}`;
     navigator.clipboard.writeText(shareableLink).then(() => {
-      setShareMessage("Link copied to clipboard!");
-      setTimeout(() => setShareMessage(""), 3000);
+      alert("Post link copied to clipboard!");
     });
   };
 
-  const preventRightClick = (e) => {
-    e.preventDefault();
-  };
-
-  useEffect(() => {
-    document.addEventListener("contextmenu", preventRightClick);
-    return () => {
-      document.removeEventListener("contextmenu", preventRightClick);
-    };
-  }, []);
-
   const closeStory = () => {
     setActiveStoryIndex(null);
-    // console.log("Close button clicked");
   };
 
   return (
     <div className="max-h-[80vh] overflow-y-auto space-y-4 px-4 sm:px-6 lg:px-8">
+      {/* Posts Section */}
       <Stories activeStoryIndex={activeStoryIndex} closeStory={closeStory} />
       {posts.length > 0 ? (
         posts.map((post) => (
-          <div key={post.id} className="bg-white rounded-lg shadow-lg mb-4 w-full sm:max-w-[500px] mx-auto">
-            <div className="flex items-center p-4">
-              <img src={avatars[post.userId] || 'https://via.placeholder.com/40'} alt="User" className="w-10 h-10 rounded-full border-2 border-gray-300" />
-              <div className="ml-3">
-                <p className="font-semibold text-gray-800">{post.username}</p>
-                <p className="text-sm text-gray-500">{new Date(post.timestamp).toLocaleTimeString()}</p>
-              </div>
+          <div
+            key={post.id}
+            className="bg-white rounded-lg shadow-lg mb-4 w-full sm:max-w-[500px] mx-auto"
+          >
+            {/* User Info */}
+            <div className="p-4">
+              <p className="font-semibold text-gray-800">
+                {post.username || "Unknown User"}
+              </p>
+              <p className="text-sm text-gray-500">
+                {new Date(post.timestamp).toLocaleString()}
+              </p>
             </div>
-            {post.fileType === 'image' && post.fileUrl && (
-              <div
-                className="relative w-full h-[300px] bg-cover bg-center"
-                style={{ backgroundImage: `url(${post.fileUrl})` }}
+
+            {/* Post Media */}
+            {post.fileType === "image" && post.fileUrl && (
+              <img
+                src={post.fileUrl}
+                alt="Post"
+                className="w-full h-auto rounded-lg"
               />
             )}
-            {post.fileType === 'video' && post.fileUrl && (
-              <div className="relative w-full h-[300px] bg-black">
-                <video className="object-cover w-full h-full" onClick={(e) => e.preventDefault()}>
-                  <source src={post.fileUrl} type="video/mp4" />
-                </video>
-              </div>
+            {post.fileType === "video" && post.fileUrl && (
+              <video
+                className="w-full h-auto rounded-lg"
+                controls
+                src={post.fileUrl}
+              />
             )}
-            {post.fileType === 'audio' && post.fileUrl && (
-              <div className="p-4">
-                <audio className="w-full" controls={false} onClick={(e) => e.preventDefault()}>
-                  <source src={post.fileUrl} type="audio/mp3" />
-                </audio>
-              </div>
+            {post.fileType === "audio" && post.fileUrl && (
+              <audio className="w-full mt-4" controls src={post.fileUrl} />
             )}
-            {post.fileType === 'text' && post.caption && (
+            {post.fileType === "text" && post.caption && (
               <p className="p-4 text-gray-700">{post.caption}</p>
             )}
+
+            {/* Post Actions */}
             <div className="flex justify-between items-center p-4 border-t border-gray-200">
-              <div className="flex space-x-4">
-                <button
-                  className={`flex items-center transition-all duration-300 ${
-                    likedPosts[post.id] && likedPosts[post.id][user.uid] ? 'text-blue-600' : 'text-gray-600'
-                  }`}
-                  onClick={() => handleLike(post, user.uid)}
-                >
-                  <FiThumbsUp size={20} />
-                  <span className="ml-2 hidden sm:inline">Like</span>
-                </button>
-                <p className="text-sm text-gray-600">{Object.keys(likedPosts[post.id] || {}).length} Likes</p>
-                <button className="flex items-center text-gray-600 hover:text-blue-600">
-                  <FiMessageSquare size={20} />
-                  <span className="ml-2 hidden sm:inline">Comment</span>
-                </button>
-                <button
-                  className="flex items-center text-gray-600 hover:text-blue-600"
-                  onClick={() => handleShare(post)}
-                >
-                  <FiShare2 size={20} />
-                  <span className="ml-2 hidden sm:inline">Share</span>
-                </button>
-              </div>
-              <button className="flex items-center text-gray-600 hover:text-blue-600">
-                <FiUserPlus size={20} />
-                <span className="ml-2 hidden sm:inline">Follow</span>
+              <button
+                className={`flex items-center ${
+                  post.likes?.[user?.uid] ? "text-blue-600" : "text-gray-600"
+                }`}
+                onClick={() => handleLike(post)}
+              >
+                <FiThumbsUp size={20} />
+                <span className="ml-2">
+                  {Object.keys(post.likes || {}).length} Likes
+                </span>
+              </button>
+              <button className="flex items-center text-gray-600">
+                <FiMessageSquare size={20} />
+                <span className="ml-2">
+                  {Object.keys(comments[post.id] || {}).length} Comments
+                </span>
+              </button>
+              <button
+                className="flex items-center text-gray-600"
+                onClick={() => handleShare(post.id)}
+              >
+                <FiShare2 size={20} />
+                <span className="ml-2">Share</span>
               </button>
             </div>
-            {shareMessage && <div className="text-green-600 text-sm p-2">{shareMessage}</div>}
+
+            {/* Comments Section */}
+            <div className="p-4">
+              <input
+                type="text"
+                className="w-full border rounded-lg p-2 mb-2"
+                placeholder="Add a comment..."
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+              />
+              <button
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg"
+                onClick={() => handleAddComment(post.id)}
+              >
+                Post
+              </button>
+
+              {/* Display Comments */}
+              <div className="mt-4 space-y-2">
+                {Object.values(comments[post.id] || {}).map((comment, index) => (
+                  <div key={index} className="bg-gray-100 p-2 rounded-lg">
+                    <p className="text-sm font-semibold">
+                      {comment.fullName || "Unknown"}
+                    </p>
+                    <p className="text-sm text-gray-600">{comment.text}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         ))
       ) : (
