@@ -5,6 +5,27 @@ import { getFirestore, collection, addDoc } from 'firebase/firestore';
 import { getDatabase, ref, set } from 'firebase/database';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getAuth } from 'firebase/auth';
+import styled from 'styled-components';
+
+const Button = styled.button`
+  background-color: #6200ea;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #3700b3;
+  }
+
+  &:disabled {
+    background-color: #9e9e9e;
+    cursor: not-allowed;
+  }
+`;
 
 const UploadPost = () => {
   const [file, setFile] = useState(null);
@@ -165,13 +186,12 @@ const UploadPost = () => {
                 />
               </label>
             </div>
-            <button
+            <Button
               onClick={handleSubmit}
-              className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold text-sm transition duration-300 ease-in-out"
               disabled={isUploading}
             >
               {isUploading ? 'Posting...' : 'Post'}
-            </button>
+            </Button>
           </div>
         </div>
       </div>

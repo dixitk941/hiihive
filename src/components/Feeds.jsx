@@ -118,96 +118,98 @@ const Feeds = () => {
       {/* Posts Section */}
       <Stories activeStoryIndex={activeStoryIndex} closeStory={closeStory} />
       {posts.length > 0 ? (
-        posts.map((post) => (
-          <div
-            key={post.id}
-            className="bg-white rounded-lg shadow-lg mb-4 w-full sm:max-w-[500px] mx-auto"
-          >
-            {/* User Info */}
-            <div className="p-4">
-              <p className="font-semibold text-gray-800">
-                {post.username || "Unknown User"}
-              </p>
-              <p className="text-sm text-gray-500">
-                {new Date(post.timestamp).toLocaleString()}
-              </p>
-            </div>
+        posts
+          .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+          .map((post) => (
+            <div
+              key={post.id}
+              className="bg-white rounded-lg shadow-lg mb-4 w-full sm:max-w-[500px] mx-auto"
+            >
+              {/* User Info */}
+              <div className="p-4">
+                <p className="font-semibold text-gray-800">
+                  {post.username || "Unknown User"}
+                </p>
+                <p className="text-sm text-gray-500">
+                  {new Date(post.timestamp).toLocaleString()}
+                </p>
+              </div>
 
-            {/* Post Media */}
-            {post.fileType === "image" && post.fileUrl && (
-              <img
-                src={post.fileUrl}
-                alt="Post"
-                className="w-full h-auto rounded-lg"
-              />
-            )}
-            {post.fileType === "video" && post.fileUrl && (
-              <video
-                className="w-full h-auto rounded-lg shadow-lg"
-                controls
-                src={post.fileUrl}
-              />
-            )}
-            {post.fileType === "audio" && post.fileUrl && (
-              <audio className="w-full mt-4 rounded-lg shadow-lg" controls src={post.fileUrl} />
-            )}
-            {post.fileType === "text" && post.caption && (
-              <p className="p-4 text-gray-700 bg-gray-100 rounded-lg shadow-lg">{post.caption}</p>
-            )}
+              {/* Post Media */}
+              {post.fileType === "image" && post.fileUrl && (
+                <img
+                  src={post.fileUrl}
+                  alt="Post"
+                  className="w-full h-auto rounded-lg"
+                />
+              )}
+              {post.fileType === "video" && post.fileUrl && (
+                <video
+                  className="w-full h-auto rounded-lg shadow-lg"
+                  controls
+                  src={post.fileUrl}
+                />
+              )}
+              {post.fileType === "audio" && post.fileUrl && (
+                <audio className="w-full mt-4 rounded-lg shadow-lg" controls src={post.fileUrl} />
+              )}
+              {post.fileType === "text" && post.caption && (
+                <p className="p-4 text-gray-700 bg-gray-100 rounded-lg shadow-lg">{post.caption}</p>
+              )}
 
-            {/* Post Actions */}
-            <div className="flex justify-between items-center p-4 border-t border-gray-200 bg-gray-50 rounded-b-lg shadow-lg">
-              <button
-                className={`flex items-center ${
-                  post.likes?.[user?.uid] ? "text-blue-600" : "text-gray-600"
-                } hover:text-blue-500 transition duration-300 ease-in-out`}
-                onClick={() => handleLike(post)}
-              >
-                <FiThumbsUp size={20} />
-                <span className="ml-2">
-                  {Object.keys(post.likes || {}).length} Likes
-                </span>
-              </button>
-              <button className="flex items-center text-gray-600 hover:text-blue-500 transition duration-300 ease-in-out">
-                <FiMessageCircle size={20} />
-                <span className="ml-2">Comment</span>
-              </button>
-              <button className="flex items-center text-gray-600 hover:text-blue-500 transition duration-300 ease-in-out">
-                <FiShare size={20} />
-                <span className="ml-2">Share</span>
-              </button>
-            </div>
+              {/* Post Actions */}
+              <div className="flex justify-between items-center p-4 border-t border-gray-200 bg-gray-50 rounded-b-lg shadow-lg">
+                <button
+                  className={`flex items-center ${
+                    post.likes?.[user?.uid] ? "text-blue-600" : "text-gray-600"
+                  } hover:text-blue-500 transition duration-300 ease-in-out`}
+                  onClick={() => handleLike(post)}
+                >
+                  <FiThumbsUp size={20} />
+                  <span className="ml-2">
+                    {Object.keys(post.likes || {}).length} Likes
+                  </span>
+                </button>
+                <button className="flex items-center text-gray-600 hover:text-blue-500 transition duration-300 ease-in-out">
+                  <FiMessageCircle size={20} />
+                  <span className="ml-2">Comment</span>
+                </button>
+                <button className="flex items-center text-gray-600 hover:text-blue-500 transition duration-300 ease-in-out">
+                  <FiShare size={20} />
+                  <span className="ml-2">Share</span>
+                </button>
+              </div>
 
-            {/* Comments Section */}
-            <div className="p-4">
-              <input
-                type="text"
-                className="w-full border rounded-lg p-2 mb-2"
-                placeholder="Add a comment..."
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-              />
-              <button
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg"
-                onClick={() => handleAddComment(post.id)}
-              >
-                Post
-              </button>
+              {/* Comments Section */}
+              <div className="p-4">
+                <input
+                  type="text"
+                  className="w-full border rounded-lg p-2 mb-2"
+                  placeholder="Add a comment..."
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                />
+                <button
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg"
+                  onClick={() => handleAddComment(post.id)}
+                >
+                  Post
+                </button>
 
-              {/* Display Comments */}
-              <div className="mt-4 space-y-2">
-                {Object.values(comments[post.id] || {}).map((comment, index) => (
-                  <div key={index} className="bg-gray-100 p-2 rounded-lg">
-                    <p className="text-sm font-semibold">
-                      {comment.fullName || "Unknown"}
-                    </p>
-                    <p className="text-sm text-gray-600">{comment.text}</p>
-                  </div>
-                ))}
+                {/* Display Comments */}
+                <div className="mt-4 space-y-2">
+                  {Object.values(comments[post.id] || {}).map((comment, index) => (
+                    <div key={index} className="bg-gray-100 p-2 rounded-lg">
+                      <p className="text-sm font-semibold">
+                        {comment.fullName || "Unknown"}
+                      </p>
+                      <p className="text-sm text-gray-600">{comment.text}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        ))
+          ))
       ) : (
         <div className="text-center">No posts available</div>
       )}
