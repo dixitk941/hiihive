@@ -8,7 +8,6 @@ import { arrayUnion, arrayRemove } from 'firebase/firestore';
 import Avatar from '@mui/material/Avatar';
 import loaderGif from '../assets/normload.gif'; // Adjust the path according to your project structure
 
-
 const UserProfile = () => {
   const { userId } = useParams();
   const [userDetails, setUserDetails] = useState({
@@ -21,14 +20,23 @@ const UserProfile = () => {
   const [currentUserId, setCurrentUserId] = useState(null);
   const [isFollowing, setIsFollowing] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isProfilePicModalOpen, setIsProfilePicModalOpen] = useState(false);
+  const [isPostVisible, setIsPostVisible] = useState(true);
+
+
+  const handleClosePost = () => {
+    setIsPostVisible(false);
+  };
 
   const openModal = (post) => {
     setSelectedPost(post);
+    setIsModalOpen(true);
   };
 
   const closeModal = () => {
+    setIsModalOpen(false);
     setSelectedPost(null);
   };
 
@@ -204,36 +212,91 @@ const UserProfile = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-3 gap-1 sm:gap-4 border-t border-gray-200 pt-4 sm:grid-cols-2 md:grid-cols-3">
-        {userPosts.map(post => (
-          <div key={post.id} className="relative group">
-            <img
-              src={post.imageUrl}
-              alt={post.caption}
-              className="w-full h-40 sm:h-64 object-cover transition-transform duration-300 ease-in-out transform group-hover:scale-105 cursor-pointer"
-              onClick={() => openModal(post)}
-            />
-          </div>
-        ))}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-4">
+  {userPosts.map(post => (
+    <div key={post.id} className="relative group overflow-hidden rounded-lg shadow-lg">
+      {post.fileType === 'image' && (
+        <img
+          src={post.fileUrl}
+          alt={post.caption}
+          className="w-full h-64 object-cover transition-transform duration-300 ease-in-out transform group-hover:scale-110 cursor-pointer"
+          onClick={() => openModal(post)}
+        />
+      )}
+      {post.fileType === 'video' && (
+        <video
+          src={post.fileUrl}
+          className="w-full h-64 object-cover transition-transform duration-300 ease-in-out transform group-hover:scale-110 cursor-pointer"
+          controls
+          onClick={() => openModal(post)}
+        />
+      )}
+      {post.fileType === 'audio' && (
+        <div className="w-full h-64 bg-gray-200 flex items-center justify-center transition-transform duration-300 ease-in-out transform group-hover:scale-110 cursor-pointer">
+          <audio
+            src={post.fileUrl}
+            className="w-full"
+            controls
+            onClick={() => openModal(post)}
+          />
+        </div>
+      )}
+      {post.fileType === 'text' && (
+        <div
+          className="w-full h-64 p-4 bg-gray-100 flex items-center justify-center transition-transform duration-300 ease-in-out transform group-hover:scale-110 cursor-pointer"
+          onClick={() => openModal(post)}
+        >
+          <p className="text-gray-800 text-center">{post.textContent}</p>
+        </div>
+      )}
+      <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <button
+          className="text-white font-semibold"
+          onClick={() => openModal(post)}
+        >
+          View Post
+        </button>
       </div>
+    </div>
+  ))}
+</div>
 
       {/* Modal for Post Details */}
-      {selectedPost && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg overflow-hidden shadow-lg w-full max-w-4xl flex flex-col md:flex-row">
-            <img
-              src={selectedPost.imageUrl}
-              alt={selectedPost.caption}
-              className="w-full md:w-1/2 h-64 md:h-auto object-cover"
-            />
-            <div className="p-4 w-full md:w-1/2">
-              <p className="text-gray-800 font-semibold">{selectedPost.caption}</p>
-              <div className="mt-4">
-                <button onClick={closeModal} className="text-blue-500">
-                  Close
-                </button>
+      {isModalOpen && selectedPost && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white p-4 rounded-lg shadow-lg max-w-lg w-full">
+            <button
+              className="absolute top-0 right-0 m-2 text-black font-semibold"
+              onClick={closeModal}
+            >
+              X
+            </button>
+            {selectedPost.fileType === 'image' && (
+              <img
+                src={selectedPost.fileUrl}
+                alt={selectedPost.caption}
+                className="w-full h-auto"
+              />
+            )}
+            {selectedPost.fileType === 'video' && (
+              <video
+                src={selectedPost.fileUrl}
+                className="w-full h-auto"
+                controls
+              />
+            )}
+            {selectedPost.fileType === 'audio' && (
+              <audio
+                src={selectedPost.fileUrl}
+                className="w-full"
+                controls
+              />
+            )}
+            {selectedPost.fileType === 'text' && (
+              <div className="p-4 bg-gray-100">
+                <p className="text-gray-800">{selectedPost.textContent}</p>
               </div>
-            </div>
+            )}
           </div>
         </div>
       )}
