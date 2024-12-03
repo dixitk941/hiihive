@@ -7,7 +7,7 @@ import {
   push,
   serverTimestamp,
 } from 'firebase/database';
-import { FiThumbsUp, FiMessageSquare, FiShare2 } from 'react-icons/fi';
+import { FiThumbsUp, FiMessageCircle, FiShare } from 'react-icons/fi';
 import { auth } from './firebaseConfig';
 import { onAuthStateChanged } from 'firebase/auth';
 import Stories from './Stories';
@@ -143,24 +143,24 @@ const Feeds = () => {
             )}
             {post.fileType === "video" && post.fileUrl && (
               <video
-                className="w-full h-auto rounded-lg"
+                className="w-full h-auto rounded-lg shadow-lg"
                 controls
                 src={post.fileUrl}
               />
             )}
             {post.fileType === "audio" && post.fileUrl && (
-              <audio className="w-full mt-4" controls src={post.fileUrl} />
+              <audio className="w-full mt-4 rounded-lg shadow-lg" controls src={post.fileUrl} />
             )}
             {post.fileType === "text" && post.caption && (
-              <p className="p-4 text-gray-700">{post.caption}</p>
+              <p className="p-4 text-gray-700 bg-gray-100 rounded-lg shadow-lg">{post.caption}</p>
             )}
 
             {/* Post Actions */}
-            <div className="flex justify-between items-center p-4 border-t border-gray-200">
+            <div className="flex justify-between items-center p-4 border-t border-gray-200 bg-gray-50 rounded-b-lg shadow-lg">
               <button
                 className={`flex items-center ${
                   post.likes?.[user?.uid] ? "text-blue-600" : "text-gray-600"
-                }`}
+                } hover:text-blue-500 transition duration-300 ease-in-out`}
                 onClick={() => handleLike(post)}
               >
                 <FiThumbsUp size={20} />
@@ -168,17 +168,12 @@ const Feeds = () => {
                   {Object.keys(post.likes || {}).length} Likes
                 </span>
               </button>
-              <button className="flex items-center text-gray-600">
-                <FiMessageSquare size={20} />
-                <span className="ml-2">
-                  {Object.keys(comments[post.id] || {}).length} Comments
-                </span>
+              <button className="flex items-center text-gray-600 hover:text-blue-500 transition duration-300 ease-in-out">
+                <FiMessageCircle size={20} />
+                <span className="ml-2">Comment</span>
               </button>
-              <button
-                className="flex items-center text-gray-600"
-                onClick={() => handleShare(post.id)}
-              >
-                <FiShare2 size={20} />
+              <button className="flex items-center text-gray-600 hover:text-blue-500 transition duration-300 ease-in-out">
+                <FiShare size={20} />
                 <span className="ml-2">Share</span>
               </button>
             </div>
