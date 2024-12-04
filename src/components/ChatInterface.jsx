@@ -1,43 +1,49 @@
 import React, { useState, useEffect } from 'react';
-import { getDatabase, ref, push, onValue } from 'firebase/database';
+import { getFirestore, collection, addDoc, query, onSnapshot, orderBy } from 'firebase/firestore';
 import { FaPaperPlane } from 'react-icons/fa';
 import { FiArrowLeft } from 'react-icons/fi';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
-const ChatInterface = ({ chatRoomId, currentUser }) => {
+const ChatInterface = ({ currentUser }) => {
   const [messages, setMessages] = useState([]);
   const [messageInput, setMessageInput] = useState('');
   const navigate = useNavigate();
+  const { chatRoomId } = useParams(); // Get chatRoomId from URL parameters
+  const db = getFirestore();
 
   useEffect(() => {
-    const db = getDatabase();
-    const messagesRef = ref(db, `chatRooms/${chatRoomId}/messages`);
+    if (!chatRoomId) {
+      console.error('Invalid chatRoomId:', chatRoomId);
+      return;
+    }
 
-    onValue(messagesRef, (snapshot) => {
-      const data = snapshot.val();
-      const messagesList = data ? Object.values(data) : [];
+    const messagesRef = collection(db, 'chatRooms', chatRoomId, 'messages');
+    const q = query(messagesRef, orderBy('createdAt'));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const messagesList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setMessages(messagesList);
     });
-  }, [chatRoomId]);
+
+    return () => unsubscribe();
+  }, [chatRoomId, db]);
 
   const handleSendMessage = async () => {
     if (messageInput.trim() === '') return;
 
-    const db = getDatabase();
-    const messagesRef = ref(db, `chatRooms/${chatRoomId}/messages`);
+    if (!chatRoomId || !currentUser) {
+      console.error('chatRoomId or currentUser is undefined');
+      return;
+    }
 
-    const newMessage = {
-      senderId: currentUser.uid,
+    const messagesRef = collection(db, 'chatRooms', chatRoomId, 'messages');
+    await addDoc(messagesRef, {
       text: messageInput,
-      timestamp: new Date().toISOString(),
-    };
+      senderId: currentUser.uid,
+      createdAt: new Date().toISOString(),
+    });
 
-    await push(messagesRef, newMessage);
     setMessageInput('');
-  };
-
-  const handleBack = () => {
-    navigate('/'); // Navigate to the home page
   };
 
   const handleKeyPress = (e) => {
@@ -47,41 +53,27 @@ const ChatInterface = ({ chatRoomId, currentUser }) => {
   };
 
   return (
-    <div className="flex flex-col h-full max-w-md mx-auto bg-white border rounded-lg shadow-xl">
-      {/* Header */}
-      <div className="flex items-center p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg sticky top-0 z-10 rounded-t-lg">
-        <button onClick={handleBack} className="mr-4 text-white hover:text-gray-300">
+    <div className="flex flex-col h-full">
+      <div className="flex items-center p-4 bg-gray-100 border-b">
+        <button onClick={() => navigate(-1)} className="text-gray-500 hover:text-blue-600 transition-colors duration-300">
           <FiArrowLeft size={24} />
         </button>
-        <h2 className="text-xl font-semibold">Chat Room</h2>
+        <h2 className="ml-4 text-xl font-bold">Chat</h2>
       </div>
-
-      {/* Messages Container */}
-      <div className="flex-1 flex flex-col p-4 space-y-4 overflow-y-auto mb-20">
-        {messages.map((message, index) => (
-          <div
-            key={index}
-            className={`flex ${message.senderId === currentUser.uid ? 'justify-end' : 'justify-start'}`}
-          >
-            <div
-              className={`p-4 rounded-lg max-w-xs md:max-w-md ${
-                message.senderId === currentUser.uid
-                  ? 'bg-blue-500 text-white rounded-bl-none'
-                  : 'bg-gray-200 text-gray-800 rounded-br-none'
-              } shadow-md`}
-            >
-              <p>{message.text}</p>
-              <span className="text-xs text-gray-400 mt-1 block">
-                {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </span>
-            </div>
+      <div className="flex-1 overflow-y-auto p-4">
+        {messages.map((message) => (
+          <div key={message.id} className={`mb-4 p-3 rounded-lg ${message.senderId === currentUser.uid ? 'bg-blue-100 self-end' : 'bg-gray-100 self-start'}`}>
+            <p className="text-sm">{message.text}</p>
+            <span className="text-xs text-gray-500">
+              {message.createdAt?.toDate
+                ? new Date(message.createdAt.toDate()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                : 'Invalid Time'}
+            </span>
           </div>
         ))}
       </div>
-
-      {/* Input Field */}
-      <div className="p-4 bg-gray-100 rounded-b-lg border-t border-gray-300">
-        <div className="flex items-center w-full space-x-3">
+      <div className="p-4 bg-gray-100 border-t">
+        <div className="flex items-center">
           <input
             type="text"
             value={messageInput}

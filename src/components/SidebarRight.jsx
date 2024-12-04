@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { FiMessageSquare, FiChevronLeft, FiChevronRight, FiChevronDown, FiChevronUp } from 'react-icons/fi';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, query, where, getDocs, addDoc } from 'firebase/firestore';
 import { db } from './firebaseConfig'; // Import your Firebase config
 import { getAuth, onAuthStateChanged } from 'firebase/auth'; // Firebase Auth for currentUser
-import { getDatabase, ref, set } from 'firebase/database'; // Import Firebase Realtime Database functions
+import { useNavigate } from 'react-router-dom';
 
 const SidebarRight = ({ setSelectedChat }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -15,6 +15,7 @@ const SidebarRight = ({ setSelectedChat }) => {
   const [userNames, setUserNames] = useState({}); // State to store user names
   const [showFollowers, setShowFollowers] = useState(true);
   const [showFollowing, setShowFollowing] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const auth = getAuth();
@@ -58,7 +59,7 @@ const SidebarRight = ({ setSelectedChat }) => {
           setUserNames(names);
         }
       } catch (error) {
-        // console.error('Error fetching user data:', error);
+        console.error('Error fetching user data:', error);
       } finally {
         setLoading(false);
       }
@@ -74,7 +75,7 @@ const SidebarRight = ({ setSelectedChat }) => {
 
     const userFetchPromises = userIds.map((userId) => {
       if (!userId) {
-        // console.error('Invalid user ID:', userId); // Log invalid user ID
+        console.error('Invalid user ID:', userId); // Log invalid user ID
         return Promise.resolve();
       }
 
@@ -85,7 +86,7 @@ const SidebarRight = ({ setSelectedChat }) => {
           names[userId] = 'Unknown';
         }
       }).catch((error) => {
-        // console.error(`Error fetching name for ${userId}:`, error);
+        console.error(`Error fetching name for ${userId}:`, error);
         names[userId] = 'Error';
       });
     });
@@ -98,20 +99,28 @@ const SidebarRight = ({ setSelectedChat }) => {
   const handleChatSelection = async (chatId) => {
     setSelectedChat(chatId);
 
-    const db = getDatabase();
-    const currentUserId = currentUser.uid;
+    const chatRoomId = [currentUser.uid, chatId].sort().join('_');
 
-    const chatRoomId = [currentUserId, chatId].sort().join('_');
+    // Check if the chat room already exists
+    const chatRoomsRef = collection(db, 'chatRooms');
+    const q = query(chatRoomsRef, where('users', 'array-contains', currentUser.uid));
+    const querySnapshot = await getDocs(q);
 
-    await set(ref(db, `chatRooms/${chatRoomId}`), {
-      users: {
-        [currentUserId]: true,
-        [chatId]: true,
-      },
-      createdAt: new Date().toISOString(),
+    let chatRoomExists = false;
+    querySnapshot.forEach((doc) => {
+      if (doc.data().users.includes(chatId)) {
+        chatRoomExists = true;
+      }
     });
 
-    window.location.href = `/chat/${chatRoomId}`;
+    if (!chatRoomExists) {
+      await addDoc(chatRoomsRef, {
+        users: [currentUser.uid, chatId],
+        createdAt: new Date().toISOString(),
+      });
+    }
+
+    navigate(`/chat/${chatRoomId}`);
   };
 
   if (loading) {
