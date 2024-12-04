@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiMessageSquare, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { FiMessageSquare, FiChevronLeft, FiChevronRight, FiChevronDown, FiChevronUp } from 'react-icons/fi';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from './firebaseConfig'; // Import your Firebase config
 import { getAuth, onAuthStateChanged } from 'firebase/auth'; // Firebase Auth for currentUser
@@ -9,9 +9,12 @@ const SidebarRight = ({ setSelectedChat }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [followers, setFollowers] = useState([]);
   const [following, setFollowing] = useState([]);
+  const [recentChats, setRecentChats] = useState([]);
   const [currentUser, setCurrentUser] = useState(null); // State for the current user
   const [loading, setLoading] = useState(true); // Track loading state
   const [userNames, setUserNames] = useState({}); // State to store user names
+  const [showFollowers, setShowFollowers] = useState(true);
+  const [showFollowing, setShowFollowing] = useState(true);
 
   useEffect(() => {
     const auth = getAuth();
@@ -37,24 +40,25 @@ const SidebarRight = ({ setSelectedChat }) => {
           const userData = userDoc.data();
           const fetchedFollowers = userData.followers || [];
           const fetchedFollowing = userData.following || [];
+          const fetchedRecentChats = userData.recentChats || [];
 
           // Ensure followers are objects with id properties
           const formattedFollowers = fetchedFollowers.map(f => typeof f === 'string' ? { id: f } : f);
 
           setFollowers(formattedFollowers);
           setFollowing(fetchedFollowing);
+          setRecentChats(fetchedRecentChats);
 
-          const allUserIds = [...formattedFollowers.map(f => f.id), ...fetchedFollowing.map(f => f.id)].filter(Boolean);
-          console.log('All user IDs:', allUserIds); // Log all user IDs
+          const allUserIds = [
+            ...formattedFollowers.map(f => f.id),
+            ...fetchedFollowing.map(f => f.id),
+            ...fetchedRecentChats.map(c => c.id)
+          ].filter(Boolean);
           const names = await fetchUserNamesInBulk(allUserIds);
           setUserNames(names);
-
-          console.log('Fetched followers:', formattedFollowers);
-          console.log('Fetched following:', fetchedFollowing);
-          console.log('Fetched user names:', names);
         }
       } catch (error) {
-        console.error('Error fetching user data:', error);
+        // console.error('Error fetching user data:', error);
       } finally {
         setLoading(false);
       }
@@ -70,7 +74,7 @@ const SidebarRight = ({ setSelectedChat }) => {
 
     const userFetchPromises = userIds.map((userId) => {
       if (!userId) {
-        console.error('Invalid user ID:', userId); // Log invalid user ID
+        // console.error('Invalid user ID:', userId); // Log invalid user ID
         return Promise.resolve();
       }
 
@@ -81,7 +85,7 @@ const SidebarRight = ({ setSelectedChat }) => {
           names[userId] = 'Unknown';
         }
       }).catch((error) => {
-        console.error(`Error fetching name for ${userId}:`, error);
+        // console.error(`Error fetching name for ${userId}:`, error);
         names[userId] = 'Error';
       });
     });
@@ -124,15 +128,15 @@ const SidebarRight = ({ setSelectedChat }) => {
         <h2 className={`${isCollapsed ? 'hidden' : 'text-xl font-bold mb-6 text-gray-700'}`}>Chats</h2>
 
         <div>
-          <h3 className={`${isCollapsed ? 'hidden' : 'text-lg font-semibold text-gray-700 mb-3'}`}>Followers</h3>
-          {followers.length === 0 ? (
-            <p className="text-gray-500">No followers yet</p>
+          <h3 className={`${isCollapsed ? 'hidden' : 'text-lg font-semibold text-gray-700 mb-3'}`}>Recent Chats</h3>
+          {recentChats.length === 0 ? (
+            <p className="text-gray-500">No recent chats</p>
           ) : (
-            followers.map((follower) => (
-              <div key={follower.id} onClick={() => handleChatSelection(follower.id)} className={`flex items-center p-3 bg-gray-100 rounded-lg hover:bg-blue-50 transition duration-300 ${isCollapsed ? 'justify-center' : ''}`}>
+            recentChats.map((chat) => (
+              <div key={chat.id} onClick={() => handleChatSelection(chat.id)} className={`flex items-center p-3 mb-2 bg-gray-100 rounded-lg hover:bg-blue-50 transition duration-300 ${isCollapsed ? 'justify-center' : ''}`}>
                 <FiMessageSquare className="text-blue-500" size={20} />
                 <span className={`${isCollapsed ? 'hidden' : 'ml-3 font-semibold'}`}>
-                  Chat with {userNames[follower.id] || 'Loading...'}
+                  {userNames[chat.id] || 'Loading...'}
                 </span>
               </div>
             ))
@@ -140,18 +144,48 @@ const SidebarRight = ({ setSelectedChat }) => {
         </div>
 
         <div>
-          <h3 className={`${isCollapsed ? 'hidden' : 'text-lg font-semibold text-gray-700 mb-3 mt-6'}`}>Following</h3>
-          {following.length === 0 ? (
-            <p className="text-gray-500">You're not following anyone</p>
-          ) : (
-            following.map((followed) => (
-              <div key={followed.id} onClick={() => handleChatSelection(followed.id)} className={`flex items-center p-3 bg-gray-100 rounded-lg hover:bg-blue-50 transition duration-300 ${isCollapsed ? 'justify-center' : ''}`}>
-                <FiMessageSquare className="text-blue-500" size={20} />
-                <span className={`${isCollapsed ? 'hidden' : 'ml-3 font-semibold'}`}>
-                  Chat with {userNames[followed.id] || 'Loading...'}
-                </span>
-              </div>
-            ))
+          <h3 className={`${isCollapsed ? 'hidden' : 'text-lg font-semibold text-gray-700 mb-3 mt-6'}`}>
+            Followers
+            <button onClick={() => setShowFollowers(!showFollowers)} className="ml-2 text-gray-500 hover:text-blue-600 transition-colors duration-300">
+              {showFollowers ? <FiChevronUp size={20} /> : <FiChevronDown size={20} />}
+            </button>
+          </h3>
+          {showFollowers && (
+            followers.length === 0 ? (
+              <p className="text-gray-500">No followers yet</p>
+            ) : (
+              followers.map((follower) => (
+                <div key={follower.id} onClick={() => handleChatSelection(follower.id)} className={`flex items-center p-3 mb-2 bg-gray-100 rounded-lg hover:bg-blue-50 transition duration-300 ${isCollapsed ? 'justify-center' : ''}`}>
+                  <FiMessageSquare className="text-blue-500" size={20} />
+                  <span className={`${isCollapsed ? 'hidden' : 'ml-3 font-semibold'}`}>
+                    {userNames[follower.id] || 'Loading...'}
+                  </span>
+                </div>
+              ))
+            )
+          )}
+        </div>
+
+        <div>
+          <h3 className={`${isCollapsed ? 'hidden' : 'text-lg font-semibold text-gray-700 mb-3 mt-6'}`}>
+            Following
+            <button onClick={() => setShowFollowing(!showFollowing)} className="ml-2 text-gray-500 hover:text-blue-600 transition-colors duration-300">
+              {showFollowing ? <FiChevronUp size={20} /> : <FiChevronDown size={20} />}
+            </button>
+          </h3>
+          {showFollowing && (
+            following.length === 0 ? (
+              <p className="text-gray-500">You're not following anyone</p>
+            ) : (
+              following.map((followed) => (
+                <div key={followed.id} onClick={() => handleChatSelection(followed.id)} className={`flex items-center p-3 mb-2 bg-gray-100 rounded-lg hover:bg-blue-50 transition duration-300 ${isCollapsed ? 'justify-center' : ''}`}>
+                  <FiMessageSquare className="text-blue-500" size={20} />
+                  <span className={`${isCollapsed ? 'hidden' : 'ml-3 font-semibold'}`}>
+                    {userNames[followed.id] || 'Loading...'}
+                  </span>
+                </div>
+              ))
+            )
           )}
         </div>
       </div>
