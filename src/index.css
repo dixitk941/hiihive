@@ -40,3 +40,6 @@ button:hover {
 .absolute {
   pointer-events: auto; /* Ensure buttons respond to clicks */
 }
+
+
+

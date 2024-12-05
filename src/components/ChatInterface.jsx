@@ -8,7 +8,6 @@ import {
   orderBy,
   serverTimestamp,
   doc,
-  setDoc,
   getDoc,
 } from 'firebase/firestore';
 import { FaPaperPlane } from 'react-icons/fa';
@@ -18,8 +17,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 const ChatInterface = ({ currentUser }) => {
   const [messages, setMessages] = useState([]);
   const [messageInput, setMessageInput] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const [typingStatus, setTypingStatus] = useState(false);
+  const [userAvatars, setUserAvatars] = useState({});
   const navigate = useNavigate();
   const { chatRoomId } = useParams();
   const db = getFirestore();
@@ -34,27 +32,32 @@ const ChatInterface = ({ currentUser }) => {
     const messagesRef = collection(db, 'chatRooms', chatRoomId, 'messages');
     const q = query(messagesRef, orderBy('createdAt'));
 
-    const unsubscribeMessages = onSnapshot(q, (snapshot) => {
+    const unsubscribe = onSnapshot(q, async (snapshot) => {
       const messagesList = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
+
+      // Fetch user avatars for each senderId
+      const newAvatars = { ...userAvatars };
+      await Promise.all(
+        messagesList.map(async (msg) => {
+          if (!newAvatars[msg.senderId]) {
+            const userRef = doc(db, 'users', msg.senderId);
+            const userSnap = await getDoc(userRef);
+            if (userSnap.exists()) {
+              newAvatars[msg.senderId] = userSnap.data().avatar || 'default-avatar-url'; // Use default avatar if not found
+            }
+          }
+        })
+      );
+      setUserAvatars(newAvatars);
       setMessages(messagesList);
       scrollToBottom();
     });
 
-    const typingStatusRef = doc(db, 'chatRooms', chatRoomId, 'typingStatus', 'status');
-    const unsubscribeTypingStatus = onSnapshot(typingStatusRef, (doc) => {
-      if (doc.exists()) {
-        setTypingStatus(doc.data().isTyping);
-      }
-    });
-
-    return () => {
-      unsubscribeMessages();
-      unsubscribeTypingStatus();
-    };
-  }, [chatRoomId, db]);
+    return () => unsubscribe();
+  }, [chatRoomId, db, userAvatars]);
 
   const handleSendMessage = async () => {
     if (messageInput.trim() === '') return;
@@ -72,25 +75,10 @@ const ChatInterface = ({ currentUser }) => {
     });
 
     setMessageInput('');
-    setIsTyping(false);
-    await setDoc(doc(db, 'chatRooms', chatRoomId, 'typingStatus', 'status'), {
-      isTyping: false,
-    });
-  };
-
-  const handleKeyPress = async (e) => {
-    if (e.key === 'Enter') {
-      handleSendMessage();
-    } else {
-      setIsTyping(true);
-      await setDoc(doc(db, 'chatRooms', chatRoomId, 'typingStatus', 'status'), {
-        isTyping: true,
-      });
-    }
   };
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
@@ -113,10 +101,17 @@ const ChatInterface = ({ currentUser }) => {
             key={message.id}
             className={`flex ${
               message.senderId === currentUser.uid ? 'justify-end' : 'justify-start'
-            } mb-4 animate-fadeIn`}
+            } mb-4`}
           >
+            <div className="flex items-center">
+              <img
+                src={userAvatars[message.senderId] || 'default-avatar-url'} // Replace with default if avatar is missing
+                alt="User Avatar"
+                className="w-8 h-8 rounded-full mr-2"
+              />
+            </div>
             <div
-              className={`p-3 rounded-lg max-w-lg text-sm shadow-md ${
+              className={`p-3 rounded-lg max-w-lg shadow-md ${
                 message.senderId === currentUser.uid
                   ? 'bg-blue-500 text-white'
                   : 'bg-gray-200 text-black'
@@ -134,13 +129,6 @@ const ChatInterface = ({ currentUser }) => {
             </div>
           </div>
         ))}
-        {typingStatus && (
-          <div className="flex justify-start mb-4">
-            <div className="p-3 rounded-lg max-w-lg text-sm shadow-md bg-gray-200 text-black">
-              <p>Typing...</p>
-            </div>
-          </div>
-        )}
         <div ref={messagesEndRef} />
       </div>
 
@@ -151,7 +139,7 @@ const ChatInterface = ({ currentUser }) => {
             type="text"
             value={messageInput}
             onChange={(e) => setMessageInput(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
             placeholder="Type a message..."
             className="flex-1 p-3 bg-white border rounded-full shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
