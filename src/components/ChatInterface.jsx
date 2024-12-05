@@ -7,6 +7,9 @@ import {
   onSnapshot,
   orderBy,
   serverTimestamp,
+  doc,
+  setDoc,
+  getDoc,
 } from 'firebase/firestore';
 import { FaPaperPlane } from 'react-icons/fa';
 import { FiArrowLeft } from 'react-icons/fi';
@@ -15,6 +18,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 const ChatInterface = ({ currentUser }) => {
   const [messages, setMessages] = useState([]);
   const [messageInput, setMessageInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [typingStatus, setTypingStatus] = useState(false);
   const navigate = useNavigate();
   const { chatRoomId } = useParams();
   const db = getFirestore();
@@ -29,7 +34,7 @@ const ChatInterface = ({ currentUser }) => {
     const messagesRef = collection(db, 'chatRooms', chatRoomId, 'messages');
     const q = query(messagesRef, orderBy('createdAt'));
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const unsubscribeMessages = onSnapshot(q, (snapshot) => {
       const messagesList = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
@@ -38,7 +43,17 @@ const ChatInterface = ({ currentUser }) => {
       scrollToBottom();
     });
 
-    return () => unsubscribe();
+    const typingStatusRef = doc(db, 'chatRooms', chatRoomId, 'typingStatus', 'status');
+    const unsubscribeTypingStatus = onSnapshot(typingStatusRef, (doc) => {
+      if (doc.exists()) {
+        setTypingStatus(doc.data().isTyping);
+      }
+    });
+
+    return () => {
+      unsubscribeMessages();
+      unsubscribeTypingStatus();
+    };
   }, [chatRoomId, db]);
 
   const handleSendMessage = async () => {
@@ -57,11 +72,20 @@ const ChatInterface = ({ currentUser }) => {
     });
 
     setMessageInput('');
+    setIsTyping(false);
+    await setDoc(doc(db, 'chatRooms', chatRoomId, 'typingStatus', 'status'), {
+      isTyping: false,
+    });
   };
 
-  const handleKeyPress = (e) => {
+  const handleKeyPress = async (e) => {
     if (e.key === 'Enter') {
       handleSendMessage();
+    } else {
+      setIsTyping(true);
+      await setDoc(doc(db, 'chatRooms', chatRoomId, 'typingStatus', 'status'), {
+        isTyping: true,
+      });
     }
   };
 
@@ -89,7 +113,7 @@ const ChatInterface = ({ currentUser }) => {
             key={message.id}
             className={`flex ${
               message.senderId === currentUser.uid ? 'justify-end' : 'justify-start'
-            } mb-4`}
+            } mb-4 animate-fadeIn`}
           >
             <div
               className={`p-3 rounded-lg max-w-lg text-sm shadow-md ${
@@ -110,6 +134,13 @@ const ChatInterface = ({ currentUser }) => {
             </div>
           </div>
         ))}
+        {typingStatus && (
+          <div className="flex justify-start mb-4">
+            <div className="p-3 rounded-lg max-w-lg text-sm shadow-md bg-gray-200 text-black">
+              <p>Typing...</p>
+            </div>
+          </div>
+        )}
         <div ref={messagesEndRef} />
       </div>
 
