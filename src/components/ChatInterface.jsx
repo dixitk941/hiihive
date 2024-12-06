@@ -18,11 +18,36 @@ const ChatInterface = ({ currentUser }) => {
   const [messages, setMessages] = useState([]);
   const [messageInput, setMessageInput] = useState('');
   const [showAttachmentOptions, setShowAttachmentOptions] = useState(false);
-  const [userAvatars, setUserAvatars] = useState({});
+  const [participantId, setParticipantId] = useState(null);
   const { chatRoomId } = useParams();
   const db = getFirestore();
   const messagesContainerRef = useRef(null);
 
+  // Fetch participant ID based on the chatRoomId
+  useEffect(() => {
+    const fetchParticipantId = async () => {
+      if (!chatRoomId) return;
+
+      const chatRoomRef = doc(db, 'chatRooms', chatRoomId);
+      try {
+        const chatRoomDoc = await getDoc(chatRoomRef);
+        if (chatRoomDoc.exists()) {
+          const chatRoomData = chatRoomDoc.data();
+          const participants = chatRoomData.participants || [];
+          const otherParticipantId = participants.find((id) => id !== currentUser.uid);
+          setParticipantId(otherParticipantId || null);
+        } else {
+          console.error('Chat room not found.');
+        }
+      } catch (error) {
+        console.error('Error fetching chat room:', error);
+      }
+    };
+
+    fetchParticipantId();
+  }, [chatRoomId, currentUser.uid, db]);
+
+  // Fetch messages and listen for real-time updates
   useEffect(() => {
     if (!chatRoomId) {
       console.error('Invalid chatRoomId:', chatRoomId);
@@ -38,60 +63,61 @@ const ChatInterface = ({ currentUser }) => {
         ...doc.data(),
       }));
 
-      const newAvatars = { ...userAvatars };
-      await Promise.all(
-        messagesList.map(async (msg) => {
-          if (!newAvatars[msg.senderId]) {
-            const userRef = doc(db, 'users', msg.senderId);
-            const userSnap = await getDoc(userRef);
-            if (userSnap.exists()) {
-              newAvatars[msg.senderId] = userSnap.data().avatar || 'default-avatar-url';
-            }
-          }
-        })
-      );
-
-      setUserAvatars(newAvatars);
       setMessages(messagesList);
-
-      if (messages.length < messagesList.length) scrollToBottom();
+      scrollToBottom();
     });
 
     return () => unsubscribe();
-  }, [chatRoomId, db, messages.length, userAvatars]);
+  }, [chatRoomId, db]);
 
   const handleSendMessage = async () => {
     if (messageInput.trim() === '') return;
 
-    if (!chatRoomId || !currentUser) {
-      console.error('chatRoomId or currentUser is undefined');
+    if (!chatRoomId || !currentUser || !participantId) {
+      console.error('chatRoomId, currentUser, or participantId is undefined');
       return;
     }
 
     const messagesRef = collection(db, 'chatRooms', chatRoomId, 'messages');
+    
     await addDoc(messagesRef, {
       text: messageInput,
       senderId: currentUser.uid,
+      participantId: participantId,  // Store participant ID
       createdAt: serverTimestamp(),
     });
 
     setMessageInput('');
   };
 
-  const handleAttachmentClick = (type) => {
+  const handleAttachmentClick = async (type) => {
     setShowAttachmentOptions(false);
+
     if (type === 'camera') {
-      // Open the camera
-      alert('Opening Camera...');
-    } else if (type === 'photos') {
-      // Open photos
-      alert('Opening Photos...');
-    } else if (type === 'document') {
-      // Open file manager for documents
-      alert('Opening File Manager...');
-    } else if (type === 'contact') {
-      // Open contacts
-      alert('Opening Contacts...');
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        alert('Camera access successful!');
+        stream.getTracks().forEach((track) => track.stop());
+      } catch (err) {
+        alert('Camera access denied!');
+      }
+    } else {
+      const input = document.createElement('input');
+      input.type = 'file';
+      if (type === 'photos') {
+        input.accept = 'image/*';
+      } else if (type === 'document') {
+        input.accept = '*/*';
+      } else if (type === 'contact') {
+        input.accept = 'text/vcard';
+      }
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          alert(`File selected: ${file.name}`);
+        }
+      };
+      input.click();
     }
   };
 
@@ -103,14 +129,13 @@ const ChatInterface = ({ currentUser }) => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-white">
-      {/* Chat Header */}
-      <ChatHeader />
+    <div className="flex flex-col h-screen bg-gray-100">
+      {/* Pass participantId to ChatHeader */}
+      <ChatHeader participantId={participantId} />
 
-      {/* Messages Section */}
       <div
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50"
+        className="flex-1 overflow-y-auto p-4 space-y-4 bg-white"
       >
         {messages.map((message) => (
           <div
@@ -119,39 +144,23 @@ const ChatInterface = ({ currentUser }) => {
               message.senderId === currentUser.uid ? 'justify-end' : 'justify-start'
             }`}
           >
-            <div className="flex items-center space-x-2">
-              {message.senderId !== currentUser.uid && (
-                <img
-                  src={userAvatars[message.senderId] || 'default-avatar-url'}
-                  alt="User Avatar"
-                  className="w-8 h-8 rounded-full"
-                />
-              )}
-              <div
-                className={`p-3 rounded-lg shadow-sm ${
-                  message.senderId === currentUser.uid
-                    ? 'bg-blue-100 text-blue-800'
-                    : 'bg-gray-100 text-gray-800'
-                }`}
-              >
-                <p>{message.text}</p>
-                <span className="block text-xs mt-1 opacity-80">
-                  {message.createdAt?.toDate
-                    ? new Date(message.createdAt.toDate()).toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })
-                    : 'Sending...'}
-                </span>
-              </div>
+            <div className="p-3 max-w-[75%] rounded-lg shadow-md bg-gray-200 text-gray-800">
+              <p>{message.text}</p>
+              <span className="block text-xs mt-1 text-right opacity-70">
+                {message.createdAt?.toDate
+                  ? new Date(message.createdAt.toDate()).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })
+                  : 'Sending...'}
+              </span>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Input Bar */}
       <div className="p-3 bg-gray-200 border-t">
-        <div className="flex items-center space-x-2">
+        <div className="relative flex items-center">
           <button
             onClick={() => setShowAttachmentOptions(!showAttachmentOptions)}
             className="p-2 bg-gray-300 rounded-full hover:bg-gray-400"
@@ -160,7 +169,7 @@ const ChatInterface = ({ currentUser }) => {
           </button>
 
           {showAttachmentOptions && (
-            <div className="absolute bottom-16 left-4 bg-white p-3 rounded-lg shadow-lg space-y-2">
+            <div className="absolute bottom-16 left-4 bg-white p-3 rounded-lg shadow-md space-y-2 z-50">
               <button
                 onClick={() => handleAttachmentClick('camera')}
                 className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-md"
@@ -198,7 +207,7 @@ const ChatInterface = ({ currentUser }) => {
             onChange={(e) => setMessageInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
             placeholder="Type a message..."
-            className="flex-1 p-2 bg-white border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 p-2 mx-2 bg-white border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
 
           <button
