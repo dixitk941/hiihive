@@ -4,36 +4,36 @@ import { useNavigate } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { getFirestore } from 'firebase/firestore';
 
-const ChatHeader = ({ participantId }) => {
+const ChatHeader = ({ participants }) => {
   const navigate = useNavigate();
   const db = getFirestore();
 
   const [participant, setParticipant] = useState({
     name: 'Loading...',
-    photoURL: '',
+    avatar: '',
     status: 'Loading...',
   });
 
   useEffect(() => {
     const fetchParticipantDetails = async () => {
-      if (!participantId) return;
+      if (!participants) return;
 
       try {
-        const userRef = doc(db, 'users', participantId);
+        const userRef = doc(db, 'users', participants);
         const userDoc = await getDoc(userRef);
 
         if (userDoc.exists()) {
           const userData = userDoc.data();
           setParticipant({
-            name: userData.name || 'Unknown User',
-            photoURL: userData.photoURL || 'https://via.placeholder.com/150',
+            name: userData.fullName || 'Unknown User',  // Changed from 'name' to 'fullName'
+            avatar: userData.avatar || 'https://via.placeholder.com/150',
             status: userData.status || 'Offline',
           });
         } else {
-          console.warn('User not found:', participantId);
+          console.warn('User not found:', participants);
           setParticipant({
             name: 'Unknown User',
-            photoURL: 'https://via.placeholder.com/150',
+            avatar: 'https://via.placeholder.com/150',
             status: 'Offline',
           });
         }
@@ -41,14 +41,14 @@ const ChatHeader = ({ participantId }) => {
         console.error('Error fetching user details:', error);
         setParticipant({
           name: 'Error',
-          photoURL: 'https://via.placeholder.com/150',
+          avatar: 'https://via.placeholder.com/150',
           status: 'Offline',
         });
       }
     };
 
     fetchParticipantDetails();
-  }, [participantId, db]);
+  }, [participants, db]);
 
   return (
     <div
@@ -66,9 +66,9 @@ const ChatHeader = ({ participantId }) => {
       {/* Profile and Chat Info */}
       <div className="flex items-center ml-3 space-x-3">
         <div className="w-8 h-8 rounded-full bg-white overflow-hidden border-2 border-white">
-          {/* Placeholder for profile image */}
+          {/* Profile image */}
           <img
-            src={participant.photoURL}
+            src={participant.avatar}
             alt={participant.name}
             className="w-full h-full object-cover"
           />
