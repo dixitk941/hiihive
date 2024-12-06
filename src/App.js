@@ -1,5 +1,5 @@
 import React, { useState, useEffect, Suspense } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { auth } from './Pages/firebaseConfig';
 import Loading from './components/Loading';
 import KnowledgeHub from "./components/KnowledgeHub/KnowledgeHub";
@@ -102,7 +102,7 @@ function App() {
   return (
     <Suspense fallback={<Loading />}>
       <Router>
-        <Header user={user} />
+        <ConditionalHeader user={user} />
         <Routes>
           <Route
             path="/login"
@@ -154,5 +154,14 @@ function App() {
     </Suspense>
   );
 }
+
+const ConditionalHeader = ({ user }) => {
+  const location = useLocation();
+  const hideHeaderPaths = ['/chat/:chatRoomId'];
+
+  const shouldHideHeader = hideHeaderPaths.some((path) => location.pathname.startsWith(path.replace(':chatRoomId', '')));
+
+  return !shouldHideHeader && <Header user={user} />;
+};
 
 export default App;

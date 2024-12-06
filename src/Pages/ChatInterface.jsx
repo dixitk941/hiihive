@@ -4,13 +4,9 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from './firebaseConfig'; // Import your Firebase config
 import SidebarLeft from '../components/SidebarLeft';
 import SidebarRight from '../components/SidebarRight';
-// import SearchBar from '../components/SearchBar';
-import Feeds from '../components/ChatInterface';
-// import FloatingMenu from '../components/FloatingMenu';
 import ChatInterface from '../components/ChatInterface';
-import BottomBar from '../components/BottomBar';
 
-const HomePage = () => {
+const ChatPage = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [selectedChat, setSelectedChat] = useState(null);
   const [loading, setLoading] = useState(true); // Manage loading state
@@ -46,16 +42,15 @@ const HomePage = () => {
 
   return (
     <div className="flex flex-col h-screen">
-      <div className="flex flex-1 pt-24"> {/* Add padding-top to avoid being hidden by the header */}
-        {/* SidebarLeft for main navigation */}
+<div className="flex flex-1">
+{/* SidebarLeft for main navigation */}
         <div className="hidden lg:block w-[250px]">
           <SidebarLeft currentUser={currentUser} /> {/* Pass currentUser to SidebarLeft */}
         </div>
         
-        {/* Main content section with SearchBar and Feeds */}
+        {/* Main content section */}
         <main className="flex-1 p-4 overflow-auto">
-          {/* <SearchBar currentUser={currentUser} /> Pass currentUser to SearchBar */}
-          <Feeds currentUser={currentUser} /> {/* Pass currentUser to Feeds */}
+          <ChatInterface currentUser={currentUser} chatRoomId={selectedChat} onBack={handleBackToSidebar} />
         </main>
 
         {/* Conditionally render SidebarRight or ChatInterface */}
@@ -75,16 +70,8 @@ const HomePage = () => {
           </div>
         )}
       </div>
-
-      {/* Floating menu for additional options *
-      <div className="lg:hidden">
-        <FloatingMenu currentUser={currentUser} /> {/* Pass currentUser to FloatingMenu */}
-
-
-      {/* Bottom Bar for mobile */}
-      {/* <BottomBar currentUser={currentUser} /> Pass currentUser to BottomBar */}
     </div>
   );
 };
 
-export default HomePage;
+export default ChatPage;
