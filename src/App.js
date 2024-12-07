@@ -152,8 +152,7 @@ function App() {
           path="/knowledgehub"
           element={user ? <KnowledgeHub /> : <Navigate to="/login" />}
           />
-          <Route path="/post/:postId" element={<PostPage />} /> {/* Add the post route */}
-        </Routes>
+        <Route path="/post/:feedId" element={<PostPage />} /> {/* Add the post route */}        </Routes>
       </Router>
     </Suspense>
   );
