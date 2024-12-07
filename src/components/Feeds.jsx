@@ -10,15 +10,17 @@ import {
 import { FiThumbsUp, FiMessageCircle, FiShare } from 'react-icons/fi';
 import { auth } from './firebaseConfig';
 import { onAuthStateChanged } from 'firebase/auth';
-import Stories from './Stories';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
 
 const Feeds = () => {
   const [posts, setPosts] = useState([]);
   const [user, setUser] = useState(null);
-  const [activeStoryIndex, setActiveStoryIndex] = useState(null);
   const [commentText, setCommentText] = useState("");
   const [comments, setComments] = useState({});
+  const [userDetails, setUserDetails] = useState({});
+  const [expandedComments, setExpandedComments] = useState({});
   const db = getDatabase();
+  const firestore = getFirestore();
 
   // Listen for authentication state changes
   useEffect(() => {
@@ -27,6 +29,17 @@ const Feeds = () => {
     });
     return () => unsubscribe();
   }, []);
+
+  // Fetch user details from Firestore
+  const fetchUserDetails = async (uid) => {
+    const userDoc = doc(firestore, 'users', uid);
+    const userSnap = await getDoc(userDoc);
+    if (userSnap.exists()) {
+      setUserDetails(prevState => ({ ...prevState, [uid]: userSnap.data() }));
+    } else {
+      console.log("User not found in Firestore");
+    }
+  };
 
   // Fetch posts from Realtime Database
   useEffect(() => {
@@ -44,6 +57,39 @@ const Feeds = () => {
     });
     return () => unsubscribe();
   }, [user]);
+
+  // Fetch comments in real-time
+  useEffect(() => {
+    if (!user) return; // Prevent unauthorized reads
+    const feedsRef = ref(db, 'feeds');
+    const unsubscribe = onValue(feedsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const allComments = Object.keys(data).reduce((acc, postId) => {
+          acc[postId] = data[postId]?.comments || {};
+          return acc;
+        }, {});
+        setComments(allComments);
+      }
+    });
+    return () => unsubscribe();
+  }, [user]);
+
+  // Fetch user details for each post and comment
+  useEffect(() => {
+    posts.forEach(post => {
+      if (post.userId && !userDetails[post.userId]) {
+        fetchUserDetails(post.userId);
+      }
+      if (comments[post.id]) {
+        Object.values(comments[post.id]).forEach(comment => {
+          if (comment.userId && !userDetails[comment.userId]) {
+            fetchUserDetails(comment.userId);
+          }
+        });
+      }
+    });
+  }, [posts, comments, userDetails]);
 
   // Handle like functionality
   const handleLike = async (post) => {
@@ -71,7 +117,7 @@ const Feeds = () => {
     const newComment = {
       userId: user.uid,
       username: user.displayName || "Anonymous",
-      fullName: user.email || "Unknown User",
+      fullName: user.displayName || "Unknown User",
       text: commentText,
       timestamp: serverTimestamp(),
     };
@@ -84,39 +130,31 @@ const Feeds = () => {
     }
   };
 
-  // Fetch comments in real-time
-  useEffect(() => {
-    if (!user) return; // Prevent unauthorized reads
-    const feedsRef = ref(db, 'feeds');
-    const unsubscribe = onValue(feedsRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        const allComments = Object.keys(data).reduce((acc, postId) => {
-          acc[postId] = data[postId]?.comments || {};
-          return acc;
-        }, {});
-        setComments(allComments);
-      }
-    });
-    return () => unsubscribe();
-  }, [user]);
-
   // Handle sharing posts
   const handleShare = (postId) => {
     const shareableLink = `https://hiihive.vercel.app/post/${postId}`;
     navigator.clipboard.writeText(shareableLink).then(() => {
       alert("Post link copied to clipboard!");
+    }).catch((error) => {
+      console.error("Failed to copy the link:", error);
     });
   };
 
-  const closeStory = () => {
-    setActiveStoryIndex(null);
+  // Toggle expanded comments view
+  const toggleExpandComments = (postId) => {
+    setExpandedComments(prevState => ({
+      ...prevState,
+      [postId]: !prevState[postId],
+    }));
+  };
+
+  // Handle user avatar click (Navigate to user profile)
+  const handleUserProfileClick = (userId) => {
+    window.location.href = `/user/${userId}`; // Redirect to profile page
   };
 
   return (
     <div className="max-h-[80vh] overflow-y-auto space-y-4 px-4 sm:px-6 lg:px-8">
-      {/* Posts Section */}
-      <Stories activeStoryIndex={activeStoryIndex} closeStory={closeStory} />
       {posts.length > 0 ? (
         posts
           .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
@@ -126,13 +164,21 @@ const Feeds = () => {
               className="bg-white rounded-lg shadow-lg mb-4 w-full sm:max-w-[500px] mx-auto"
             >
               {/* User Info */}
-              <div className="p-4">
-                <p className="font-semibold text-gray-800">
-                  {post.username || "Unknown User"}
-                </p>
-                <p className="text-sm text-gray-500">
-                  {new Date(post.timestamp).toLocaleString()}
-                </p>
+              <div className="flex items-center p-4">
+                <img
+                  src={userDetails[post.userId]?.avatar || "/default-avatar.png"}
+                  alt="User Avatar"
+                  className="w-10 h-10 rounded-full object-cover cursor-pointer"
+                  onClick={() => handleUserProfileClick(post.userId)} // Navigate to user profile
+                />
+                <div className="ml-3">
+                  <p className="font-semibold text-gray-800">
+                    {userDetails[post.userId]?.fullName || "Unknown User"}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    @{post.username || "Unknown"}
+                  </p>
+                </div>
               </div>
 
               {/* Post Media */}
@@ -174,7 +220,10 @@ const Feeds = () => {
                   <FiMessageCircle size={20} />
                   <span className="ml-2">Comment</span>
                 </button>
-                <button className="flex items-center text-gray-600 hover:text-blue-500 transition duration-300 ease-in-out">
+                <button
+                  className="flex items-center text-gray-600 hover:text-blue-500 transition duration-300 ease-in-out"
+                  onClick={() => handleShare(post.id)} // Pass the post ID to share
+                >
                   <FiShare size={20} />
                   <span className="ml-2">Share</span>
                 </button>
@@ -198,14 +247,38 @@ const Feeds = () => {
 
                 {/* Display Comments */}
                 <div className="mt-4 space-y-2">
-                  {Object.values(comments[post.id] || {}).map((comment, index) => (
-                    <div key={index} className="bg-gray-100 p-2 rounded-lg">
-                      <p className="text-sm font-semibold">
-                        {comment.fullName || "Unknown"}
-                      </p>
-                      <p className="text-sm text-gray-600">{comment.text}</p>
-                    </div>
-                  ))}
+                  {Object.values(comments[post.id] || {})
+                    .slice(0, expandedComments[post.id] ? undefined : 2)
+                    .map((comment, index) => (
+                      <div key={index} className="bg-gray-100 p-2 rounded-lg">
+                        <div className="flex items-center">
+                          <img
+                            src={userDetails[comment.userId]?.avatar || "/default-avatar.png"}
+                            alt="Commenter Avatar"
+                            className="w-8 h-8 rounded-full object-cover cursor-pointer"
+                            onClick={() => handleUserProfileClick(comment.userId)} // Navigate to user profile
+                          />
+                          <div className="ml-3">
+                            <p
+                              className="text-sm font-semibold cursor-pointer text-blue-600"
+                              onClick={() => handleUserProfileClick(comment.userId)} // Navigate to user profile
+                            >
+                              {userDetails[comment.userId]?.fullName || "Unknown"}
+                            </p>
+                            <p className="text-sm text-gray-600">{comment.text}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+
+                  {Object.values(comments[post.id] || {}).length > 2 && (
+                    <button
+                      className="text-blue-600"
+                      onClick={() => toggleExpandComments(post.id)}
+                    >
+                      {expandedComments[post.id] ? "Show less" : `+${Object.values(comments[post.id]).length - 2} more`}
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

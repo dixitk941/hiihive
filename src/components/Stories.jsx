@@ -28,6 +28,7 @@ const Stories = () => {
   const [loading, setLoading] = useState(true);
   const [previewUrl, setPreviewUrl] = useState("");
   const [isMuted, setIsMuted] = useState(false);
+  const [fileType, setFileType] = useState(null); // To store file type (photo or video)
 
   const toggleMute = () => {
     setIsMuted(!isMuted);
@@ -67,12 +68,33 @@ const Stories = () => {
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
 
-    if (selectedFile && selectedFile.type.startsWith("video/")) {
-      setFile(selectedFile);
-      const fileURL = URL.createObjectURL(selectedFile);
-      setPreviewUrl(fileURL);
-    } else {
-      alert("Please select a video file.");
+    if (selectedFile) {
+      if (selectedFile.type.startsWith("video/")) {
+        if (selectedFile.size / 1024 / 1024 > 15) {
+          alert("Video file size exceeds the 15 MB limit.");
+          return;
+        }
+
+        const videoElement = document.createElement("video");
+        videoElement.src = URL.createObjectURL(selectedFile);
+        videoElement.onloadedmetadata = () => {
+          if (videoElement.duration > 15) {
+            alert("Video duration exceeds 15 seconds.");
+          } else {
+            setFile(selectedFile);
+            setFileType("video");
+            const fileURL = URL.createObjectURL(selectedFile);
+            setPreviewUrl(fileURL);
+          }
+        };
+      } else if (selectedFile.type.startsWith("image/")) {
+        setFile(selectedFile);
+        setFileType("image");
+        const fileURL = URL.createObjectURL(selectedFile);
+        setPreviewUrl(fileURL);
+      } else {
+        alert("Please select a valid file (video or photo).");
+      }
     }
   };
 
@@ -97,7 +119,7 @@ const Stories = () => {
         const storyData = {
           storyId: storyId,
           url: downloadURL,
-          type: "video",
+          type: fileType, // Store file type as "image" or "video"
           avatar: avatarUrl,
           timestamp: serverTimestamp(),
         };
@@ -117,6 +139,7 @@ const Stories = () => {
         setFile(null);
         setProgress(0);
 
+        // Set a timeout to delete the story after 12 hours
         setTimeout(async () => {
           await updateDoc(userDocRef, {
             stories: arrayRemove({
@@ -128,9 +151,15 @@ const Stories = () => {
           });
           await remove(dbRef(dbRealtime, `stories/${storyId}`));
           await deleteObject(storageRef);
-        }, 12 * 60 * 60 * 1000);
+        }, 12 * 60 * 60 * 1000); // 12 hours
       }
     );
+  };
+
+  const handleAddStory = () => {
+    // Add your logic to handle adding a story here
+    console.log("Story added!");
+    setShowAddStory(false);
   };
 
   const openStory = (index) => {
@@ -139,7 +168,6 @@ const Stories = () => {
   };
 
   const closeStory = () => {
-    // console.log("Close button clicked");
     setActiveStoryIndex(null);
   };
 
@@ -193,58 +221,46 @@ const Stories = () => {
       {showAddStory && (
         <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
           <div className="bg-black rounded-lg shadow-lg w-full max-w-md p-6 relative">
+            <button
+              className="absolute top-4 right-4 text-white text-2xl"
+              onClick={() => setShowAddStory(false)}
+            >
+              &times;
+            </button>
             <div className="mb-4">
               {file && (
-                <div className="w-full h-72 overflow-hidden rounded-lg bg-gray-800">
-                  <video
-                    src={previewUrl}
-                    className="w-full h-full object-cover"
-                    controls
-                  />
+                <div className="w-full overflow-hidden rounded-lg border-4 border-white" style={{ aspectRatio: '9/16' }}>
+                  {fileType === "video" ? (
+                    <div className="aspect-w-9 aspect-h-16">
+                      <video
+                        src={previewUrl}
+                        className="w-full h-full object-cover"
+                        controls
+                      />
+                    </div>
+                  ) : (
+                    <div className="aspect-w-9 aspect-h-16">
+                      <img
+                        src={previewUrl}
+                        alt="Story"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-
-            {!file && (
-              <div className="flex flex-col items-center justify-center space-y-4 mb-6">
-                <input
-                  type="file"
-                  accept="video/*"
-                  onChange={handleFileChange}
-                  className="hidden"
-                  id="file-input"
-                />
-                <label
-                  htmlFor="file-input"
-                  className="bg-blue-500 text-white py-3 px-6 rounded-lg cursor-pointer hover:bg-blue-600 transition"
-                >
-                  Choose Story
-                </label>
-              </div>
-            )}
-
-            {progress > 0 && (
-              <div className="my-4">
-                <progress value={progress} max="100" className="w-full bg-gray-700 rounded-full">
-                  {progress}%
-                </progress>
-              </div>
-            )}
-
-            <div className="flex justify-between mt-4">
+            <div className="flex flex-col space-y-4">
+              <input
+                type="text"
+                placeholder="Add a caption..."
+                className="w-full p-2 rounded-lg bg-gray-800 text-white"
+              />
               <button
-                onClick={handleUpload}
-                disabled={progress > 0 && progress < 100}
-                className="bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 disabled:opacity-50 transition"
+                className="w-full py-2 rounded-lg bg-blue-500 text-white font-semibold"
+                onClick={handleAddStory}
               >
-                Upload
-              </button>
-
-              <button
-                onClick={() => setShowAddStory(false)}
-                className="bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600 transition"
-              >
-                Cancel
+                Add to Story
               </button>
             </div>
           </div>
@@ -279,61 +295,55 @@ const Stories = () => {
               {userStories[activeStoryIndex]?.username}
             </span>
             <button
-              className="absolute top-4 right-4 text-white bg-gray-700 bg-opacity-70 hover:bg-opacity-100 rounded-full p-2 text-xl transition-all z-50"
+              className="absolute top-0 right-0 px-4 py-2 text-white"
               onClick={closeStory}
             >
-              <BsX />
+              <BsX size={24} />
             </button>
           </div>
 
-          <div className="relative w-full h-screen flex items-center justify-center">
-            {userStories[activeStoryIndex]?.type === "video" ? (
-              <video
-                src={userStories[activeStoryIndex]?.url}
-                className="w-full h-full object-contain"
-                autoPlay
-                muted={isMuted}
-                ref={(video) => (videoRef.current = video)}
-              />
-            ) : (
-              <img
-                src={userStories[activeStoryIndex]?.url}
-                alt={`${userStories[activeStoryIndex]?.username}'s story`}
-                className="w-full h-full object-contain"
-              />
-            )}
+          <div className="flex items-center justify-between w-full px-4 z-20">
+            <button className="text-white" onClick={prevStory}>
+              <BsChevronLeft size={32} />
+            </button>
+
+            <div className="relative w-full h-full overflow-hidden border-4 border-white rounded-xl">
+              <div className="relative w-full h-full">
+                {userStories[activeStoryIndex]?.type === "video" ? (
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    muted={isMuted}
+                    loop
+                    onPlay={() => videoRef.current.play()}
+                    onPause={() => videoRef.current.pause()}
+                    className="object-cover w-full h-full"
+                    src={userStories[activeStoryIndex].url}
+                  />
+                ) : (
+                  <img
+                    src={userStories[activeStoryIndex]?.url}
+                    alt="Story Image"
+                    className="object-cover w-full h-full"
+                  />
+                )}
+              </div>
+            </div>
+
+            <button
+              className="text-white"
+              onClick={nextStory}
+            >
+              <BsChevronRight size={32} />
+            </button>
           </div>
 
-          <div className="absolute bottom-4 flex items-center justify-center gap-4 w-full px-4">
+          <div className="absolute bottom-4 left-4">
             <button
-              className="bg-gray-800 bg-opacity-70 text-white rounded-full p-3 hover:bg-opacity-100 transition"
-              onClick={prevStory}
-            >
-              <BsChevronLeft />
-            </button>
-
-            <button
-              className="bg-gray-800 bg-opacity-70 text-white rounded-full p-3 hover:bg-opacity-100 transition"
-              onClick={() => {
-                const video = videoRef.current;
-                if (video) video.currentTime = 0;
-              }}
-            >
-              Replay
-            </button>
-
-            <button
-              className="bg-gray-800 bg-opacity-70 text-white rounded-full p-3 hover:bg-opacity-100 transition"
+              className="text-white text-xl"
               onClick={toggleMute}
             >
               {isMuted ? <BsVolumeMute /> : <BsVolumeUp />}
-            </button>
-
-            <button
-              className="bg-gray-800 bg-opacity-70 text-white rounded-full p-3 hover:bg-opacity-100 transition"
-              onClick={nextStory}
-            >
-              <BsChevronRight />
             </button>
           </div>
         </div>

@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import { auth } from './Pages/firebaseConfig';
 import Loading from './components/Loading';
 import KnowledgeHub from "./components/KnowledgeHub/KnowledgeHub";
+import PostPage from "./components/post";
 
 const HomePage = React.lazy(() => import('./Pages/HomePage'));
 const LoginPage = React.lazy(() => import('./Pages/Login'));
@@ -102,12 +103,14 @@ function App() {
   return (
     <Suspense fallback={<Loading />}>
       <Router>
+        
         <ConditionalHeader user={user} />
         <Routes>
           <Route
             path="/login"
             element={user ? <Navigate to="/" /> : <LoginPage />}
           />
+       
           <Route
             path="/"
             element={user ? <HomePage /> : <Navigate to="/login" />}
@@ -149,6 +152,7 @@ function App() {
           path="/knowledgehub"
           element={user ? <KnowledgeHub /> : <Navigate to="/login" />}
           />
+          <Route path="/post/:postId" element={<PostPage />} /> {/* Add the post route */}
         </Routes>
       </Router>
     </Suspense>

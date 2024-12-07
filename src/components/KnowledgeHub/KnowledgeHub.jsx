@@ -15,6 +15,8 @@ const KnowledgeHub = () => {
   const [streak, setStreak] = useState(0);
   const intervalRef = useRef(null);
   const firestore = getFirestore();
+  const [isVisible, setIsVisible] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(true);
 
   useEffect(() => {
     // Hardcoded sample data for testing
@@ -104,6 +106,14 @@ const KnowledgeHub = () => {
     };
   }, []);
 
+  useEffect(() => {
+    setIsVisible(true);
+    const timer = setTimeout(() => {
+      setShowWelcome(false);
+    }, 3000); // Show welcome message for 3 seconds
+    return () => clearTimeout(timer);
+  }, []);
+
   const startTimer = () => {
     intervalRef.current = setInterval(() => {
       setTimer(prevTimer => {
@@ -133,28 +143,36 @@ const KnowledgeHub = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-r from-gray-900 to-gray-800 text-white p-4 sm:p-6">      <div className="absolute top-20 right-4 flex items-center bg-gray-800 p-2 sm:p-3 rounded-lg shadow-lg z-10">
-        <FontAwesomeIcon icon={faFire} className="text-red-500 text-xl sm:text-2xl mr-2" />
-        <p className="text-sm sm:text-lg">Daily Streak: {streak} {streak === 1 ? 'day' : 'days'}</p>
-      </div>
-      <h1 className="text-4xl sm:text-5xl font-extrabold text-center mt-32 sm:mt-24 mb-4">KnowledgeHub</h1>
-      <p className="text-center italic text-gray-400 mb-8 sm:mb-12">by HiiHive</p>
-      <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-4">
-          <p className="text-sm sm:text-lg">Time spent on this page: {Math.floor(timer / 60)} minutes {timer % 60} seconds</p>
+    <div>
+      {showWelcome && (
+        <div className="welcome-message text-center text-2xl font-bold text-white bg-blue-500 p-4 rounded-lg shadow-lg">
+          Welcome to Knowledge Hub
         </div>
-        <SearchBar query="" onSearch={handleSearch} />
-        <Categories categories={categories} onSelectCategory={handleSelectCategory} />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8 mt-6 sm:mt-10">
-          {filteredResources.length > 0 ? (
-            filteredResources.map(resource => (
-              <ResourceCard key={resource.id} resource={resource} />
-            ))
-          ) : (
-            <p className="text-center col-span-full text-sm sm:text-lg">No resources found.</p>
-          )}
+      )}
+      <div className={`relative min-h-screen bg-gradient-to-r from-gray-900 to-gray-800 text-white p-4 sm:p-6 knowledge-hub ${isVisible ? 'knowledge-hub-enter' : ''}`}>
+        <div className="absolute top-20 right-4 flex items-center bg-gray-800 p-2 sm:p-3 rounded-lg shadow-lg z-10">
+          <FontAwesomeIcon icon={faFire} className="text-red-500 text-xl sm:text-2xl mr-2" />
+          <p className="text-sm sm:text-lg">Daily Streak: {streak} {streak === 1 ? 'day' : 'days'}</p>
         </div>
-        <College />
+        <h1 className="text-4xl sm:text-5xl font-extrabold text-center mt-32 sm:mt-24 mb-4">KnowledgeHub</h1>
+        <p className="text-center italic text-gray-400 mb-8 sm:mb-12">by HiiHive</p>
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-4">
+            <p className="text-sm sm:text-lg">Time spent on this page: {Math.floor(timer / 60)} minutes {timer % 60} seconds</p>
+          </div>
+          <SearchBar query="" onSearch={handleSearch} />
+          <Categories categories={categories} onSelectCategory={handleSelectCategory} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8 mt-6 sm:mt-10">
+            {filteredResources.length > 0 ? (
+              filteredResources.map(resource => (
+                <ResourceCard key={resource.id} resource={resource} />
+              ))
+            ) : (
+              <p className="text-center col-span-full text-sm sm:text-lg">No resources found.</p>
+            )}
+          </div>
+          <College />
+        </div>
       </div>
     </div>
   );

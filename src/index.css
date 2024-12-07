@@ -11,6 +11,46 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.welcome-message {
+  animation: fadeIn 1s ease-out forwards;
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #fff;
+  background: linear-gradient(90deg, #ff8a00, #e52e71);
+  padding: 1rem 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  margin: 2rem auto;
+  width: fit-content;
+}
+
+.knowledge-hub-enter {
+  animation: slideIn 1s ease-out forwards;
+}
 /* src/index.css */
 @tailwind base;
 @tailwind components;

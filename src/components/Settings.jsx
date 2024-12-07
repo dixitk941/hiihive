@@ -3,19 +3,26 @@ import { FiEdit, FiLock, FiPower, FiUser, FiMail } from 'react-icons/fi';
 import { Link, useNavigate } from 'react-router-dom';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db, auth } from './firebaseConfig'; // Firebase setup
+import MoreAppsSection from './MoreAppsSection'; // Import MoreAppsSection component
 import { reauthenticateWithCredential, EmailAuthProvider, updatePassword, getAuth, signOut } from 'firebase/auth';
 import loaderGif from '../assets/normload.gif'; // Adjust the path according to your project structure
+import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+
+const storage = getStorage();
 
 const Settings = () => {
   const [user, setUser] = useState(null);
   const [isProfileEditMode, setIsProfileEditMode] = useState(false);
   const [isPasswordEditMode, setIsPasswordEditMode] = useState(false);
-  const [fullName, setfullName] = useState('');
+  const [fullName, setFullName] = useState('');
   const [username, setUsername] = useState('');
   const [bio, setBio] = useState('');
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [avatar, setAvatar] = useState(null);
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatar || '/default-profile.jpg');
+  const [isAvatarUploading, setIsAvatarUploading] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const navigate = useNavigate();
 
@@ -24,17 +31,16 @@ const Settings = () => {
     const fetchUserData = async () => {
       const userRef = doc(db, "users", auth.currentUser.uid); // assuming 'users' collection
       const docSnap = await getDoc(userRef);
-      
+
       if (docSnap.exists()) {
         setUser(docSnap.data());
-        setfullName(docSnap.data().fullName);
+        setFullName(docSnap.data().fullName);
         setUsername(docSnap.data().username);
         setBio(docSnap.data().bio);
-      } else {
-        // console.log("No such document!");
+        setAvatarUrl(docSnap.data().avatar || '/default-profile.jpg');
       }
     };
-    
+
     fetchUserData();
   }, []);
 
@@ -61,7 +67,6 @@ const Settings = () => {
       alert('Password updated successfully');
       setIsPasswordEditMode(false); // Exit password edit mode
     } catch (error) {
-      // console.error("Error updating password", error);
       alert("Error updating password");
     }
   };
@@ -83,32 +88,71 @@ const Settings = () => {
     setShowLogoutConfirm(false);
   };
 
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setAvatar(file);
+    }
+  };
+
+  const handleAvatarUpload = async () => {
+    if (!avatar) return;
+    setIsAvatarUploading(true);
+
+    // Get a reference to Firebase Storage
+    const storageRef = ref(storage, `avatars/${auth.currentUser.uid}`);
+    
+    // Upload the file to Firebase Storage
+    try {
+      const uploadTask = uploadBytesResumable(storageRef, avatar);
+      uploadTask.on(
+        'state_changed',
+        null,
+        (error) => {
+          console.error("Error uploading avatar:", error);
+          alert("Error uploading avatar!");
+        },
+        async () => {
+          const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
+          // Update user avatar URL in Firestore
+          const userRef = doc(db, 'users', auth.currentUser.uid);
+          await updateDoc(userRef, { avatar: downloadUrl });
+
+          setAvatarUrl(downloadUrl);  // Update the avatar URL in the UI
+          setIsAvatarUploading(false);
+        }
+      );
+    } catch (error) {
+      setIsAvatarUploading(false);
+      alert("Error uploading avatar");
+    }
+  };
+
   if (!user) {
     return (
-      <div className="h-screen flex flex-col justify-center items-center bg-gray-100">
+      <div className="h-screen flex flex-col justify-center items-center bg-white">
         {/* Loader GIF in the center */}
         <div className="flex items-center justify-center mb-4">
-          <img src={loaderGif} alt="Loading" className="w-32 h-32" /> {/* Increased size */}
+          <img src={loaderGif} alt="Loading" className="w-32 h-32" />
         </div>
       </div>
     );
   }
 
-
   return (
-    <div className="max-w-4xl mx-auto p-4">
+    <div className="max-w-4xl mx-auto p-4 bg-white text-black">
       {/* Header */}
       <div className="text-center mb-8">
         <h2 className="text-2xl font-semibold">Settings</h2>
       </div>
 
       {/* Profile Settings Section */}
-      <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
+      <div className="bg-gray-100 p-6 rounded-lg shadow-sm mb-6">
         <h3 className="text-xl font-medium mb-4">Profile</h3>
         <div className="flex items-center space-x-4">
           <div className="w-16 h-16 rounded-full bg-gray-300 flex items-center justify-center">
             {/* Profile Picture */}
-            <img src={user.avatar || '/default-profile.jpg'} alt="Profile" className="w-full h-full rounded-full" />
+            <img src={avatarUrl} alt="Profile" className="w-full h-full rounded-full" />
           </div>
           <div>
             <h4 className="text-lg font-medium">{fullName}</h4>
@@ -120,6 +164,26 @@ const Settings = () => {
               <FiEdit size={16} className="mr-2" />
               {isProfileEditMode ? 'Cancel' : 'Edit'}
             </button>
+            {/* Avatar Edit Button */}
+            <div className="mt-2">
+              <label className="text-blue-500 cursor-pointer hover:underline">
+                {isAvatarUploading ? 'Uploading...' : 'Edit Avatar'}
+                <input
+                  type="file"
+                  onChange={handleAvatarChange}
+                  accept="image/*"
+                  className="hidden"
+                />
+              </label>
+              {avatar && !isAvatarUploading && (
+                <button
+                  onClick={handleAvatarUpload}
+                  className="mt-2 bg-blue-500 text-white px-6 py-2 rounded-lg"
+                >
+                  Upload Avatar
+                </button>
+              )}
+            </div>
           </div>
         </div>
         {isProfileEditMode && (
@@ -127,21 +191,21 @@ const Settings = () => {
             <input
               type="text"
               value={fullName}
-              onChange={(e) => setfullName(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg shadow-sm"
+              onChange={(e) => setFullName(e.target.value)}
+              className="w-full px-4 py-2 border rounded-lg shadow-sm bg-white text-black"
               placeholder="Name"
             />
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg shadow-sm"
+              className="w-full px-4 py-2 border rounded-lg shadow-sm bg-white text-black"
               placeholder="Username"
             />
             <textarea
               value={bio}
               onChange={(e) => setBio(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg shadow-sm"
+              className="w-full px-4 py-2 border rounded-lg shadow-sm bg-white text-black"
               placeholder="Bio"
             />
             <button onClick={handleProfileUpdate} className="mt-2 bg-blue-500 text-white px-6 py-2 rounded-lg">
@@ -152,7 +216,7 @@ const Settings = () => {
       </div>
 
       {/* Account Settings Section */}
-      <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
+      <div className="bg-gray-100 p-6 rounded-lg shadow-sm mb-6">
         <h3 className="text-xl font-medium mb-4">Account</h3>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
@@ -176,21 +240,21 @@ const Settings = () => {
                 value={oldPassword}
                 onChange={(e) => setOldPassword(e.target.value)}
                 placeholder="Current Password"
-                className="w-full px-4 py-2 border rounded-lg shadow-sm"
+                className="w-full px-4 py-2 border rounded-lg shadow-sm bg-white text-black"
               />
               <input
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="New Password"
-                className="w-full px-4 py-2 border rounded-lg shadow-sm"
+                className="w-full px-4 py-2 border rounded-lg shadow-sm bg-white text-black"
               />
               <input
                 type="password"
                 value={confirmNewPassword}
                 onChange={(e) => setConfirmNewPassword(e.target.value)}
                 placeholder="Confirm New Password"
-                className="w-full px-4 py-2 border rounded-lg shadow-sm"
+                className="w-full px-4 py-2 border rounded-lg shadow-sm bg-white text-black"
               />
               <button onClick={handlePasswordUpdate} className="mt-2 bg-blue-500 text-white px-6 py-2 rounded-lg">
                 Save
@@ -200,68 +264,33 @@ const Settings = () => {
         </div>
       </div>
 
+      {/* More Apps Section */}
+      <div className="bg-gray-100 p-6 rounded-lg shadow-sm mb-6">
+        <MoreAppsSection />
+      </div>
+
       {/* Log Out Section */}
-      <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
+      <div className="bg-gray-100 p-6 rounded-lg shadow-sm mb-6">
         <div className="flex items-center justify-between">
-          <button
-            className="flex items-center text-red-500 hover:text-red-600"
-            onClick={confirmLogout}
-          >
-            <FiPower size={20} className="mr-2" />
+          <p>Log out</p>
+          <button onClick={confirmLogout} className="text-red-500 hover:underline flex items-center">
+            <FiPower size={16} className="mr-2" />
             Log out
           </button>
         </div>
       </div>
 
-      {/* Confirmation Dialog */}
       {showLogoutConfirm && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-lg">
-            <p className="mb-4">Are you sure you want to log out?</p>
-            <div className="flex justify-end">
-              <button
-                className="bg-red-500 text-white px-4 py-2 rounded mr-2"
-                onClick={handleLogout}
-              >
-                Yes, log out
-              </button>
-              <button
-                className="bg-gray-300 text-black px-4 py-2 rounded"
-                onClick={cancelLogout}
-              >
-                Cancel
-              </button>
+            <p>Are you sure you want to log out?</p>
+            <div className="mt-4 space-x-4">
+              <button onClick={cancelLogout} className="bg-gray-300 px-6 py-2 rounded-lg">Cancel</button>
+              <button onClick={handleLogout} className="bg-red-500 text-white px-6 py-2 rounded-lg">Logout</button>
             </div>
           </div>
         </div>
-      )} {/* Enhanced Project Promotion Section */}
-      <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
-        <h3 className="text-xl font-medium mb-4">Explore More Apps</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {[
-            { name: "AINOR", link: "https://ainor.vercel.app" },
-            { name: "NeoCodeNex", link: "https://neocodenex.tech" },
-            { name: "MentorConnect", link: "https://mentorconnectt.vercel.app" },
-            { name: "GenZHub", link: "https://genzhub.vercel.app" },
-            { name: "HiiHive", link: "https://hiiHive.vercel.app" }
-          ].map((project, index) => (
-            <a
-              key={index}
-              href={project.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block bg-gradient-to-r from-blue-500 to-purple-600 p-4 rounded-lg shadow-lg text-white font-semibold hover:shadow-xl hover:scale-105 transition-transform duration-300"
-            >
-              {project.name}
-            </a>
-          ))}
-        </div>
-      </div>
-
-      {/* Footer Section for Credit */}
-      <footer className="text-center mt-8 text-sm text-gray-500">
-        <p>Developed by dixitk941 | Powered by AINOR</p>
-      </footer>
+      )}
     </div>
   );
 };

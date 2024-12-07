@@ -6,7 +6,8 @@ import { getDownloadURL, ref as storageRef } from "firebase/storage";
 import { useParams } from 'react-router-dom';
 import { arrayUnion, arrayRemove } from 'firebase/firestore';
 import Avatar from '@mui/material/Avatar';
-import loaderGif from '../assets/normload.gif'; // Adjust the path according to your project structure
+import Modal from '@mui/material/Modal';
+import loaderGif from '../assets/normload.gif'; // Adjust path to loader asset
 
 const UserProfile = () => {
   const { userId } = useParams();
@@ -15,38 +16,19 @@ const UserProfile = () => {
     avatar: '',
     username: '',
     bio: '',
+    followers: [],
+    following: [],
   });
+  const [followersData, setFollowersData] = useState([]);
+  const [followingData, setFollowingData] = useState([]);
   const [userPosts, setUserPosts] = useState([]);
   const [currentUserId, setCurrentUserId] = useState(null);
   const [isFollowing, setIsFollowing] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPostModalOpen, setIsPostModalOpen] = useState(false);
+  const [isUserListModalOpen, setIsUserListModalOpen] = useState(false);
+  const [listType, setListType] = useState(null); // 'followers' or 'following'
   const [loading, setLoading] = useState(true);
-  const [isProfilePicModalOpen, setIsProfilePicModalOpen] = useState(false);
-  const [isPostVisible, setIsPostVisible] = useState(true);
-
-
-  const handleClosePost = () => {
-    setIsPostVisible(false);
-  };
-
-  const openModal = (post) => {
-    setSelectedPost(post);
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setSelectedPost(null);
-  };
-
-  const openProfilePicModal = () => {
-    setIsProfilePicModalOpen(true);
-  };
-
-  const closeProfilePicModal = () => {
-    setIsProfilePicModalOpen(false);
-  };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -73,11 +55,13 @@ const UserProfile = () => {
               avatar: avatarUrl,
               username: userData.username || '',
               bio: userData.bio || '',
+              followers: userData.followers || [],
+              following: userData.following || [],
             });
             setIsFollowing(userData.followers?.includes(currentUserId) || false);
           }
         } catch (error) {
-          // console.error('Error fetching user data:', error);
+          console.error('Error fetching user data:', error);
         } finally {
           setLoading(false);
         }
@@ -95,12 +79,50 @@ const UserProfile = () => {
           const posts = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
           setUserPosts(posts);
         } catch (error) {
-          // console.error('Error fetching user posts:', error);
+          console.error('Error fetching user posts:', error);
         }
       }
     };
     fetchUserPosts();
   }, [userId]);
+
+  // Fetch followers and following data
+  useEffect(() => {
+    const fetchUserListDetails = async (list, setData) => {
+      const users = await Promise.all(
+        list.map(async (userId) => {
+          if (typeof userId !== 'string') {
+            console.error('Invalid userId:', userId);
+            return null;
+          }
+          const userRef = doc(db, 'users', userId);
+          const userSnap = await getDoc(userRef);
+          if (userSnap.exists()) {
+            const userData = userSnap.data();
+            let avatarUrl = '';
+            if (userData.avatar) {
+              const avatarRef = storageRef(storage, `avatars/${userId}`);
+              avatarUrl = await getDownloadURL(avatarRef);
+            }
+            return {
+              id: userId,
+              fullName: userData.fullName || 'Unknown User',
+              avatar: avatarUrl,
+            };
+          }
+          return null;
+        })
+      );
+      setData(users.filter(user => user !== null)); // Filter out any null values
+    };
+
+    if (userDetails.followers.length > 0) {
+      fetchUserListDetails(userDetails.followers, setFollowersData);
+    }
+    if (userDetails.following.length > 0) {
+      fetchUserListDetails(userDetails.following, setFollowingData);
+    }
+  }, [userDetails.followers, userDetails.following]);
 
   const handleFollowToggle = async () => {
     const currentUserRef = doc(db, 'users', currentUserId);
@@ -109,22 +131,22 @@ const UserProfile = () => {
     try {
       if (isFollowing) {
         await updateDoc(currentUserRef, {
-          following: arrayRemove({ id: userId, fullName: userDetails.displayName })
+          following: arrayRemove(userId),
         });
         await updateDoc(followedUserRef, {
-          followers: arrayRemove(currentUserId)
+          followers: arrayRemove(currentUserId),
         });
       } else {
         await updateDoc(currentUserRef, {
-          following: arrayUnion({ id: userId, fullName: userDetails.displayName })
+          following: arrayUnion(userId),
         });
         await updateDoc(followedUserRef, {
-          followers: arrayUnion(currentUserId)
+          followers: arrayUnion(currentUserId),
         });
       }
       setIsFollowing(!isFollowing);
     } catch (error) {
-      // console.error("Error toggling follow status: ", error);
+      console.error("Error toggling follow status: ", error);
     }
   };
 
@@ -134,42 +156,70 @@ const UserProfile = () => {
     alert('Profile link copied to clipboard!');
   };
 
+  const handlePostClick = (post) => {
+    setSelectedPost(post);
+    setIsPostModalOpen(true);
+  };
+
+  const handleUserListClick = (type) => {
+    setListType(type);
+    setIsUserListModalOpen(true);
+  };
+
+  const renderPostContent = (post) => {
+    const { fileType, fileUrl, caption } = post;
+
+    if (fileType?.includes('image')) {
+      return <img src={fileUrl} alt={caption} className="w-full h-64 object-cover" />;
+    }
+    if (fileType?.includes('video')) {
+      return <video controls src={fileUrl} className="w-full h-64 object-cover" />;
+    }
+    if (fileType?.includes('audio')) {
+      return <audio controls src={fileUrl} className="w-full" />;
+    }
+    return (
+      <div className="flex items-center justify-center bg-gray-200 h-64 text-gray-700">
+        <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="underline">
+          Open File
+        </a>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="h-screen flex flex-col justify-center items-center bg-gray-100">
-      {/* Loader GIF in the center */}
-      <div className="flex items-center justify-center mb-4">
-        <img src={loaderGif} alt="Loading" className="w-32 h-32" /> {/* Increased size */}
+        <img src={loaderGif} alt="Loading" className="w-32 h-32" />
       </div>
-    </div>
     );
   }
 
   return (
     <div className="max-w-screen-lg mx-auto p-4 sm:p-6 bg-white">
       <div className="flex flex-col items-center text-center pb-6 mb-6 border-b border-gray-300">
-      <Avatar
-  src={userDetails.avatar || ''}
-  alt="Profile"
-  className="rounded-full border border-gray-300 cursor-pointer"
-  style={{ width: '128px', height: '128px' }} // 128px is equivalent to 8rem (64 * 2)
-  onClick={openProfilePicModal}
->
-  {!userDetails.avatar && userDetails.username[0]?.toUpperCase()}
-</Avatar>
+        <Avatar
+          src={userDetails.avatar || ''}
+          alt="Profile"
+          className="rounded-full border border-gray-300"
+          style={{ width: '128px', height: '128px' }}
+        />
         <h2 className="text-2xl font-semibold text-gray-900 mt-4">{userDetails.username}</h2>
         <p className="text-gray-500">{userDetails.displayName}</p>
         <p className="text-sm text-gray-400 mt-2">{userDetails.bio}</p>
         <div className="flex space-x-6 mt-4">
-          <span className="text-sm font-semibold">
-            <span className="text-gray-900">{userPosts.length}</span> posts
-          </span>
-          <span className="text-sm font-semibold">
-            <span className="text-gray-900">{userDetails.followers?.length || 0}</span> followers
-          </span>
-          <span className="text-sm font-semibold">
-            <span className="text-gray-900">{userDetails.following?.length || 0}</span> following
-          </span>
+          <button
+            className="text-sm font-semibold"
+            onClick={() => handleUserListClick('followers')}
+          >
+            <span className="text-gray-900">{followersData.length || 0}</span> followers
+          </button>
+          <button
+            className="text-sm font-semibold"
+            onClick={() => handleUserListClick('following')}
+          >
+            <span className="text-gray-900">{followingData.length || 0}</span> following
+          </button>
         </div>
         {userId !== currentUserId && (
           <button
@@ -181,129 +231,41 @@ const UserProfile = () => {
             {isFollowing ? 'Following' : 'Follow'}
           </button>
         )}
-        {/* Share Profile Button */}
         <button
           onClick={shareProfile}
-          className="mt-4 px-6 py-2 text-sm font-semibold rounded-md bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:bg-blue-600 transition duration-300 ease-in-out"
+          className="mt-4 px-6 py-2 text-sm font-semibold rounded-md bg-gradient-to-r from-blue-500 to-indigo-500 text-white"
         >
           Share Profile
         </button>
       </div>
-
-      {/* Modal for Profile Picture */}
-      {isProfilePicModalOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
-          onClick={closeProfilePicModal}
-        >
-          <div className="bg-white rounded-lg overflow-hidden shadow-lg w-full max-w-lg">
-            <img
-              src={userDetails.avatar || ''}
-              alt="Profile"
-              className="w-full h-full object-cover"
-            />
-            <button
-              className="absolute top-0 right-0 m-2 text-white font-semibold"
-              onClick={closeProfilePicModal}
-            >
-              X
-            </button>
-          </div>
-        </div>
-      )}
-
+      {/* Posts Section */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-4">
-  {userPosts.map(post => (
-    <div key={post.id} className="relative group overflow-hidden rounded-lg shadow-lg">
-      {post.fileType === 'image' && (
-        <img
-          src={post.fileUrl}
-          alt={post.caption}
-          className="w-full h-64 object-cover transition-transform duration-300 ease-in-out transform group-hover:scale-110 cursor-pointer"
-          onClick={() => openModal(post)}
-        />
-      )}
-      {post.fileType === 'video' && (
-        <video
-          src={post.fileUrl}
-          className="w-full h-64 object-cover transition-transform duration-300 ease-in-out transform group-hover:scale-110 cursor-pointer"
-          controls
-          onClick={() => openModal(post)}
-        />
-      )}
-      {post.fileType === 'audio' && (
-        <div className="w-full h-64 bg-gray-200 flex items-center justify-center transition-transform duration-300 ease-in-out transform group-hover:scale-110 cursor-pointer">
-          <audio
-            src={post.fileUrl}
-            className="w-full"
-            controls
-            onClick={() => openModal(post)}
-          />
-        </div>
-      )}
-      {post.fileType === 'text' && (
-        <div
-          className="w-full h-64 p-4 bg-gray-100 flex items-center justify-center transition-transform duration-300 ease-in-out transform group-hover:scale-110 cursor-pointer"
-          onClick={() => openModal(post)}
-        >
-          <p className="text-gray-800 text-center">{post.textContent}</p>
-        </div>
-      )}
-      <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-        <button
-          className="text-white font-semibold"
-          onClick={() => openModal(post)}
-        >
-          View Post
-        </button>
-      </div>
-    </div>
-  ))}
-</div>
-
-      {/* Modal for Post Details */}
-      {isModalOpen && selectedPost && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-          <div className="bg-white p-4 rounded-lg shadow-lg max-w-lg w-full">
-            <button
-              className="absolute top-0 right-0 m-2 text-black font-semibold"
-              onClick={closeModal}
-            >
-              X
-            </button>
-            {selectedPost.fileType === 'image' && (
-              <img
-                src={selectedPost.fileUrl}
-                alt={selectedPost.caption}
-                className="w-full h-auto"
-              />
-            )}
-            {selectedPost.fileType === 'video' && (
-              <video
-                src={selectedPost.fileUrl}
-                className="w-full h-auto"
-                controls
-              />
-            )}
-            {selectedPost.fileType === 'audio' && (
-              <audio
-                src={selectedPost.fileUrl}
-                className="w-full"
-                controls
-              />
-            )}
-            {selectedPost.fileType === 'text' && (
-              <div className="p-4 bg-gray-100">
-                <p className="text-gray-800">{selectedPost.textContent}</p>
-              </div>
-            )}
+        {userPosts.map(post => (
+          <div
+            key={post.id}
+            className="relative group overflow-hidden rounded-lg shadow-lg cursor-pointer"
+            onClick={() => handlePostClick(post)}
+          >
+            {renderPostContent(post)}
           </div>
+        ))}
+      </div>
+      {/* Followers/Following Modal */}
+      <Modal open={isUserListModalOpen} onClose={() => setIsUserListModalOpen(false)}>
+        <div className="bg-white max-w-md mx-auto mt-20 p-6 rounded-lg shadow-lg">
+          <h3 className="text-lg font-semibold">
+            {listType === 'followers' ? 'Followers' : 'Following'}
+          </h3>
+          <ul className="mt-4 space-y-2">
+            {(listType === 'followers' ? followersData : followingData).map((user, index) => (
+              <li key={index} className="flex items-center space-x-4">
+                <Avatar src={user.avatar || ''} alt={user.fullName} />
+                <p className="text-gray-700">{user.fullName || 'Anonymous User'}</p>
+              </li>
+            ))}
+          </ul>
         </div>
-      )}
-
-<footer className="text-center mt-8 text-sm text-gray-500">
-        <p>Developed by dixitk941 | Powered by AINOR</p>
-      </footer>
+      </Modal>
     </div>
   );
 };

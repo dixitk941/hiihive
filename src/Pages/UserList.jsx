@@ -5,7 +5,6 @@ import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from './firebaseConfig'; // Adjust the import path as necessary
 import SidebarLeft from '../components/SidebarLeft';
 import SidebarRight from '../components/SidebarRight';
-import SearchBar from '../components/SearchBar';
 import UsersList from '../components/UserList'; // Replace Feeds with UsersList
 // import FloatingMenu from '../components/FloatingMenu';
 import ChatInterface from '../components/ChatInterface';
@@ -61,7 +60,7 @@ function UserList() {
         
         {/* Main content section with SearchBar and UsersList */}
         <main className="flex-1 p-4 overflow-auto">
-          <SearchBar />
+          {/* <SearchBar /> */}
           {currentUser && <UsersList currentUser={currentUser} />} {/* Pass currentUser to UsersList */}
         </main>
 

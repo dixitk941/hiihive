@@ -10,11 +10,10 @@ import {
   doc,
   deleteDoc,
   getDoc,
-  updateDoc,
 } from 'firebase/firestore';
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import Picker from '@emoji-mart/react';
-import { IoSend, IoDocumentTextOutline, IoImageOutline, IoClose, IoAddCircleOutline } from 'react-icons/io5';
+import { IoSend, IoDocumentTextOutline, IoImageOutline, IoClose } from 'react-icons/io5';
 import { useParams } from 'react-router-dom';
 import ChatHeader from './ChatHeader';
 
@@ -27,29 +26,33 @@ const ChatInterface = ({ currentUser }) => {
   const [fileUploadProgress, setFileUploadProgress] = useState(0);
   const [chatRoomName, setChatRoomName] = useState('');
   const [chatRoomEmoji, setChatRoomEmoji] = useState('');
-  const { chatRoomId } = useParams();
+  const { chatRoomId } = useParams(); // Get chatRoomId from URL params
+  const [currentChatRoomId, setChatRoomId] = useState(chatRoomId || ''); // State for chatRoomId
   const db = getFirestore();
   const storage = getStorage();
   const messagesContainerRef = useRef(null);
 
-  const [deleteMessageId, setDeleteMessageId] = useState(null);
-  const [showDeleteIcon, setShowDeleteIcon] = useState(false);
-
   useEffect(() => {
-    if (!chatRoomId) return;
+    if (!currentChatRoomId) return;
 
     const fetchChatRoomData = async () => {
-      const chatRoomRef = doc(db, 'chatRooms', chatRoomId);
+      const chatRoomRef = doc(db, 'chatRooms', currentChatRoomId);
       const chatRoomDoc = await getDoc(chatRoomRef);
+      
+      // Log the status of the chat room
+      console.log("Fetching chat room data for:", currentChatRoomId);
+      
       if (chatRoomDoc.exists()) {
         setChatRoomName(chatRoomDoc.data().name || 'Chat Room');
         setChatRoomEmoji(chatRoomDoc.data().emoji || '💬');
+      } else {
+        console.log("Chat room not found.");
       }
     };
 
     fetchChatRoomData();
 
-    const messagesRef = collection(db, 'chatRooms', chatRoomId, 'messages');
+    const messagesRef = collection(db, 'chatRooms', currentChatRoomId, 'messages');
     const q = query(messagesRef, orderBy('createdAt'));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -63,12 +66,12 @@ const ChatInterface = ({ currentUser }) => {
     });
 
     return () => unsubscribe();
-  }, [chatRoomId, db]);
+  }, [currentChatRoomId, db]);
 
   const handleSendMessage = async () => {
     if (messageInput.trim() === '' && !file && !image) return;
 
-    const messagesRef = collection(db, 'chatRooms', chatRoomId, 'messages');
+    const messagesRef = collection(db, 'chatRooms', currentChatRoomId, 'messages');
 
     let fileUrl = null;
     let imageUrl = null;
@@ -123,7 +126,7 @@ const ChatInterface = ({ currentUser }) => {
   };
 
   const sendMessage = async (fileUrl, imageUrl) => {
-    const messagesRef = collection(db, 'chatRooms', chatRoomId, 'messages');
+    const messagesRef = collection(db, 'chatRooms', currentChatRoomId, 'messages');
     await addDoc(messagesRef, {
       text: messageInput,
       senderId: currentUser.uid,
@@ -140,9 +143,8 @@ const ChatInterface = ({ currentUser }) => {
 
   const handleDeleteMessage = async (messageId) => {
     if (window.confirm('Are you sure you want to delete this message?')) {
-      const messageRef = doc(db, 'chatRooms', chatRoomId, 'messages', messageId);
+      const messageRef = doc(db, 'chatRooms', currentChatRoomId, 'messages', messageId);
       await deleteDoc(messageRef);
-      setDeleteMessageId(messageId);
     }
   };
 
@@ -176,7 +178,13 @@ const ChatInterface = ({ currentUser }) => {
 
   return (
     <div className="flex flex-col h-screen bg-white text-black">
-      <ChatHeader chatRoomName={chatRoomName} chatRoomEmoji={chatRoomEmoji} onBack={() => console.log('Go Back')} />
+      <ChatHeader 
+        chatRoomName={chatRoomName} 
+        chatRoomEmoji={chatRoomEmoji} 
+        chatRoomId={currentChatRoomId} 
+        currentUser={currentUser} 
+        onBack={() => console.log('Go Back')} 
+      />
 
       <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-100 rounded-t-2xl shadow-lg sm:p-6">
         {messages.map((message) => (
@@ -241,20 +249,14 @@ const ChatInterface = ({ currentUser }) => {
           <input type="file" id="fileInput" onChange={handleFileChange} className="hidden" />
           <input type="file" id="imageInput" onChange={handleImageChange} className="hidden" />
 
-          {/* File and image input buttons */}
-          <label htmlFor="fileInput" className="p-2 cursor-pointer text-gray-500 hover:text-green-500 hidden sm:block">
-            <IoDocumentTextOutline size={24} />
+          {/* File and image upload buttons */}
+          <label htmlFor="fileInput">
+            <IoDocumentTextOutline size={24} className="text-gray-500 cursor-pointer" />
           </label>
-          <label htmlFor="imageInput" className="p-2 cursor-pointer text-gray-500 hover:text-blue-500 hidden sm:block">
-            <IoImageOutline size={24} />
+          <label htmlFor="imageInput">
+            <IoImageOutline size={24} className="text-gray-500 cursor-pointer" />
           </label>
-
-          {/* + icon for mobile */}
-          <label htmlFor="fileInput" className="p-2 cursor-pointer text-gray-500 sm:hidden hover:text-green-500">
-            <IoAddCircleOutline size={40} />
-          </label>
-
-          <button onClick={handleSendMessage} className="p-2 text-white bg-blue-500 rounded-full hover:bg-blue-600 transition">
+          <button onClick={handleSendMessage} className="p-2 text-blue-500">
             <IoSend size={24} />
           </button>
         </div>
