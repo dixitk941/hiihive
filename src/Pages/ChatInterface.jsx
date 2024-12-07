@@ -42,18 +42,18 @@ const ChatPage = () => {
 
   return (
     <div className="flex flex-col h-screen">
-      <div className="flex flex-1">
-        {/* SidebarLeft for main navigation - hidden on mobile */}
+      <div className="flex flex-1 w-full">
+        {/* SidebarLeft - only visible on larger screens */}
         <div className="hidden lg:block w-[250px]">
-          <SidebarLeft currentUser={currentUser} /> {/* Pass currentUser to SidebarLeft */}
+          <SidebarLeft currentUser={currentUser} />
         </div>
-        
+
         {/* Main content section */}
-        <main className="flex-1 p-4 overflow-auto lg:p-0">
+        <main className="flex-1 p-4 lg:p-0 w-full">
           <ChatInterface currentUser={currentUser} chatRoomId={selectedChat} onBack={handleBackToSidebar} />
         </main>
 
-        {/* Conditionally render SidebarRight or ChatInterface - hidden on mobile */}
+        {/* SidebarRight - only visible on larger screens */}
         <div className="hidden lg:flex flex-col w-96">
           {!selectedChat ? (
             <SidebarRight currentUser={currentUser} setSelectedChat={setSelectedChat} />
@@ -61,14 +61,14 @@ const ChatPage = () => {
             <ChatInterface currentUser={currentUser} chatRoomId={selectedChat} onBack={handleBackToSidebar} />
           )}
         </div>
-
-        {/* Show ChatInterface on mobile if chat is selected */}
-        {selectedChat && (
-          <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white shadow-lg z-50 p-4">
-            <ChatInterface currentUser={currentUser} chatRoomId={selectedChat} onBack={handleBackToSidebar} />
-          </div>
-        )}
       </div>
+
+      {/* Show ChatInterface on mobile if chat is selected */}
+      {selectedChat && (
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white shadow-lg z-50 p-4 w-full">
+          <ChatInterface currentUser={currentUser} chatRoomId={selectedChat} onBack={handleBackToSidebar} />
+        </div>
+      )}
     </div>
   );
 };

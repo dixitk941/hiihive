@@ -12,11 +12,11 @@ import {
   getDoc,
   updateDoc,
 } from 'firebase/firestore';
-
+import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import Picker from '@emoji-mart/react';
-import { IoSend, IoDocumentTextOutline, IoImageOutline, IoClose } from 'react-icons/io5';
+import { IoSend, IoDocumentTextOutline, IoImageOutline, IoClose, IoAddCircleOutline } from 'react-icons/io5';
 import { useParams } from 'react-router-dom';
-import ChatHeader from './ChatHeader'; // Import the new ChatHeader component
+import ChatHeader from './ChatHeader';
 
 const ChatInterface = ({ currentUser }) => {
   const [messages, setMessages] = useState([]);
@@ -24,10 +24,12 @@ const ChatInterface = ({ currentUser }) => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [file, setFile] = useState(null);
   const [image, setImage] = useState(null);
+  const [fileUploadProgress, setFileUploadProgress] = useState(0);
   const [chatRoomName, setChatRoomName] = useState('');
   const [chatRoomEmoji, setChatRoomEmoji] = useState('');
   const { chatRoomId } = useParams();
   const db = getFirestore();
+  const storage = getStorage();
   const messagesContainerRef = useRef(null);
 
   const [deleteMessageId, setDeleteMessageId] = useState(null);
@@ -67,17 +69,73 @@ const ChatInterface = ({ currentUser }) => {
     if (messageInput.trim() === '' && !file && !image) return;
 
     const messagesRef = collection(db, 'chatRooms', chatRoomId, 'messages');
+
+    let fileUrl = null;
+    let imageUrl = null;
+
+    // Upload file to Firebase Storage
+    if (file) {
+      const fileRef = ref(storage, `chatFiles/${Date.now()}-${file.name}`);
+      const uploadTask = uploadBytesResumable(fileRef, file);
+
+      // Listen for file upload progress
+      uploadTask.on(
+        'state_changed',
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          setFileUploadProgress(progress);
+        },
+        (error) => {
+          console.error('File upload failed', error);
+        },
+        async () => {
+          // Get the file download URL after successful upload
+          fileUrl = await getDownloadURL(uploadTask.snapshot.ref);
+          await sendMessage(fileUrl, imageUrl);
+        }
+      );
+    }
+
+    // Upload image to Firebase Storage
+    if (image) {
+      const imageRef = ref(storage, `chatImages/${Date.now()}-${image.name}`);
+      const uploadTask = uploadBytesResumable(imageRef, image);
+
+      uploadTask.on(
+        'state_changed',
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          setFileUploadProgress(progress);
+        },
+        (error) => {
+          console.error('Image upload failed', error);
+        },
+        async () => {
+          imageUrl = await getDownloadURL(uploadTask.snapshot.ref);
+          await sendMessage(fileUrl, imageUrl);
+        }
+      );
+    }
+
+    if (!file && !image) {
+      await sendMessage(fileUrl, imageUrl);
+    }
+  };
+
+  const sendMessage = async (fileUrl, imageUrl) => {
+    const messagesRef = collection(db, 'chatRooms', chatRoomId, 'messages');
     await addDoc(messagesRef, {
       text: messageInput,
       senderId: currentUser.uid,
       createdAt: serverTimestamp(),
-      file: file ? file.name : null,
-      image: image ? image.name : null,
+      file: fileUrl,
+      image: imageUrl,
     });
 
     setMessageInput('');
     setFile(null);
     setImage(null);
+    setFileUploadProgress(0);
   };
 
   const handleDeleteMessage = async (messageId) => {
@@ -116,126 +174,90 @@ const ChatInterface = ({ currentUser }) => {
     }
   };
 
-  const handleLongPress = (e, messageId) => {
-    e.preventDefault();
-    setDeleteMessageId(messageId);
-    setShowDeleteIcon(true);
-  };
-
-  const handleDeleteClick = (messageId) => {
-    handleDeleteMessage(messageId);
-    setShowDeleteIcon(false);
-  };
-
-  const handleSwipeLeft = (e, messageId) => {
-    const target = e.target;
-    const swipeThreshold = 150;
-    let startX;
-
-    const onTouchStart = (touchStartEvent) => {
-      startX = touchStartEvent.touches[0].clientX;
-    };
-
-    const onTouchMove = (touchMoveEvent) => {
-      const diff = startX - touchMoveEvent.touches[0].clientX;
-      if (diff > swipeThreshold) {
-        target.classList.add('show-timestamp');
-      }
-    };
-
-    const onTouchEnd = () => {
-      target.removeEventListener('touchmove', onTouchMove);
-      target.removeEventListener('touchend', onTouchEnd);
-    };
-
-    target.addEventListener('touchstart', onTouchStart);
-    target.addEventListener('touchmove', onTouchMove);
-    target.addEventListener('touchend', onTouchEnd);
-  };
-
-  const handleEmojiRoomSelect = (emoji) => {
-    setChatRoomEmoji(emoji.native);
-    const chatRoomRef = doc(db, 'chatRooms', chatRoomId);
-    updateDoc(chatRoomRef, {
-      emoji: emoji.native,
-    });
-  };
-
   return (
     <div className="flex flex-col h-screen bg-white text-black">
       <ChatHeader chatRoomName={chatRoomName} chatRoomEmoji={chatRoomEmoji} onBack={() => console.log('Go Back')} />
 
       <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-100 rounded-t-2xl shadow-lg sm:p-6">
         {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex items-start space-x-2 ${
-              message.senderId === currentUser.uid ? 'justify-end' : 'justify-start'
-            } relative`}
-            onContextMenu={(e) => handleLongPress(e, message.id)}
-            onTouchStart={(e) => handleSwipeLeft(e, message.id)}
-            style={{ opacity: deleteMessageId === message.id ? 0.5 : 1 }}
-          >
-            <div
-              className={`p-3 max-w-[75%] sm:max-w-[65%] rounded-lg shadow-md ${
-                message.senderId === currentUser.uid
-                  ? 'bg-black text-white'
-                  : 'bg-white text-black border border-gray-300'
-              }`}
-            >
+          <div key={message.id} className={`flex items-start space-x-2 ${message.senderId === currentUser.uid ? 'justify-end' : 'justify-start'} relative`}>
+            <div className={`p-3 max-w-[75%] sm:max-w-[65%] rounded-lg shadow-md ${message.senderId === currentUser.uid ? 'bg-black text-white' : 'bg-white text-black border border-gray-300'}`}>
               <p>{message.text}</p>
-              {message.file && <p className="text-xs truncate">📄 {message.file}</p>}
-              {message.image && <img src={URL.createObjectURL(image)} alt="uploaded" className="rounded-md mt-2 w-full object-contain" />}
-              <span className="block text-xs mt-1 text-right opacity-70 timestamp hidden">
-                {message.createdAt?.toDate
-                  ? new Date(message.createdAt.toDate()).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })
-                  : 'Sending...'}
-              </span>
-              {showDeleteIcon && deleteMessageId === message.id && (
-                <button
-                  onClick={() => handleDeleteClick(message.id)}
-                  className="absolute top-1 right-1 text-red-500 text-xl"
-                  style={{ transition: 'transform 0.3s ease-out', transform: 'scale(1.2)' }}
-                >
-                  <IoClose />
-                </button>
-              )}
+              {message.file && <a href={message.file} className="text-xs truncate text-blue-600">📄 File</a>}
+              {message.image && <img src={message.image} alt="uploaded" className="rounded-md mt-2 w-full object-contain" />}
             </div>
           </div>
         ))}
       </div>
 
-      <div className="p-4 bg-gray-200 border-t flex items-center gap-2 sm:p-6">
-        {showEmojiPicker && (
-          <div className="absolute bottom-16 left-4 z-50">
-            <Picker onEmojiSelect={handleEmojiSelect} theme="light" />
+      <div className="p-4 bg-gray-200 border-t flex flex-col gap-2 sm:p-6">
+        {/* Preview of selected file or image */}
+        {file && (
+          <div className="flex items-center space-x-2 mb-2">
+            <IoDocumentTextOutline size={24} className="text-gray-500" />
+            <span className="text-sm">{file.name}</span>
+            <button onClick={() => setFile(null)} className="text-red-500">
+              <IoClose size={24} />
+            </button>
           </div>
         )}
-        <button onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="p-2 text-gray-500 hover:text-blue-500 transition-transform duration-300">
-          😊
-        </button>
-        <input
-          type="text"
-          value={messageInput}
-          onChange={(e) => setMessageInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Type a message..."
-          className="flex-1 p-2 text-sm bg-white text-black border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        <input type="file" id="fileInput" onChange={handleFileChange} className="hidden" />
-        <label htmlFor="fileInput" className="p-2 cursor-pointer text-gray-500 hover:text-green-500">
-          <IoDocumentTextOutline size={20} />
-        </label>
-        <input type="file" accept="image/*" id="imageInput" onChange={handleImageChange} className="hidden" />
-        <label htmlFor="imageInput" className="p-2 cursor-pointer text-gray-500 hover:text-purple-500">
-          <IoImageOutline size={20} />
-        </label>
-        <button onClick={handleSendMessage} className="p-2 text-gray-500 hover:text-blue-500 transition-transform duration-300 transform hover:scale-125">
-          <IoSend size={20} />
-        </button>
+        {image && (
+          <div className="flex items-center space-x-2 mb-2">
+            <img src={URL.createObjectURL(image)} alt="preview" className="w-10 h-10 object-cover rounded" />
+            <span className="text-sm">{image.name}</span>
+            <button onClick={() => setImage(null)} className="text-red-500">
+              <IoClose size={24} />
+            </button>
+          </div>
+        )}
+
+        {/* Uploading Progress */}
+        {fileUploadProgress > 0 && fileUploadProgress < 100 && (
+          <div className="w-full bg-gray-300 rounded-full h-2 mb-2">
+            <div
+              className="bg-blue-500 h-2 rounded-full"
+              style={{ width: `${fileUploadProgress}%`, transition: 'width 0.5s ease-out' }}
+            />
+          </div>
+        )}
+
+        <div className="flex items-center gap-2">
+          {showEmojiPicker && (
+            <div className="absolute bottom-16 left-4 z-50">
+              <Picker onEmojiSelect={handleEmojiSelect} theme="light" />
+            </div>
+          )}
+          <button onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="p-2 text-gray-500 hover:text-blue-500 transition-transform duration-300">
+            😊
+          </button>
+          <input
+            type="text"
+            value={messageInput}
+            onChange={(e) => setMessageInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Type a message..."
+            className="flex-1 p-2 text-sm bg-white text-black border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <input type="file" id="fileInput" onChange={handleFileChange} className="hidden" />
+          <input type="file" id="imageInput" onChange={handleImageChange} className="hidden" />
+
+          {/* File and image input buttons */}
+          <label htmlFor="fileInput" className="p-2 cursor-pointer text-gray-500 hover:text-green-500 hidden sm:block">
+            <IoDocumentTextOutline size={24} />
+          </label>
+          <label htmlFor="imageInput" className="p-2 cursor-pointer text-gray-500 hover:text-blue-500 hidden sm:block">
+            <IoImageOutline size={24} />
+          </label>
+
+          {/* + icon for mobile */}
+          <label htmlFor="fileInput" className="p-2 cursor-pointer text-gray-500 sm:hidden hover:text-green-500">
+            <IoAddCircleOutline size={40} />
+          </label>
+
+          <button onClick={handleSendMessage} className="p-2 text-white bg-blue-500 rounded-full hover:bg-blue-600 transition">
+            <IoSend size={24} />
+          </button>
+        </div>
       </div>
     </div>
   );
