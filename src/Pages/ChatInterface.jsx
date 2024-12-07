@@ -42,24 +42,23 @@ const ChatPage = () => {
 
   return (
     <div className="flex flex-col h-screen">
-<div className="flex flex-1">
-{/* SidebarLeft for main navigation */}
+      <div className="flex flex-1">
+        {/* SidebarLeft for main navigation - hidden on mobile */}
         <div className="hidden lg:block w-[250px]">
           <SidebarLeft currentUser={currentUser} /> {/* Pass currentUser to SidebarLeft */}
         </div>
         
         {/* Main content section */}
-        <main className="flex-1 p-4 overflow-auto">
+        <main className="flex-1 p-4 overflow-auto lg:p-0">
           <ChatInterface currentUser={currentUser} chatRoomId={selectedChat} onBack={handleBackToSidebar} />
         </main>
 
-        {/* Conditionally render SidebarRight or ChatInterface */}
+        {/* Conditionally render SidebarRight or ChatInterface - hidden on mobile */}
         <div className="hidden lg:flex flex-col w-96">
-          {/* If no chat is selected, show SidebarRight */}
           {!selectedChat ? (
-            <SidebarRight currentUser={currentUser} setSelectedChat={setSelectedChat} /> 
+            <SidebarRight currentUser={currentUser} setSelectedChat={setSelectedChat} />
           ) : (
-            <ChatInterface currentUser={currentUser} chatRoomId={selectedChat} onBack={handleBackToSidebar} /> 
+            <ChatInterface currentUser={currentUser} chatRoomId={selectedChat} onBack={handleBackToSidebar} />
           )}
         </div>
 
