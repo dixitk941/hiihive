@@ -14,10 +14,10 @@ const PostPage = ({ match }) => {
   const history = useNavigate();
 
   // Fetch post data from Firebase Realtime Database
-  const fetchPost = async (postId) => {
+  const fetchPost = async (feedid) => {
     setIsLoading(true);
     try {
-      const postRef = ref(db, `feeds/${postId}`);
+      const postRef = ref(db, `postpage/${feedid}`);
       const snapshot = await get(postRef);
       if (snapshot.exists()) {
         setPost(snapshot.val());
@@ -31,16 +31,16 @@ const PostPage = ({ match }) => {
     }
   };
 
-  const handleShare = (postId) => {
-    const shareableLink = `https://hiihive.vercel.app/post/${postId}`;
+  const handleShare = (feedid) => {
+    const shareableLink = `https://hiihive.vercel.app/post/${feedid}`;
     navigator.clipboard.writeText(shareableLink).then(() => {
       alert('Link copied to clipboard!');
     });
   };
 
   useEffect(() => {
-    const postId = match.params.postId;
-    fetchPost(postId);
+    const feedid = match.params.feedid;
+    fetchPost(feedid);
 
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -52,7 +52,7 @@ const PostPage = ({ match }) => {
     });
 
     return () => unsubscribe();
-  }, [match.params.postId]);
+  }, [match.params.feedid]);
 
   const handleLoginClick = () => {
     setShowLoginPrompt(false);
