@@ -83,3 +83,39 @@ button:hover {
 
 
 
+/* CSS */
+.w-full {
+  width: 100%;
+}
+
+.h-screen {
+  height: 100vh;
+}
+
+.object-cover {
+  object-fit: cover;
+}
+
+.relative {
+  position: relative;
+}
+
+.absolute {
+  position: absolute;
+}
+
+.bg-black {
+  background-color: black;
+}
+/* CSS for smooth scrolling */
+.h-full {
+  scroll-behavior: smooth; /* Add smooth scrolling */
+}
+/* In your global styles (e.g., styles.css or inside Tailwind config) */
+.scroll-container {
+  scroll-snap-type: y mandatory;
+}
+
+.scroll-item {
+  scroll-snap-align: start;
+}

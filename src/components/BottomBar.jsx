@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiHome, FiMessageSquare, FiUpload, FiSettings, FiCompass } from 'react-icons/fi';
+import { FiHome, FiMessageSquare, FiUpload, FiCompass, FiVideo } from 'react-icons/fi';
 
 const BottomBar = ({ toggleSidebarRight, isStoryActive }) => {
   const navigate = useNavigate();
@@ -30,17 +30,17 @@ const BottomBar = ({ toggleSidebarRight, isStoryActive }) => {
         <FiUpload size={20} />
       </button>
       <button
+        onClick={() => navigate('/hivee')}
+        className="flex flex-col items-center p-2 rounded-lg hover:bg-gray-100 hover:text-blue-600 transition-all duration-300"
+      >
+        <FiVideo size={20} />
+        </button>
+      <button
         onClick={() => navigate('/explore')}
         className="flex flex-col items-center p-2 rounded-lg hover:bg-gray-100 hover:text-blue-600 transition-all duration-300"
       >
         <FiCompass size={20} />
-      </button>
-      <button
-        onClick={() => navigate('/settings')}
-        className="flex flex-col items-center p-2 rounded-lg hover:bg-gray-100 hover:text-blue-600 transition-all duration-300"
-      >
-        <FiSettings size={20} />
-      </button>
+        </button>
     </aside>
   );
 };
