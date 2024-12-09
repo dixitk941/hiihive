@@ -1,202 +1,187 @@
 import React, { useState } from 'react';
-import { FaCamera, FaFileVideo, FaFileAudio } from 'react-icons/fa';
-import { AiOutlineClose, AiOutlineCloudUpload } from 'react-icons/ai';
-import { getFirestore, collection, addDoc } from 'firebase/firestore';
 import { getDatabase, ref, set } from 'firebase/database';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getAuth } from 'firebase/auth';
-import styled from 'styled-components';
+import { useNavigate } from 'react-router-dom';
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
+import { v4 as uuidv4 } from 'uuid';
 
-const Button = styled.button`
-  background-color: #6200ea;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 10px 20px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-
-  &:hover {
-    background-color: #3700b3;
-  }
-
-  &:disabled {
-    background-color: #9e9e9e;
-    cursor: not-allowed;
-  }
-`;
-
-const UploadPost = () => {
+const UploadContent = () => {
+  const [uploadType, setUploadType] = useState('Post'); // 'Post' or 'Hivee'
   const [file, setFile] = useState(null);
+  const [filePreview, setFilePreview] = useState(null);
   const [caption, setCaption] = useState('');
-  const [previewUrl, setPreviewUrl] = useState(null);
-  const [fileType, setFileType] = useState('');
+  const [selectedMusic, setSelectedMusic] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  const [musicLibrary] = useState([
+    { id: 1, name: 'Song 1', url: '/path/to/song1.mp3' },
+    { id: 2, name: 'Song 2', url: '/path/to/song2.mp3' },
+    { id: 3, name: 'Song 3', url: '/path/to/song3.mp3' },
+  ]);
+  const navigate = useNavigate();
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
-    if (selectedFile) {
-      const type = selectedFile.type.split('/')[0];
-      setFile(selectedFile);
-      setFileType(type);
-      setPreviewUrl(type === 'text' ? null : URL.createObjectURL(selectedFile)); // No preview for text files
-    }
+    setFile(selectedFile);
+    setFilePreview(URL.createObjectURL(selectedFile));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!caption.trim() && !file) {
-      alert('Caption or a file is required.');
-      return;
-    }
-
+  const handleUpload = async () => {
     setIsUploading(true);
     const auth = getAuth();
     const user = auth.currentUser;
-    const firestore = getFirestore();
-    const realtimeDb = getDatabase();
+    const db = getDatabase();
     const storage = getStorage();
+    const firestore = getFirestore();
 
-    if (!user) {
-      alert('You must be logged in to upload a post.');
-      setIsUploading(false);
-      return;
-    }
+    if (file && user) {
+      const fileRef = storageRef(storage, `uploads/${user.uid}/${file.name}`);
+      await uploadBytes(fileRef, file);
+      const fileUrl = await getDownloadURL(fileRef);
 
-    try {
-      let fileUrl = '';
-      if (file) {
-        const fileRef = storageRef(storage, `posts/${user.uid}/${file.name}`);
-        await uploadBytes(fileRef, file);
-        fileUrl = await getDownloadURL(fileRef);
+      const uploadId = uuidv4();
+
+      if (uploadType === 'Post') {
+        // Post - Save to `feeds` collection
+        const postRef = ref(db, `feeds/${uploadId}`);
+        await set(postRef, {
+          id: uploadId,
+          userId: user.uid,
+          username: user.email,
+          caption,
+          fileUrl,
+          fileType: uploadType === 'Post' ? 'image' : 'video',
+          timestamp: new Date().toISOString(),
+          likes: 0,
+          shareCount: 0,
+          comments: [],
+        });
+
+        const userDocRef = doc(firestore, `users/${user.uid}/uploads/${uploadId}`);
+        await setDoc(userDocRef, {
+          uploadId,
+          type: 'Post',
+          url: fileUrl,
+          caption,
+          createdAt: new Date().toISOString(),
+        });
+      } else if (uploadType === 'Hivee') {
+        // Hivee - Save to `hivees` collection
+        const hiveeRef = ref(db, `hivees/${uploadId}`);
+        await set(hiveeRef, {
+          id: uploadId,
+          userId: user.uid,
+          username: user.email,
+          caption,
+          fileUrl,
+          fileType: uploadType === 'Post' ? 'image' : 'video',
+          music: selectedMusic,
+          timestamp: new Date().toISOString(),
+        });
+
+        const userHiveeDocRef = doc(firestore, `users/${user.uid}/hivees/${uploadId}`);
+        await setDoc(userHiveeDocRef, {
+          uploadId,
+          type: 'Hivee',
+          url: fileUrl,
+          caption,
+          music: selectedMusic,
+          createdAt: new Date().toISOString(),
+        });
       }
 
-      const newPost = {
-        userId: user.uid,
-        caption,
-        fileUrl,
-        fileType: file ? fileType : 'text',
-        timestamp: new Date().toISOString(),
-        likes: 0,
-        comments: [],
-        shareCount: 0,
-      };
-
-      const docRef = await addDoc(collection(firestore, `users/${user.uid}/posts`), newPost);
-      const postId = docRef.id;
-
-      await set(ref(realtimeDb, 'feeds/' + postId), {
-        ...newPost,
-        username: user.displayName || user.email,
-        id: postId,
-      });
-
-      setFile(null);
-      setCaption('');
-      setPreviewUrl(null);
-      alert('Post uploaded successfully!');
-    } catch (error) {
-      alert('Failed to upload post.');
-    } finally {
       setIsUploading(false);
+      navigate('/');
     }
-  };
-
-  const removeFile = () => {
-    setFile(null);
-    setPreviewUrl(null);
-    setFileType('');
   };
 
   return (
-    <div className="max-w-xl mx-auto p-6 bg-white rounded-xl shadow-lg border border-gray-200 relative">
-      <div className="absolute -top-4 right-4 bg-blue-500 text-white p-3 rounded-full shadow-md">
-        <AiOutlineCloudUpload size={24} />
-      </div>
-      <div className="flex items-start space-x-4">
-        <div className="flex-shrink-0">
-          <img
-            src="/default-profile.png" // Replace with the user’s profile image URL
-            alt="User"
-            className="w-12 h-12 rounded-full object-cover"
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+        <div className="flex justify-between mb-4">
+          <button
+            className={`flex-1 p-2 text-center ${uploadType === 'Post' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+            onClick={() => setUploadType('Post')}
+          >
+            Post
+          </button>
+          <button
+            className={`flex-1 p-2 text-center ${uploadType === 'Hivee' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+            onClick={() => setUploadType('Hivee')}
+          >
+            Hivee
+          </button>
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-gray-700 text-sm font-bold mb-2">
+            {uploadType === 'Post' ? 'Upload Image' : 'Upload Video'}
+          </label>
+          <input
+            type="file"
+            accept={uploadType === 'Post' ? 'image/*' : 'video/*'}
+            className="w-full p-2 border border-gray-300 rounded"
+            onChange={handleFileChange}
           />
         </div>
-        <div className="flex-1">
+
+        {filePreview && uploadType === 'Hivee' && (
+          <div className="mb-4">
+            <label className="block text-gray-700 text-sm font-bold mb-2">Video Preview</label>
+            <video className="w-full" controls>
+              <source src={filePreview} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        )}
+
+        <div className="mb-4">
+          <label className="block text-gray-700 text-sm font-bold mb-2">
+            Caption
+          </label>
           <textarea
+            className="w-full p-2 border border-gray-300 rounded"
+            rows="3"
+            placeholder="Write a caption..."
             value={caption}
             onChange={(e) => setCaption(e.target.value)}
-            placeholder="Share your thoughts..."
-            className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-gray-700 resize-none"
-            rows={3}
-          />
-          {previewUrl && (
-            <div className="relative mb-4 mt-4">
-              {fileType === 'image' && (
-                <img
-                  src={previewUrl}
-                  alt="Preview"
-                  className="w-full h-56 object-cover rounded-lg shadow-md"
-                />
-              )}
-              {fileType === 'video' && (
-                <video src={previewUrl} controls className="w-full h-56 rounded-lg shadow-md" />
-              )}
-              {fileType === 'audio' && (
-                <audio src={previewUrl} controls className="w-full rounded-lg shadow-md" />
-              )}
-              <button
-                onClick={removeFile}
-                className="absolute top-2 right-2 bg-gray-800 text-white p-2 rounded-full hover:bg-gray-900"
-              >
-                <AiOutlineClose size={16} />
-              </button>
-            </div>
-          )}
-          <div className="flex items-center justify-between mt-3">
-            <div className="flex items-center space-x-4">
-              <label className="flex items-center space-x-2 cursor-pointer text-blue-500 hover:text-blue-700">
-                <FaCamera size={18} />
-                <span className="text-sm font-medium">Photo</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-              </label>
-              <label className="flex items-center space-x-2 cursor-pointer text-blue-500 hover:text-blue-700">
-                <FaFileVideo size={18} />
-                <span className="text-sm font-medium">Video</span>
-                <input
-                  type="file"
-                  accept="video/*"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-              </label>
-              <label className="flex items-center space-x-2 cursor-pointer text-blue-500 hover:text-blue-700">
-                <FaFileAudio size={18} />
-                <span className="text-sm font-medium">Audio</span>
-                <input
-                  type="file"
-                  accept="audio/*"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-              </label>
-            </div>
-            <Button
-              onClick={handleSubmit}
-              disabled={isUploading}
+          ></textarea>
+        </div>
+
+        {uploadType === 'Hivee' && (
+          <div className="mb-4">
+            <label className="block text-gray-700 text-sm font-bold mb-2">
+              Select Music
+            </label>
+            <select
+              className="w-full p-2 border border-gray-300 rounded"
+              value={selectedMusic}
+              onChange={(e) => setSelectedMusic(e.target.value)}
             >
-              {isUploading ? 'Posting...' : 'Post'}
-            </Button>
+              <option value="">None</option>
+              {musicLibrary.map((music) => (
+                <option key={music.id} value={music.url}>
+                  {music.name}
+                </option>
+              ))}
+            </select>
           </div>
+        )}
+
+        <div className="flex justify-end">
+          <button
+            onClick={handleUpload}
+            disabled={isUploading}
+            className={`bg-blue-500 text-white p-2 rounded-lg transition-all duration-300 ${
+              isUploading ? 'bg-gray-500 cursor-not-allowed' : 'hover:bg-blue-700'
+            }`}
+          >
+            {isUploading ? 'Posting...' : 'Post'}
+          </button>
         </div>
       </div>
     </div>
   );
 };
 
-export default UploadPost;
+export default UploadContent;
