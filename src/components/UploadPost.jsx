@@ -77,6 +77,9 @@ const UploadContent = () => {
           fileType: uploadType === 'Post' ? 'image' : 'video',
           music: selectedMusic,
           timestamp: new Date().toISOString(),
+          likes: 0, // Initialize likes
+          comments: [], // Initialize comments
+          shareCount: 0, // Initialize share count
         });
 
         const userHiveeDocRef = doc(firestore, `users/${user.uid}/hivees/${uploadId}`);
@@ -87,6 +90,9 @@ const UploadContent = () => {
           caption,
           music: selectedMusic,
           createdAt: new Date().toISOString(),
+          likes: 0, // Initialize likes
+          comments: [], // Initialize comments
+          shareCount: 0, // Initialize share count  
         });
       }
 
