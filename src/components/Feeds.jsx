@@ -30,7 +30,7 @@ const Feeds = () => {
     return () => unsubscribe();
   }, []);
 
-  // Fetch user details from Firestore
+  // Fetch user details from Firestore (for user name and avatar)
   const fetchUserDetails = async (uid) => {
     const userDoc = doc(firestore, 'users', uid);
     const userSnap = await getDoc(userDoc);
@@ -154,7 +154,7 @@ const Feeds = () => {
   };
 
   return (
-    <div className="max-h-[80vh] overflow-y-auto space-y-4 px-4 sm:px-6 lg:px-8">
+    <div className="max-w-[600px] mx-auto px-4 sm:px-6 lg:px-8">
       {posts.length > 0 ? (
         posts
           .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
@@ -176,7 +176,7 @@ const Feeds = () => {
                     {userDetails[post.userId]?.fullName || "Unknown User"}
                   </p>
                   <p className="text-sm text-gray-500">
-                    @{post.username || "Unknown"}
+                    @{userDetails[post.userId]?.username || "Unknown"}
                   </p>
                 </div>
               </div>

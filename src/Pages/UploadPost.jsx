@@ -4,17 +4,18 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from './firebaseConfig'; // Import your Firebase config
 import SidebarLeft from '../components/SidebarLeft';
 import SidebarRight from '../components/SidebarRight';
-import Feeds from '../components/UploadPost';
-// import FloatingMenu from '../components/FloatingMenu';
+import UploadPost from '../components/UploadPost'; // Import UploadPost component
+import UploadHivee from '../components/UploadHivee'; // Import UploadHivee component
 import ChatInterface from '../components/ChatInterface';
 import BottomBar from '../components/BottomBar';
 import loaderGif from '../assets/normload.gif'; // Adjust the path according to your project structure
 
-const HomePage = () => {
+const UploadPage = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [selectedChat, setSelectedChat] = useState(null);
   const [loading, setLoading] = useState(true); // Manage loading state
   const [isSidebarRightVisible, setIsSidebarRightVisible] = useState(false); // Manage SidebarRight visibility
+  const [uploadType, setUploadType] = useState('Post'); // Default to 'Post' upload type
   const sidebarRightRef = useRef(null);
 
   useEffect(() => {
@@ -38,6 +39,7 @@ const HomePage = () => {
     return () => unsubscribe();
   }, []);
 
+  // Effect to handle sidebar behavior on inactivity
   useEffect(() => {
     let timeout;
     const handleActivity = () => {
@@ -73,13 +75,19 @@ const HomePage = () => {
     setIsSidebarRightVisible(!isSidebarRightVisible);
   };
 
+  const handleUploadTypeChange = (type) => {
+    setUploadType(type);
+  };
+
   if (loading) {
-    return  <div className="h-screen flex flex-col justify-center items-center bg-gray-100">
-    {/* Loader GIF in the center */}
-    <div className="flex items-center justify-center mb-4">
-      <img src={loaderGif} alt="Loading" className="w-32 h-32" /> {/* Increased size */}
-    </div>
-  </div>
+    return (
+      <div className="h-screen flex flex-col justify-center items-center bg-gray-100">
+        {/* Loader GIF in the center */}
+        <div className="flex items-center justify-center mb-4">
+          <img src={loaderGif} alt="Loading" className="w-32 h-32" /> {/* Increased size */}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -89,22 +97,38 @@ const HomePage = () => {
         <div className="hidden lg:block w-[250px]">
           <SidebarLeft currentUser={currentUser} /> {/* Pass currentUser to SidebarLeft */}
         </div>
-        
-        {/* Main content section with SearchBar and Feeds */}
+
+        {/* Main content section with posts (Upload Post/Hivee) */}
         {!selectedChat && (
           <main className="flex-1 p-4 overflow-auto">
-            {/* <SearchBar currentUser={currentUser} /> Pass currentUser to SearchBar */}
-            <Feeds currentUser={currentUser} /> {/* Pass currentUser to Feeds */}
+            {/* Tab-like buttons to toggle between Post and Hivee */}
+            <div className="flex mb-4">
+              <button
+                className={`flex-1 p-2 text-center ${uploadType === 'Post' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+                onClick={() => handleUploadTypeChange('Post')}
+              >
+                Post
+              </button>
+              <button
+                className={`flex-1 p-2 text-center ${uploadType === 'Hivee' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+                onClick={() => handleUploadTypeChange('Hivee')}
+              >
+                Hivee
+              </button>
+            </div>
+
+            {/* Render the appropriate component based on the selected upload type */}
+            {uploadType === 'Post' && <UploadPost currentUser={currentUser} />}
+            {uploadType === 'Hivee' && <UploadHivee currentUser={currentUser} />}
           </main>
         )}
 
         {/* Conditionally render SidebarRight or ChatInterface */}
         <div className="hidden lg:flex flex-col w-96">
-          {/* If no chat is selected, show SidebarRight */}
           {!selectedChat ? (
-            <SidebarRight currentUser={currentUser} setSelectedChat={setSelectedChat} /> 
+            <SidebarRight currentUser={currentUser} setSelectedChat={setSelectedChat} />
           ) : (
-            <ChatInterface currentUser={currentUser} chatRoomId={selectedChat} onBack={handleBackToSidebar} /> 
+            <ChatInterface currentUser={currentUser} chatRoomId={selectedChat} onBack={handleBackToSidebar} />
           )}
         </div>
 
@@ -116,15 +140,12 @@ const HomePage = () => {
         )}
       </div>
 
-      {/* Floating menu for additional options */}
-
-
       {/* Bottom Bar for mobile, visible only if no chat is selected */}
       {!selectedChat && (
-        <BottomBar toggleSidebarRight={toggleSidebarRight} /> 
+        <BottomBar toggleSidebarRight={toggleSidebarRight} />
       )}
     </div>
   );
 };
 
-export default HomePage;
+export default UploadPage;
