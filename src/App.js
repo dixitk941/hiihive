@@ -25,7 +25,11 @@ function App() {
   // Track authentication state
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
-      setUser(user);
+      if (user && user.emailVerified) {
+        setUser(user);
+      } else {
+        setUser(null);
+      }
       setAuthLoading(false); // Set auth loading to false once auth state is determined
     });
     return () => unsubscribe();

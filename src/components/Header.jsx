@@ -5,7 +5,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { getDownloadURL, ref } from 'firebase/storage';
 import { Link, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHome, faBook } from '@fortawesome/free-solid-svg-icons';
+import { faHome, faBook, faCog } from '@fortawesome/free-solid-svg-icons';
 import logo from '../assets/logo.svg';
 
 const Header = () => {
@@ -89,51 +89,14 @@ const Header = () => {
       </div>
 
       {/* Navigation Links */}
-      <nav className="flex space-x-6">
-        <Link
-          to="/"
-          className={`text-base sm:text-lg font-medium hidden sm:inline ${
-            location.pathname === '/'
-              ? 'text-blue-500 underline'
-              : 'text-gray-600 hover:text-gray-800'
-          }`}
-        >
-          Home
-        </Link>
-        <Link
-          to="/knowledgehub"
-          className={`text-base sm:text-lg font-medium hidden sm:inline ${
-            location.pathname === '/knowledgehub'
-              ? 'text-blue-500 underline'
-              : 'text-gray-600 hover:text-gray-800'
-          }`}
-        >
-          Knowledge Hub
-        </Link>
-        <Link
-          to="/"
-          className={`text-base sm:text-lg font-medium sm:hidden ${
-            location.pathname === '/'
-              ? 'text-blue-500 underline'
-              : 'text-gray-600 hover:text-gray-800'
-          }`}
-        >
-          <FontAwesomeIcon icon={faHome} className="text-xl" />
-        </Link>
-        <Link
-          to="/knowledgehub"
-          className={`text-base sm:text-lg font-medium sm:hidden ${
-            location.pathname === '/knowledgehub'
-              ? 'text-blue-500 underline'
-              : 'text-gray-600 hover:text-gray-800'
-          }`}
-        >
-          <FontAwesomeIcon icon={faBook} className="text-xl" />
-        </Link>
-      </nav>
+
+    
 
       {/* User Info */}
       <div className="flex items-center space-x-3">
+        <Link to="/settings" className="block md:hidden text-gray-700 hover:text-gray-900">
+          <FontAwesomeIcon icon={faCog} size="lg" />
+        </Link>
         {user.avatar && (
           <Link to={`/user/${currentUserId}`}>
             <img

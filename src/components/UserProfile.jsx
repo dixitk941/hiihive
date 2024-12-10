@@ -26,7 +26,6 @@ const UserProfile = () => {
   const [isFollowing, setIsFollowing] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
-  const [postCount, setPostCount] = useState(0);
   const [isUserListModalOpen, setIsUserListModalOpen] = useState(false);
   const [listType, setListType] = useState(null); // 'followers' or 'following'
   const [loading, setLoading] = useState(true);
@@ -81,7 +80,6 @@ const UserProfile = () => {
           // Sort posts by timestamp in descending order
           posts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
           setUserPosts(posts);
-          setPostCount(querySnapshot.size);
         } catch (error) {
           console.error('Error fetching user posts:', error);
         }
@@ -89,6 +87,44 @@ const UserProfile = () => {
     };
     fetchUserPosts();
   }, [userId]);
+
+  // Fetch followers and following data
+  useEffect(() => {
+    const fetchUserListDetails = async (list, setData) => {
+      const users = await Promise.all(
+        list.map(async (userId) => {
+          if (typeof userId !== 'string') {
+            console.error('Invalid userId:', userId);
+            return null;
+          }
+          const userRef = doc(db, 'users', userId);
+          const userSnap = await getDoc(userRef);
+          if (userSnap.exists()) {
+            const userData = userSnap.data();
+            let avatarUrl = '';
+            if (userData.avatar) {
+              const avatarRef = storageRef(storage, `avatars/${userId}`);
+              avatarUrl = await getDownloadURL(avatarRef);
+            }
+            return {
+              id: userId,
+              fullName: userData.fullName || 'Unknown User',
+              avatar: avatarUrl,
+            };
+          }
+          return null;
+        })
+      );
+      setData(users.filter(user => user !== null)); // Filter out any null values
+    };
+
+    if (userDetails.followers.length > 0) {
+      fetchUserListDetails(userDetails.followers, setFollowersData);
+    }
+    if (userDetails.following.length > 0) {
+      fetchUserListDetails(userDetails.following, setFollowingData);
+    }
+  }, [userDetails.followers, userDetails.following]);
 
   const handleFollowToggle = async () => {
     const currentUserRef = doc(db, 'users', currentUserId);
@@ -127,9 +163,9 @@ const UserProfile = () => {
     setIsPostModalOpen(true);
   };
 
-  const handleUserListClick = (userId) => {
-    // Add your logic here
-    console.log(`User with ID ${userId} clicked`);
+  const handleUserListClick = (type) => {
+    setListType(type);
+    setIsUserListModalOpen(true);
   };
 
   const renderPostContent = (post) => {
@@ -143,6 +179,9 @@ const UserProfile = () => {
     }
     if (fileType?.includes('audio')) {
       return <audio controls src={fileUrl} className="w-full" />;
+    }
+    if (fileType === 'image/png') {
+      return <img src={fileUrl} alt={caption} className="w-full h-64 object-cover" />;
     }
     return (
       <div className="flex items-center justify-center bg-gray-200 h-64 text-gray-700">
@@ -162,7 +201,7 @@ const UserProfile = () => {
   }
 
   return (
-    <div className="max-w-screen-lg mx-auto p-4 sm:p-6 bg-white relative pb-20">
+    <div className="max-w-screen-lg mx-auto p-4 sm:p-6 bg-white">
       <div className="flex flex-col items-center text-center pb-6 mb-6 border-b border-gray-300">
         <Avatar
           src={userDetails.avatar || ''}
@@ -216,24 +255,22 @@ const UserProfile = () => {
           </div>
         ))}
       </div>
-      {/* Post Modal */}
-      <Modal open={isPostModalOpen} onClose={() => setIsPostModalOpen(false)}>
-        <div className="bg-white p-6 rounded-lg max-w-lg mx-auto mt-24 shadow-lg">
-          {selectedPost && (
-            <div>
-              {renderPostContent(selectedPost)}
-              <p className="mt-4 text-gray-700">{selectedPost.caption}</p>
-            </div>
-          )}
+      {/* Followers/Following Modal */}
+      <Modal open={isUserListModalOpen} onClose={() => setIsUserListModalOpen(false)}>
+        <div className="bg-white max-w-md mx-auto mt-20 p-6 rounded-lg shadow-lg">
+          <h3 className="text-lg font-semibold">
+            {listType === 'followers' ? 'Followers' : 'Following'}
+          </h3>
+          <ul className="mt-4 space-y-2">
+            {(listType === 'followers' ? followersData : followingData).map((user, index) => (
+              <li key={index} className="flex items-center space-x-4">
+                <Avatar src={user.avatar || ''} alt={user.fullName} />
+                <p className="text-gray-700">{user.fullName || 'Anonymous User'}</p>
+              </li>
+            ))}
+          </ul>
         </div>
       </Modal>
-      {/* Branding */}
-      <footer className="absolute bottom-0 left-0 right-0 p-4 bg-gray-100 text-center text-sm">
-        <p>
-          Designed by <span className="font-bold">Dixitk941</span> | Powered by{' '}
-          <span className="font-bold">AINOR</span> | Logo by <span className="font-bold">Mayank Sharma</span>
-        </p>
-      </footer>
     </div>
   );
 };
