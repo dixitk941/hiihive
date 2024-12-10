@@ -5,6 +5,7 @@ import HiiCard from "./HiiCard"; // Import the HiiCard component
 import MoreAppsSection from "./MoreAppsSection"; // Import MoreAppsSection component
 import loaderGif from "../assets/normload.gif"; // Adjust the path according to your project structure
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage"; // Firebase Storage functions
+import Footer from "./Footer"; // Import the Footer component
 
 const Settings = () => {
   const [user, setUser] = useState(null);
@@ -185,6 +186,9 @@ const Settings = () => {
       <div className="bg-gray-100 p-6 rounded-lg shadow-sm mb-6">
         <MoreAppsSection />
       </div>
+
+      {/* Footer Section */}
+      <Footer />
     </div>
   );
 };
