@@ -1,48 +1,21 @@
 import React from "react";
-import { FaHeart, FaBolt } from "react-icons/fa"; // Importing icons from react-icons
 
 const Footer = () => {
   return (
-    <footer style={footerStyle}>
-      <p style={textStyle}>
-        Designed with <FaHeart style={heartStyle} /> by dixitk941 | Powered by <FaBolt style={boltStyle} /> AINOR | Mayank Sharma
-      </p>
+    <footer className="bg-gradient-to-r from-white via-gray-200 to-gray-300 text-gray-800 py-6 shadow-lg mt-10">
+      <div className="container mx-auto text-center px-4">
+        <p className="text-lg font-semibold mb-2">
+          Powered by{" "}
+          <span className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-indigo-600">
+            AINOR
+          </span>
+        </p>
+        <p className="text-sm text-gray-600">
+          Building the Future of Technology, One Step at a Time
+        </p>
+      </div>
     </footer>
   );
-};
-
-const footerStyle = {
-  textAlign: "center",
-  padding: "1em",
-  background: "linear-gradient(90deg, #f3f4f6, #e2e8f0)",
-  color: "#333",
-  boxShadow: "0 -2px 10px rgba(0, 0, 0, 0.1)",
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-};
-
-const textStyle = {
-  margin: 0,
-  fontSize: "1em",
-  fontFamily: "'Roboto', sans-serif",
-  display: "flex",
-  flexDirection: "row",
-  justifyContent: "center",
-  alignItems: "center",
-  gap: "0.5em",
-  padding: "0 1em",
-  flexWrap: "wrap",
-};
-
-const heartStyle = {
-  color: "red",
-  animation: "pulse 1s infinite",
-};
-
-const boltStyle = {
-  color: "orange",
-  animation: "flash 1.5s infinite",
 };
 
 export default Footer;
