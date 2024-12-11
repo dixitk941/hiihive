@@ -93,11 +93,13 @@ const Settings = () => {
 
       {/* HiiCard Section */}
       <div className="mb-6">
+        {/* Pass userId to HiiCard */}
         <HiiCard
           avatarUrl={avatarUrl}
           username={username}
           fullName={fullName}
           bio={bio}
+          userId={auth.currentUser.uid} // Pass the userId here
         />
       </div>
 
