@@ -1,12 +1,12 @@
-import React, { useState } from "react";
-import { auth, db, storage ,  } from "./firebaseConfig";
+import React, { useState, useEffect } from "react";
+import { auth, db, storage } from "./firebaseConfig";
 import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
 } from "firebase/auth";
-import { setDoc, doc, serverTimestamp ,getDoc } from "firebase/firestore";
+import { setDoc, doc, serverTimestamp, getDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useNavigate } from "react-router-dom";
 import "tailwindcss/tailwind.css";
@@ -25,6 +25,7 @@ const LoginPage = () => {
     avatar: null,
   });
   const [error, setError] = useState("");
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth > 768);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -125,7 +126,7 @@ const LoginPage = () => {
       setError("Please enter your email address.");
       return;
     }
-  
+
     setLoading(true);
     setError("");
     try {
@@ -138,6 +139,15 @@ const LoginPage = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth > 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-r from-white via-blue-50 to-blue-200 text-gray-900">
@@ -224,6 +234,17 @@ const LoginPage = () => {
               </p>
             )}
 
+            {isDesktop && (
+              <div className="text-center mt-4">
+                <a
+                  href="https://expo.dev/artifacts/eas/n9249p3RDhDhzurJQkwxYe.apk"
+                  className="text-blue-500 cursor-pointer"
+                >
+                  Download Android App
+                </a>
+              </div>
+            )}
+
             <p className="text-center text-gray-600 mt-4">
               {isSignUp ? (
                 <>
@@ -258,47 +279,47 @@ const LoginPage = () => {
             communities, and explore knowledge-rich content in an elegant,
             seamless environment.
           </p>
-            {/* Features / Benefits */}
-            <div className="flex justify-start space-x-8 mt-8">
-              <div className="flex flex-col items-center space-y-2">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-12 w-12 text-blue-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 2v20m10-10H2" />
-                </svg>
-                <p className="mt-2 text-lg font-medium text-gray-900">Communities</p>
-              </div>
-              <div className="flex flex-col items-center space-y-2">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-12 w-12 text-green-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                </svg>
-                <p className="mt-2 text-lg font-medium text-gray-900">Knowledge Hub</p>
-              </div>
-              <div className="flex flex-col items-center space-y-2">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-12 w-12 text-yellow-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                </svg>
-                <p className="mt-2 text-lg font-medium text-gray-900">Explore</p>
-              </div>
+          {/* Features / Benefits */}
+          <div className="flex justify-start space-x-8 mt-8">
+            <div className="flex flex-col items-center space-y-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-12 w-12 text-blue-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 2v20m10-10H2" />
+              </svg>
+              <p className="mt-2 text-lg font-medium text-gray-900">Communities</p>
+            </div>
+            <div className="flex flex-col items-center space-y-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-12 w-12 text-green-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+              </svg>
+              <p className="mt-2 text-lg font-medium text-gray-900">Knowledge Hub</p>
+            </div>
+            <div className="flex flex-col items-center space-y-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-12 w-12 text-yellow-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+              </svg>
+              <p className="mt-2 text-lg font-medium text-gray-900">Explore</p>
             </div>
           </div>
         </div>
+      </div>
 
       <footer className="w-full bg-transparent text-black py-6 mt-8">
         <div className="flex justify-center md:justify-end items-center space-x-6">
