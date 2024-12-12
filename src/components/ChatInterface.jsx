@@ -28,6 +28,7 @@ const ChatInterface = ({ currentUser }) => {
   const [chatRoomEmoji, setChatRoomEmoji] = useState('');
   const { chatRoomId } = useParams(); // Get chatRoomId from URL params
   const [currentChatRoomId, setChatRoomId] = useState(chatRoomId || ''); // State for chatRoomId
+  const [userAvatars, setUserAvatars] = useState({}); // Store user avatars
   const db = getFirestore();
   const storage = getStorage();
   const messagesContainerRef = useRef(null);
@@ -39,14 +40,9 @@ const ChatInterface = ({ currentUser }) => {
       const chatRoomRef = doc(db, 'chatRooms', currentChatRoomId);
       const chatRoomDoc = await getDoc(chatRoomRef);
       
-      // Log the status of the chat room
-      console.log("Fetching chat room data for:", currentChatRoomId);
-      
       if (chatRoomDoc.exists()) {
         setChatRoomName(chatRoomDoc.data().name || 'Chat Room');
         setChatRoomEmoji(chatRoomDoc.data().emoji || '💬');
-      } else {
-        console.log("Chat room not found.");
       }
     };
 
@@ -68,6 +64,25 @@ const ChatInterface = ({ currentUser }) => {
     return () => unsubscribe();
   }, [currentChatRoomId, db]);
 
+  useEffect(() => {
+    // Fetch user avatars when messages are received
+    const fetchUserAvatars = async () => {
+      const avatars = {};
+      for (const message of messages) {
+        if (message.senderId && !avatars[message.senderId]) {
+          const userRef = doc(db, 'users', message.senderId);
+          const userDoc = await getDoc(userRef);
+          if (userDoc.exists()) {
+            avatars[message.senderId] = userDoc.data().avatar || 'default-avatar-url';
+          }
+        }
+      }
+      setUserAvatars(avatars);
+    };
+
+    fetchUserAvatars();
+  }, [messages, db]);
+
   const handleSendMessage = async () => {
     if (messageInput.trim() === '' && !file && !image) return;
 
@@ -81,7 +96,6 @@ const ChatInterface = ({ currentUser }) => {
       const fileRef = ref(storage, `chatFiles/${Date.now()}-${file.name}`);
       const uploadTask = uploadBytesResumable(fileRef, file);
 
-      // Listen for file upload progress
       uploadTask.on(
         'state_changed',
         (snapshot) => {
@@ -92,7 +106,6 @@ const ChatInterface = ({ currentUser }) => {
           console.error('File upload failed', error);
         },
         async () => {
-          // Get the file download URL after successful upload
           fileUrl = await getDownloadURL(uploadTask.snapshot.ref);
           await sendMessage(fileUrl, imageUrl);
         }
@@ -189,10 +202,17 @@ const ChatInterface = ({ currentUser }) => {
       <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-100 rounded-t-2xl shadow-lg sm:p-6">
         {messages.map((message) => (
           <div key={message.id} className={`flex items-start space-x-2 ${message.senderId === currentUser.uid ? 'justify-end' : 'justify-start'} relative`}>
-            <div className={`p-3 max-w-[75%] sm:max-w-[65%] rounded-lg shadow-md ${message.senderId === currentUser.uid ? 'bg-black text-white' : 'bg-white text-black border border-gray-300'}`}>
-              <p>{message.text}</p>
-              {message.file && <a href={message.file} className="text-xs truncate text-blue-600">📄 File</a>}
-              {message.image && <img src={message.image} alt="uploaded" className="rounded-md mt-2 w-full object-contain" />}
+            <div className="flex items-center space-x-2">
+              <img
+                src={userAvatars[message.senderId] || 'default-avatar-url'}
+                alt="avatar"
+                className="w-8 h-8 rounded-full"
+              />
+              <div className={`p-3 max-w-[75%] sm:max-w-[65%] rounded-lg shadow-md ${message.senderId === currentUser.uid ? 'bg-black text-white' : 'bg-white text-black border border-gray-300'}`}>
+                <p>{message.text}</p>
+                {message.file && <a href={message.file} className="text-xs truncate text-blue-600">📄 File</a>}
+                {message.image && <img src={message.image} alt="uploaded" className="rounded-md mt-2 w-full object-contain" />}
+              </div>
             </div>
           </div>
         ))}
@@ -238,14 +258,13 @@ const ChatInterface = ({ currentUser }) => {
           <button onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="p-2 text-gray-500 hover:text-blue-500 transition-transform duration-300">
             😊
           </button>
-          <input
-            type="text"
+          <textarea
+            placeholder="Type a message... (Markdown supported)"
             value={messageInput}
             onChange={(e) => setMessageInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Type a message..."
-            className="flex-1 p-2 text-sm bg-white text-black border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring focus:ring-blue-300 resize-none"
+            rows="2"
+          ></textarea>
           <input type="file" id="fileInput" onChange={handleFileChange} className="hidden" />
           <input type="file" id="imageInput" onChange={handleImageChange} className="hidden" />
 
