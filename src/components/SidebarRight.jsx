@@ -17,6 +17,12 @@ const SidebarRight = ({ setSelectedChat }) => {
   const [showFollowing, setShowFollowing] = useState(false);
   const navigate = useNavigate();
 
+  // Hardcode the communities
+  const hardcodedCommunities = [
+    { name: 'RATM-BCA' },
+    { name: 'RATM-BBA' }
+  ];
+
   // Fetch current user data
   useEffect(() => {
     const auth = getAuth();
@@ -109,6 +115,34 @@ const SidebarRight = ({ setSelectedChat }) => {
     return names;
   };
 
+  // Function to create a community chatroom
+  const createCommunityChatRoom = async (communityName) => {
+    if (!currentUser) return;
+
+    // Create a unique chatroom ID based on the community name
+    const chatRoomRef = doc(db, 'chatRooms', communityName);
+    const chatRoomDoc = await getDoc(chatRoomRef);
+
+    if (!chatRoomDoc.exists()) {
+      // Create a new chatroom in Firestore
+      await setDoc(chatRoomRef, {
+        name: communityName,
+        users: [currentUser.uid], // Initially add the current user
+        createdAt: new Date().toISOString(),
+        isOpen: true, // Open for all users
+        messages: [],
+      });
+    }
+
+    // Navigate to the community chat interface
+    navigate(`/chat/${communityName}`);
+  };
+
+  // Handle community selection (e.g., RATM-BCA or RATM-BBA)
+  const handleCommunitySelection = (communityName) => {
+    createCommunityChatRoom(communityName);
+  };
+
   // Reusable function to create or retrieve a chat room
   const createOrRetrieveChatRoom = async (selectedUserId) => {
     if (!currentUser) return;
@@ -139,7 +173,7 @@ const SidebarRight = ({ setSelectedChat }) => {
 
   return (
     <aside
-      className={`${isCollapsed ? 'w-20' : 'w-64'} fixed right-0 top-24 h-[calc(100vh-6rem)] bg-white text-gray-800 flex flex-col justify-between p-4 shadow-md border-l border-gray-200 transition-all duration-300`}
+      className={`${isCollapsed ? 'w-20' : 'w-64'} fixed right-0 top-24 h-[calc(100vh-6rem)] bg-white text-gray-800 flex flex-col justify-between p-4 shadow-md border-l border-gray-200 transition-all duration-300 overflow-y-auto`}
     >
       <div>
         <button
@@ -154,23 +188,40 @@ const SidebarRight = ({ setSelectedChat }) => {
         {/* Recent Chats */}
         <div>
           <h3 className={`${isCollapsed ? 'hidden' : 'text-lg font-semibold text-gray-700 mb-3'}`}>Recent Chats</h3>
-          {recentChats.map((chat) => (
+          <div className="max-h-64 overflow-y-auto">
+            {recentChats.map((chat) => (
+              <div
+                key={chat.id}
+                onClick={() => handleChatSelection(chat.otherUserId)}
+                className={`flex items-center p-3 mb-2 bg-gray-100 rounded-lg hover:bg-blue-50 transition duration-300 ${
+                  isCollapsed ? 'justify-center' : ''
+                }`}
+              >
+                <FiMessageSquare className="text-blue-500" size={20} />
+                <span className={`${isCollapsed ? 'hidden' : 'ml-3 font-semibold'}`}>
+                  {userNames[chat.otherUserId] || 'Loading...'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Hardcoded Communities */}
+        <div>
+          <h3 className={`${isCollapsed ? 'hidden' : 'text-lg font-semibold text-gray-700 mb-3'}`}>Communities</h3>
+          {hardcodedCommunities.map((community, index) => (
             <div
-              key={chat.id}
-              onClick={() => handleChatSelection(chat.otherUserId)}
-              className={`flex items-center p-3 mb-2 bg-gray-100 rounded-lg hover:bg-blue-50 transition duration-300 ${
-                isCollapsed ? 'justify-center' : ''
-              }`}
+              key={index}
+              onClick={() => handleCommunitySelection(community.name)}
+              className={`flex items-center p-3 mb-2 bg-gray-100 rounded-lg hover:bg-blue-50 transition duration-300 ${isCollapsed ? 'justify-center' : ''}`}
             >
               <FiMessageSquare className="text-blue-500" size={20} />
-              <span className={`${isCollapsed ? 'hidden' : 'ml-3 font-semibold'}`}>
-                {userNames[chat.otherUserId] || 'Loading...'}
-              </span>
+              <span className={`${isCollapsed ? 'hidden' : 'ml-3 font-semibold'}`}>{community.name}</span>
             </div>
           ))}
         </div>
 
-        {/* Followers */}
+        {/* Followers Section */}
         <div>
           <h3 className={`${isCollapsed ? 'hidden' : 'text-lg font-semibold text-gray-700 mb-3 mt-6'}`}>
             Followers
@@ -201,7 +252,7 @@ const SidebarRight = ({ setSelectedChat }) => {
           )}
         </div>
 
-        {/* Following */}
+        {/* Following Section */}
         <div>
           <h3 className={`${isCollapsed ? 'hidden' : 'text-lg font-semibold text-gray-700 mb-3 mt-6'}`}>
             Following
