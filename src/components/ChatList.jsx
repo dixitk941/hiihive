@@ -1,17 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { FiMessageSquare } from 'react-icons/fi';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from './firebaseConfig';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { getDatabase, ref, set } from 'firebase/database';
+import { FiMessageSquare, FiChevronLeft, FiChevronRight, FiChevronDown, FiChevronUp } from 'react-icons/fi';
+import { doc, getDoc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from './firebaseConfig'; // Import Firebase config
+import { getAuth, onAuthStateChanged } from 'firebase/auth'; // Firebase Auth
 
-const ChatList = ({ setSelectedChat }) => {
+const SidebarRight = ({ setSelectedChat }) => {
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [followers, setFollowers] = useState([]);
   const [following, setFollowing] = useState([]);
+  const [recentChats, setRecentChats] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [userNames, setUserNames] = useState({});
+  const [showFollowers, setShowFollowers] = useState(false);
+  const [showFollowing, setShowFollowing] = useState(false);
 
+  // Hardcode the communities
+  const hardcodedCommunities = [
+    { name: 'RATM-BCA' },
+    { name: 'RATM-BBA' }
+  ];
+
+  // Fetch current user data
   useEffect(() => {
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -24,6 +34,7 @@ const ChatList = ({ setSelectedChat }) => {
     return () => unsubscribe();
   }, []);
 
+  // Fetch user details
   useEffect(() => {
     const fetchUserData = async () => {
       if (!currentUser) return;
@@ -36,59 +47,81 @@ const ChatList = ({ setSelectedChat }) => {
           const userData = userDoc.data();
           const fetchedFollowers = userData.followers || [];
           const fetchedFollowing = userData.following || [];
-          setFollowers(fetchedFollowers);
+
+          setFollowers(fetchedFollowers.map(f => (typeof f === 'string' ? { id: f } : f)));
           setFollowing(fetchedFollowing);
 
-          const allUserIds = [...fetchedFollowers.map(f => f.id), ...fetchedFollowing.map(f => f.id)];
+          const recentChatRoomsQuery = query(
+            collection(db, 'chatRooms'),
+            where('users', 'array-contains', currentUser.uid)
+          );
+          const recentChatRoomsSnapshot = await getDocs(recentChatRoomsQuery);
+
+          const fetchedRecentChats = [];
+          recentChatRoomsSnapshot.forEach((doc) => {
+            const chatRoomData = doc.data();
+            if (chatRoomData.users) {
+              const otherUserId = chatRoomData.users.find(userId => userId !== currentUser.uid);
+              if (otherUserId) {
+                fetchedRecentChats.push({
+                  id: doc.id,
+                  otherUserId: otherUserId,
+                });
+              }
+            }
+          });
+
+          setRecentChats(fetchedRecentChats);
+
+          const allUserIds = [
+            ...fetchedFollowers.map(f => f.id),
+            ...fetchedFollowing.map(f => f.id),
+            ...fetchedRecentChats.map(c => c.otherUserId),
+          ].filter(Boolean);
+
           const names = await fetchUserNamesInBulk(allUserIds);
           setUserNames(names);
         }
       } catch (error) {
-        // console.error('Error fetching user data:', error);
+        console.error('Error fetching user data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    if (currentUser) {
-      fetchUserData();
-    }
+    fetchUserData();
   }, [currentUser]);
 
+  // Fetch usernames in bulk
   const fetchUserNamesInBulk = async (userIds) => {
     const names = {};
-    const userFetchPromises = userIds.map((userId) =>
-      getDoc(doc(db, 'users', userId)).then((userDoc) => {
-        if (userDoc.exists()) {
-          names[userId] = userDoc.data().fullName || 'Unknown';
-        } else {
-          names[userId] = 'Unknown';
-        }
-      }).catch((error) => {
-        // console.error(`Error fetching name for ${userId}:`, error);
-        names[userId] = 'Error';
-      })
-    );
-
+    const userFetchPromises = userIds.map((userId) => {
+      return getDoc(doc(db, 'users', userId))
+        .then((userDoc) => {
+          if (userDoc.exists()) {
+            names[userId] = userDoc.data().fullName || 'Unknown';
+          } else {
+            names[userId] = 'Unknown';
+          }
+        })
+        .catch((error) => {
+          console.error(`Error fetching name for ${userId}:`, error);
+          names[userId] = 'Error';
+        });
+    });
     await Promise.all(userFetchPromises);
     return names;
   };
 
-  const handleChatSelection = async (chatId) => {
-    setSelectedChat(chatId);
-    const db = getDatabase();
-    const currentUserId = currentUser.uid;
-    const chatRoomId = [currentUserId, chatId].sort().join('_');
-
-    await set(ref(db, `chatRooms/${chatRoomId}`), {
-      users: {
-        [currentUserId]: true,
-        [chatId]: true,
-      },
-      createdAt: new Date().toISOString(),
-    });
-
-    // No need to redirect here, as the parent component will handle the rendering of ChatInterface
+  // Handle chatroom selection
+  const handleChatSelection = (userId) => {
+    const selectedChat = recentChats.find((chat) => chat.otherUserId === userId);
+    if (selectedChat) {
+      setSelectedChat(selectedChat.id);
+    } else {
+      const newChatRoomId = [currentUser.uid, userId].sort().join('_');
+      setSelectedChat(newChatRoomId); // Replace current chat with the new one
+    }
   };
 
   if (loading) {
@@ -96,49 +129,119 @@ const ChatList = ({ setSelectedChat }) => {
   }
 
   return (
-    <div className="p-4 bg-gray-50 h-screen overflow-y-auto">
-      <h2 className="text-xl font-semibold mb-4">Chat List</h2>
+    <aside
+      className={`${isCollapsed ? 'w-20' : 'w-64'} fixed left-0 top-24 h-[calc(100vh-6rem)] bg-white text-gray-800 flex flex-col justify-between p-4 shadow-md border-r border-gray-200 transition-all duration-300 overflow-y-auto`}
+    >
       <div>
-        <h3 className="text-lg font-semibold text-gray-700 mb-2">Followers</h3>
-        {followers.length === 0 ? (
-          <p className="text-gray-500">No followers yet</p>
-        ) : (
-          followers.map((follower) => (
-            <div
-              key={follower.id}
-              onClick={() => handleChatSelection(follower.id)}
-              className="flex items-center p-3 bg-white rounded-lg hover:bg-blue-50 transition duration-300 mb-2"
-            >
-              <FiMessageSquare className="text-blue-500" size={20} />
-              <span className="ml-3 font-semibold">
-                Chat with {userNames[follower.id] || 'Loading...'}
-              </span>
-            </div>
-          ))
-        )}
-      </div>
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="text-gray-500 hover:text-blue-600 transition-colors duration-300 mb-4"
+        >
+          {isCollapsed ? <FiChevronRight size={24} /> : <FiChevronLeft size={24} />}
+        </button>
 
-      <div>
-        <h3 className="text-lg font-semibold text-gray-700 mb-2 mt-6">Following</h3>
-        {following.length === 0 ? (
-          <p className="text-gray-500">You're not following anyone</p>
-        ) : (
-          following.map((followed) => (
+        <h2 className={`${isCollapsed ? 'hidden' : 'text-xl font-bold mb-6 text-gray-700'}`}>Chats</h2>
+
+        {/* Recent Chats */}
+        <div>
+          <h3 className={`${isCollapsed ? 'hidden' : 'text-lg font-semibold text-gray-700 mb-3'}`}>Recent Chats</h3>
+          <div className="max-h-64 overflow-y-auto">
+            {recentChats.map((chat) => (
+              <div
+                key={chat.id}
+                onClick={() => handleChatSelection(chat.otherUserId)}
+                className={`flex items-center p-3 mb-2 bg-gray-100 rounded-lg hover:bg-blue-50 transition duration-300 ${
+                  isCollapsed ? 'justify-center' : ''
+                }`}
+              >
+                <FiMessageSquare className="text-blue-500" size={20} />
+                <span className={`${isCollapsed ? 'hidden' : 'ml-3 font-semibold'}`}>
+                  {userNames[chat.otherUserId] || 'Loading...'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Hardcoded Communities */}
+        <div>
+          <h3 className={`${isCollapsed ? 'hidden' : 'text-lg font-semibold text-gray-700 mb-3'}`}>Communities</h3>
+          {hardcodedCommunities.map((community, index) => (
             <div
-              key={followed.id}
-              onClick={() => handleChatSelection(followed.id)}
-              className="flex items-center p-3 bg-white rounded-lg hover:bg-blue-50 transition duration-300 mb-2"
+              key={index}
+              onClick={() => handleChatSelection(community.name)}
+              className={`flex items-center p-3 mb-2 bg-gray-100 rounded-lg hover:bg-blue-50 transition duration-300 ${isCollapsed ? 'justify-center' : ''}`}
             >
               <FiMessageSquare className="text-blue-500" size={20} />
-              <span className="ml-3 font-semibold">
-                Chat with {userNames[followed.id] || 'Loading...'}
-              </span>
+              <span className={`${isCollapsed ? 'hidden' : 'ml-3 font-semibold'}`}>{community.name}</span>
             </div>
-          ))
-        )}
+          ))}
+        </div>
+
+        {/* Followers Section */}
+        <div>
+          <h3 className={`${isCollapsed ? 'hidden' : 'text-lg font-semibold text-gray-700 mb-3 mt-6'}`}>
+            Followers
+            <button
+              onClick={() => setShowFollowers(!showFollowers)}
+              className="ml-2 text-gray-500 hover:text-blue-600 transition-colors duration-300"
+            >
+              {showFollowers ? <FiChevronUp size={20} /> : <FiChevronDown size={20} />}
+            </button>
+          </h3>
+          {showFollowers && (
+            <div className="max-h-64 overflow-y-auto">
+              {followers.map((follower) => (
+                <div
+                  key={follower.id}
+                  onClick={() => handleChatSelection(follower.id)}
+                  className={`flex items-center p-3 mb-2 bg-gray-100 rounded-lg hover:bg-blue-50 transition duration-300 ${
+                    isCollapsed ? 'justify-center' : ''
+                  }`}
+                >
+                  <FiMessageSquare className="text-blue-500" size={20} />
+                  <span className={`${isCollapsed ? 'hidden' : 'ml-3 font-semibold'}`}>
+                    {userNames[follower.id] || 'Loading...'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Following Section */}
+        <div>
+          <h3 className={`${isCollapsed ? 'hidden' : 'text-lg font-semibold text-gray-700 mb-3 mt-6'}`}>
+            Following
+            <button
+              onClick={() => setShowFollowing(!showFollowing)}
+              className="ml-2 text-gray-500 hover:text-blue-600 transition-colors duration-300"
+            >
+              {showFollowing ? <FiChevronUp size={20} /> : <FiChevronDown size={20} />}
+            </button>
+          </h3>
+          {showFollowing && (
+            <div className="max-h-64 overflow-y-auto">
+              {following.map((followed) => (
+                <div
+                  key={followed.id}
+                  onClick={() => handleChatSelection(followed.id)}
+                  className={`flex items-center p-3 mb-2 bg-gray-100 rounded-lg hover:bg-blue-50 transition duration-300 ${
+                    isCollapsed ? 'justify-center' : ''
+                  }`}
+                >
+                  <FiMessageSquare className="text-blue-500" size={20} />
+                  <span className={`${isCollapsed ? 'hidden' : 'ml-3 font-semibold'}`}>
+                    {userNames[followed.id] || 'Loading...'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </aside>
   );
 };
 
-export default ChatList;
+export default SidebarRight;
