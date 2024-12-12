@@ -259,7 +259,7 @@ const ChatInterface = ({ currentUser }) => {
             😊
           </button>
           <textarea
-            placeholder="Type a message... (Markdown supported)"
+            placeholder="Type a message..."
             value={messageInput}
             onChange={(e) => setMessageInput(e.target.value)}
             className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring focus:ring-blue-300 resize-none"
