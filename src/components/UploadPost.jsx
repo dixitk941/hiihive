@@ -8,21 +8,22 @@ import { getAuth } from 'firebase/auth';
 import styled from 'styled-components';
 
 const Button = styled.button`
-  background-color: #6200ea;
+  background-color: #4e8bff;
   color: white;
   border: none;
-  border-radius: 4px;
-  padding: 10px 20px;
+  border-radius: 30px;
+  padding: 12px 24px;
   font-size: 16px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 
   &:hover {
-    background-color: #3700b3;
+    background-color: #3871cc;
+    transform: scale(1.05);
   }
 
   &:disabled {
-    background-color: #9e9e9e;
+    background-color: #b0c4de;
     cursor: not-allowed;
   }
 `;
@@ -110,91 +111,94 @@ const UploadPost = () => {
   };
 
   return (
-    <div className="max-w-xl mx-auto p-6 bg-white rounded-xl shadow-lg border border-gray-200 relative">
-      <div className="absolute -top-4 right-4 bg-blue-500 text-white p-3 rounded-full shadow-md">
-        <AiOutlineCloudUpload size={24} />
+    <div className="w-full max-w-md mx-auto p-4 bg-white rounded-2xl shadow-lg">
+      <div className="flex justify-center mb-6">
+        <AiOutlineCloudUpload size={32} color="#4e8bff" />
       </div>
-      <div className="flex items-start space-x-4">
-        <div className="flex-shrink-0">
-          <img
-            src="/default-profile.png" // Replace with the user’s profile image URL
-            alt="User"
-            className="w-12 h-12 rounded-full object-cover"
-          />
-        </div>
-        <div className="flex-1">
+      <div className="flex items-start space-x-3 mb-4">
+        {/* <img
+          src="/default-profile.png" // Replace with the user’s profile image URL
+          alt="User"
+          className="w-10 h-10 rounded-full object-cover"
+        /> */}
+        <div className="w-full">
           <textarea
             value={caption}
             onChange={(e) => setCaption(e.target.value)}
-            placeholder="Share your thoughts..."
-            className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-gray-700 resize-none"
+            placeholder="Write a caption..."
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm text-gray-700 resize-none"
             rows={3}
           />
-          {previewUrl && (
-            <div className="relative mb-4 mt-4">
-              {fileType === 'image' && (
-                <img
-                  src={previewUrl}
-                  alt="Preview"
-                  className="w-full h-56 object-cover rounded-lg shadow-md"
-                />
-              )}
-              {fileType === 'video' && (
-                <video src={previewUrl} controls className="w-full h-56 rounded-lg shadow-md" />
-              )}
-              {fileType === 'audio' && (
-                <audio src={previewUrl} controls className="w-full rounded-lg shadow-md" />
-              )}
-              <button
-                onClick={removeFile}
-                className="absolute top-2 right-2 bg-gray-800 text-white p-2 rounded-full hover:bg-gray-900"
-              >
-                <AiOutlineClose size={16} />
-              </button>
-            </div>
-          )}
-          <div className="flex items-center justify-between mt-3">
-            <div className="flex items-center space-x-4">
-              <label className="flex items-center space-x-2 cursor-pointer text-blue-500 hover:text-blue-700">
-                <FaCamera size={18} />
-                <span className="text-sm font-medium">Photo</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-              </label>
-              <label className="flex items-center space-x-2 cursor-pointer text-blue-500 hover:text-blue-700">
-                <FaFileVideo size={18} />
-                <span className="text-sm font-medium">Video</span>
-                <input
-                  type="file"
-                  accept="video/*"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-              </label>
-              <label className="flex items-center space-x-2 cursor-pointer text-blue-500 hover:text-blue-700">
-                <FaFileAudio size={18} />
-                <span className="text-sm font-medium">Audio</span>
-                <input
-                  type="file"
-                  accept="audio/*"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-              </label>
-            </div>
-            <Button
-              onClick={handleSubmit}
-              disabled={isUploading}
-            >
-              {isUploading ? 'Posting...' : 'Post'}
-            </Button>
-          </div>
         </div>
       </div>
+
+      {/* Preview */}
+      {previewUrl && (
+        <div className="relative mb-4">
+          {fileType === 'image' && (
+            <img
+              src={previewUrl}
+              alt="Preview"
+              className="w-full h-56 object-cover rounded-lg shadow-md"
+            />
+          )}
+          {fileType === 'video' && (
+            <video src={previewUrl} controls className="w-full h-56 rounded-lg shadow-md" />
+          )}
+          {fileType === 'audio' && (
+            <audio src={previewUrl} controls className="w-full rounded-lg shadow-md" />
+          )}
+          <button
+            onClick={removeFile}
+            className="absolute top-2 right-2 bg-gray-800 text-white p-2 rounded-full hover:bg-gray-900"
+          >
+            <AiOutlineClose size={18} />
+          </button>
+        </div>
+      )}
+
+      {/* File Type Selection */}
+      <div className="flex justify-between mb-6">
+        <label className="flex items-center space-x-2 cursor-pointer text-blue-500 hover:text-blue-700">
+          <FaCamera size={20} />
+          <span className="text-sm">Photo</span>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="hidden"
+          />
+        </label>
+        <label className="flex items-center space-x-2 cursor-pointer text-blue-500 hover:text-blue-700">
+          <FaFileVideo size={20} />
+          <span className="text-sm">Video</span>
+          <input
+            type="file"
+            accept="video/*"
+            onChange={handleFileChange}
+            className="hidden"
+          />
+        </label>
+        <label className="flex items-center space-x-2 cursor-pointer text-blue-500 hover:text-blue-700">
+          <FaFileAudio size={20} />
+          <span className="text-sm">Audio</span>
+          <input
+            type="file"
+            accept="audio/*"
+            onChange={handleFileChange}
+            className="hidden"
+          />
+        </label>
+      </div>
+
+      {/* Post Button */}
+      <Button
+        onClick={handleSubmit}
+        disabled={isUploading}
+        className="w-full"
+      >
+        {isUploading ? 'Posting...' : 'Post'}
+      </Button>
     </div>
   );
 };

@@ -28,14 +28,19 @@ const LoginPage = () => {
   const [isDesktop, setIsDesktop] = useState(window.innerWidth > 768);
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
   };
 
-  const handleAvatarChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setFormData({ ...formData, avatar: e.target.files[0] });
-    }
+  const handleFileChange = (e) => {
+    setFormData((prevData) => ({
+      ...prevData,
+      avatar: e.target.files[0],
+    }));
   };
 
   const handleSignUp = async () => {
@@ -168,7 +173,7 @@ const LoginPage = () => {
                     name="fullName"
                     placeholder="Full Name"
                     value={formData.fullName}
-                    onChange={handleChange}
+                    onChange={handleInputChange}
                     className="w-full p-3 rounded-lg bg-gray-100 border focus:outline-none focus:ring-2 focus:ring-blue-300"
                   />
                   <input
@@ -176,7 +181,7 @@ const LoginPage = () => {
                     name="username"
                     placeholder="Username"
                     value={formData.username}
-                    onChange={handleChange}
+                    onChange={handleInputChange}
                     className="w-full p-3 rounded-lg bg-gray-100 border focus:outline-none focus:ring-2 focus:ring-blue-300"
                   />
                   <input
@@ -184,7 +189,20 @@ const LoginPage = () => {
                     name="age"
                     placeholder="Age"
                     value={formData.age}
-                    onChange={handleChange}
+                    onChange={handleInputChange}
+                    className="w-full p-3 rounded-lg bg-gray-100 border focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  />
+                  <textarea
+                    name="bio"
+                    placeholder="Bio"
+                    value={formData.bio}
+                    onChange={handleInputChange}
+                    className="w-full p-3 rounded-lg bg-gray-100 border focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  ></textarea>
+                  <input
+                    type="file"
+                    name="avatar"
+                    onChange={handleFileChange}
                     className="w-full p-3 rounded-lg bg-gray-100 border focus:outline-none focus:ring-2 focus:ring-blue-300"
                   />
                 </>
@@ -195,7 +213,7 @@ const LoginPage = () => {
                 name="email"
                 placeholder="Email"
                 value={formData.email}
-                onChange={handleChange}
+                onChange={handleInputChange}
                 className="w-full p-3 rounded-lg bg-gray-100 border focus:outline-none focus:ring-2 focus:ring-blue-300"
               />
               <input
@@ -203,7 +221,7 @@ const LoginPage = () => {
                 name="password"
                 placeholder="Password"
                 value={formData.password}
-                onChange={handleChange}
+                onChange={handleInputChange}
                 className="w-full p-3 rounded-lg bg-gray-100 border focus:outline-none focus:ring-2 focus:ring-blue-300"
               />
 

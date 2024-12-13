@@ -7,44 +7,42 @@ const BottomBar = ({ toggleSidebarRight, isStoryActive }) => {
 
   return (
     <aside
-      className={`sm:hidden fixed bottom-0 left-0 right-0 bg-white text-gray-800 flex justify-between items-center p-4 rounded-lg shadow-2xl transform transition-all duration-300 z-50 ${
+      className={`sm:hidden fixed bottom-0 left-0 right-0 bg-white text-gray-800 flex justify-between items-center p-2 rounded-lg transition-all duration-150 z-50 ${ // Reduced duration for faster transition
         isStoryActive ? 'hidden' : ''
       }`}
       style={{
-        boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)', // Adds a shadow for 3D effect
-        transform: 'translateY(-10px)', // Lifts the bar up for floating effect
-        perspective: '500px', // Provides a 3D perspective
+        // No floating effect or thickness styles
       }}
     >
       <button
         onClick={() => navigate('/')}
-        className="flex flex-col items-center p-2 rounded-lg hover:bg-gray-100 hover:text-blue-600 transition-all duration-300"
+        className="flex flex-col items-center p-2 rounded-lg hover:bg-gray-100 hover:text-blue-600 transition-all duration-150" // Reduced duration for faster transition
       >
-        <HomeIcon className="h-6 w-6" /> {/* Home Icon */}
+        <HomeIcon className="h-5 w-5" /> {/* Smaller Home Icon */}
       </button>
       <button
         onClick={toggleSidebarRight}
-        className="flex flex-col items-center p-2 rounded-lg hover:bg-gray-100 hover:text-blue-600 transition-all duration-300"
+        className="flex flex-col items-center p-2 rounded-lg hover:bg-gray-100 hover:text-blue-600 transition-all duration-150" // Reduced duration for faster transition
       >
-        <ChatBubbleLeftIcon className="h-6 w-6" /> {/* Message Icon */}
+        <ChatBubbleLeftIcon className="h-5 w-5" /> {/* Smaller Message Icon */}
       </button>
       <button
         onClick={() => navigate('/upload')}
-        className="flex flex-col items-center p-2 rounded-lg hover:bg-gray-100 hover:text-blue-600 transition-all duration-300"
+        className="flex flex-col items-center p-2 rounded-lg hover:bg-gray-100 hover:text-blue-600 transition-all duration-150" // Reduced duration for faster transition
       >
-        <ArrowUpTrayIcon className="h-6 w-6" /> {/* Upload Icon */}
+        <ArrowUpTrayIcon className="h-5 w-5" /> {/* Smaller Upload Icon */}
       </button>
       <button
         onClick={() => navigate('/hivee')}
-        className="flex flex-col items-center p-2 rounded-lg hover:bg-gray-100 hover:text-blue-600 transition-all duration-300"
+        className="flex flex-col items-center p-2 rounded-lg hover:bg-gray-100 hover:text-blue-600 transition-all duration-150" // Reduced duration for faster transition
       >
-        <PlayIcon className="h-6 w-6" /> {/* Hivees Icon - Play Icon for short videos */}
+        <PlayIcon className="h-5 w-5" /> {/* Smaller Hivees Icon */}
       </button>
       <button
         onClick={() => navigate('/explore')}
-        className="flex flex-col items-center p-2 rounded-lg hover:bg-gray-100 hover:text-blue-600 transition-all duration-300"
+        className="flex flex-col items-center p-2 rounded-lg hover:bg-gray-100 hover:text-blue-600 transition-all duration-150" // Reduced duration for faster transition
       >
-        <MagnifyingGlassIcon className="h-6 w-6" /> {/* Explore Icon */}
+        <MagnifyingGlassIcon className="h-5 w-5" /> {/* Smaller Explore Icon */}
       </button>
     </aside>
   );

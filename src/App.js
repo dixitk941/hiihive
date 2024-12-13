@@ -4,6 +4,7 @@ import { auth } from "./Pages/firebaseConfig";
 import Loading from "./components/Loading";
 import KnowledgeHub from "./components/KnowledgeHub/KnowledgeHub";
 
+// Lazy loading components
 const HomePage = React.lazy(() => import("./Pages/HomePage"));
 const HiveePage = React.lazy(() => import("./components/Hivee"));
 const LoginPage = React.lazy(() => import("./Pages/Login"));
@@ -35,78 +36,16 @@ function App() {
     return () => unsubscribe();
   }, []);
 
-  // Delay hiding the loading screen for at least 5 seconds after authentication check is done
+  // Delay hiding the loading screen for at least 2 seconds after authentication check is done
   useEffect(() => {
     if (!authLoading) {
       const loadingDelay = setTimeout(() => {
-        setAppLoading(false); // Final app loading complete after 5 seconds
-      }, 5000);
+        setAppLoading(false); // Final app loading complete after 2 seconds
+      }, 2000);
 
       return () => clearTimeout(loadingDelay); // Cleanup timeout on unmount
     }
   }, [authLoading]);
-
-  // Prevent right-click globally
-  useEffect(() => {
-    const preventRightClick = (e) => e.preventDefault();
-    document.addEventListener("contextmenu", preventRightClick);
-
-    return () => {
-      document.removeEventListener("contextmenu", preventRightClick);
-    };
-  }, []);
-
-  useEffect(() => {
-    // Disable zooming
-    document.addEventListener(
-      "wheel",
-      (e) => {
-        if (e.ctrlKey) {
-          e.preventDefault();
-        }
-      },
-      { passive: false }
-    );
-
-    document.addEventListener("keydown", (e) => {
-      if ((e.ctrlKey || e.metaKey) && (e.key === "+" || e.key === "-" || e.key === "0")) {
-        e.preventDefault();
-      }
-    });
-
-    // Disable opening developer tools
-    document.addEventListener("keydown", (e) => {
-      if (
-        ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === "I" || e.key === "J")) ||
-        e.key === "U"
-      ) {
-        e.preventDefault();
-      }
-    });
-
-    return () => {
-      document.removeEventListener("wheel", (e) => {
-        if (e.ctrlKey) {
-          e.preventDefault();
-        }
-      });
-
-      document.removeEventListener("keydown", (e) => {
-        if ((e.ctrlKey || e.metaKey) && (e.key === "+" || e.key === "-" || e.key === "0")) {
-          e.preventDefault();
-        }
-      });
-
-      document.removeEventListener("keydown", (e) => {
-        if (
-          ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === "I" || e.key === "J")) ||
-          e.key === "U"
-        ) {
-          e.preventDefault();
-        }
-      });
-    };
-  }, []);
 
   // Show loading screen if authentication or app loading is still in progress
   if (authLoading || appLoading) {
@@ -114,43 +53,60 @@ function App() {
   }
 
   return (
-    <Suspense fallback={<Loading />}>
-      <Router>
-        <ConditionalHeader user={user} />
-        <Routes>
-          <Route path="/login" element={user ? <Navigate to="/" /> : <LoginPage />} />
-          <Route path="/" element={user ? <HomePage /> : <Navigate to="/login" />} />
-          <Route path="/hivee" element={user ? <HiveePage /> : <Navigate to="/login" />} />
-          <Route
-            path="/chat/:chatRoomId"
-            element={user ? <ChatInterface currentUser={user} /> : <Navigate to="/login" />}
-          />
-          <Route path="/explore" element={user ? <Explore /> : <Navigate to="/login" />} />
-          <Route path="/settings" element={user ? <Settings /> : <Navigate to="/login" />} />
-          <Route path="/user/:userId" element={user ? <UserProfile /> : <Navigate to="/login" />} />
-          <Route
-            path="/chatlist"
-            element={user ? <ChatList currentUser={user} /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/upload"
-            element={user ? <UploadPost currentUser={user} /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/notifications"
-            element={user ? <Notification currentUser={user} /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/stories"
-            element={user ? <Stories currentUser={user} /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/knowledgehub"
-            element={user ? <KnowledgeHub /> : <Navigate to="/login" />}
-          />
-        </Routes>
-      </Router>
-    </Suspense>
+    <Router>
+      <ConditionalHeader user={user} />
+      <Routes>
+        {/* Lazy-loaded routes */}
+        <Route
+          path="/login"
+          element={user ? <Navigate to="/" /> : <Suspense fallback={<Loading />}><LoginPage /></Suspense>}
+        />
+        <Route
+          path="/"
+          element={user ? <Suspense fallback={<Loading />}><HomePage /></Suspense> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/hivee"
+          element={user ? <Suspense fallback={<Loading />}><HiveePage /></Suspense> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/chat/:chatRoomId"
+          element={user ? <Suspense fallback={<Loading />}><ChatInterface currentUser={user} /></Suspense> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/explore"
+          element={user ? <Suspense fallback={<Loading />}><Explore /></Suspense> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/settings"
+          element={user ? <Suspense fallback={<Loading />}><Settings /></Suspense> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/user/:userId"
+          element={user ? <Suspense fallback={<Loading />}><UserProfile /></Suspense> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/chatlist"
+          element={user ? <Suspense fallback={<Loading />}><ChatList currentUser={user} /></Suspense> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/upload"
+          element={user ? <Suspense fallback={<Loading />}><UploadPost currentUser={user} /></Suspense> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/notifications"
+          element={user ? <Suspense fallback={<Loading />}><Notification currentUser={user} /></Suspense> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/stories"
+          element={user ? <Suspense fallback={<Loading />}><Stories currentUser={user} /></Suspense> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/knowledgehub"
+          element={user ? <Suspense fallback={<Loading />}><KnowledgeHub /></Suspense> : <Navigate to="/login" />}
+        />
+      </Routes>
+    </Router>
   );
 }
 

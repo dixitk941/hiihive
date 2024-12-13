@@ -1,21 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from './firebaseConfig'; // Import your Firebase config
+import { db } from './firebaseConfig';
 import SidebarLeft from '../components/SidebarLeft';
 import SidebarRight from '../components/SidebarRight';
-import UploadPost from '../components/UploadPost'; // Import UploadPost component
-import UploadHivee from '../components/UploadHivee'; // Import UploadHivee component
+import UploadPost from '../components/UploadPost';
+import UploadHivee from '../components/UploadHivee';
 import ChatInterface from '../components/ChatInterface';
 import BottomBar from '../components/BottomBar';
-import loaderGif from '../assets/normload.gif'; // Adjust the path according to your project structure
+import loaderGif from '../assets/normload.gif';
 
 const UploadPage = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [selectedChat, setSelectedChat] = useState(null);
-  const [loading, setLoading] = useState(true); // Manage loading state
-  const [isSidebarRightVisible, setIsSidebarRightVisible] = useState(false); // Manage SidebarRight visibility
-  const [uploadType, setUploadType] = useState('Post'); // Default to 'Post' upload type
+  const [loading, setLoading] = useState(true);
+  const [isSidebarRightVisible, setIsSidebarRightVisible] = useState(false);
+  const [uploadType, setUploadType] = useState('Post');
   const sidebarRightRef = useRef(null);
 
   useEffect(() => {
@@ -27,123 +27,92 @@ const UploadPage = () => {
         const userDoc = await getDoc(userRef);
         if (userDoc.exists()) {
           setCurrentUser({ ...user, ...userDoc.data() });
-        } else {
-          console.log('No such document!');
         }
       } else {
         setCurrentUser(null);
       }
       setLoading(false);
     });
-
     return () => unsubscribe();
   }, []);
 
-  // Effect to handle sidebar behavior on inactivity
-  useEffect(() => {
-    let timeout;
-    const handleActivity = () => {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => {
-        setIsSidebarRightVisible(false);
-      }, 10000); // 10 seconds of inactivity
-    };
-
-    const handleClickOutside = (event) => {
-      if (sidebarRightRef.current && !sidebarRightRef.current.contains(event.target)) {
-        setIsSidebarRightVisible(false);
-      }
-    };
-
-    if (isSidebarRightVisible) {
-      document.addEventListener('mousemove', handleActivity);
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      clearTimeout(timeout);
-      document.removeEventListener('mousemove', handleActivity);
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isSidebarRightVisible]);
-
-  const handleBackToSidebar = () => {
-    setSelectedChat(null);
-  };
-
-  const toggleSidebarRight = () => {
-    setIsSidebarRightVisible(!isSidebarRightVisible);
-  };
-
-  const handleUploadTypeChange = (type) => {
-    setUploadType(type);
-  };
+  const toggleSidebarRight = () => setIsSidebarRightVisible(!isSidebarRightVisible);
 
   if (loading) {
     return (
-      <div className="h-screen flex flex-col justify-center items-center bg-gray-100">
-        {/* Loader GIF in the center */}
-        <div className="flex items-center justify-center mb-4">
-          <img src={loaderGif} alt="Loading" className="w-32 h-32" /> {/* Increased size */}
-        </div>
+      <div className="flex justify-center items-center h-screen bg-gray-100">
+        <img src={loaderGif} alt="Loading" className="w-20 h-20 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen">
-      <div className="flex flex-1 pt-24"> {/* Add padding-top to avoid being hidden by the header */}
-        {/* SidebarLeft for main navigation */}
-        <div className="hidden lg:block w-[250px]">
-          <SidebarLeft currentUser={currentUser} /> {/* Pass currentUser to SidebarLeft */}
+    <div className="flex flex-col h-screen bg-gray-50 text-gray-900">
+      <div className="flex flex-1 pt-16 lg:pt-20">
+        {/* SidebarLeft */}
+        <div className="hidden lg:block w-64 bg-white shadow-md">
+          <SidebarLeft currentUser={currentUser} />
         </div>
 
-        {/* Main content section with posts (Upload Post/Hivee) */}
+        {/* Main Content */}
         {!selectedChat && (
-          <main className="flex-1 p-4 overflow-auto">
-            {/* Tab-like buttons to toggle between Post and Hivee */}
-            <div className="flex mb-4">
+          <main className="flex-1 p-6 overflow-y-auto">
+            <div className="flex space-x-4 mb-4">
               <button
-                className={`flex-1 p-2 text-center ${uploadType === 'Post' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-                onClick={() => handleUploadTypeChange('Post')}
+                className={`flex-1 py-2 rounded-lg font-semibold transition-all ${
+                  uploadType === 'Post'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 hover:bg-gray-300'
+                }`}
+                onClick={() => setUploadType('Post')}
               >
                 Post
               </button>
               <button
-                className={`flex-1 p-2 text-center ${uploadType === 'Hivee' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-                onClick={() => handleUploadTypeChange('Hivee')}
+                className={`flex-1 py-2 rounded-lg font-semibold transition-all ${
+                  uploadType === 'Hivee'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 hover:bg-gray-300'
+                }`}
+                onClick={() => setUploadType('Hivee')}
               >
                 Hivee
               </button>
             </div>
-
-            {/* Render the appropriate component based on the selected upload type */}
-            {uploadType === 'Post' && <UploadPost currentUser={currentUser} />}
-            {uploadType === 'Hivee' && <UploadHivee currentUser={currentUser} />}
+            {uploadType === 'Post' ? (
+              <UploadPost currentUser={currentUser} />
+            ) : (
+              <UploadHivee currentUser={currentUser} />
+            )}
           </main>
         )}
 
-        {/* Conditionally render SidebarRight or ChatInterface */}
-        <div className="hidden lg:flex flex-col w-96">
+        {/* SidebarRight or ChatInterface */}
+        <div className="hidden lg:block w-80 bg-white shadow-md">
           {!selectedChat ? (
             <SidebarRight currentUser={currentUser} setSelectedChat={setSelectedChat} />
           ) : (
-            <ChatInterface currentUser={currentUser} chatRoomId={selectedChat} onBack={handleBackToSidebar} />
+            <ChatInterface
+              currentUser={currentUser}
+              chatRoomId={selectedChat}
+              onBack={() => setSelectedChat(null)}
+            />
           )}
         </div>
 
-        {/* Show SidebarRight on mobile if isSidebarRightVisible is true */}
+        {/* Mobile SidebarRight */}
         {isSidebarRightVisible && (
-          <div ref={sidebarRightRef} className="lg:hidden fixed bottom-0 left-0 right-0 bg-white shadow-lg z-50 p-4">
+          <div
+            ref={sidebarRightRef}
+            className="lg:hidden fixed inset-0 bg-white shadow-lg z-50"
+          >
             <SidebarRight currentUser={currentUser} setSelectedChat={setSelectedChat} />
           </div>
         )}
       </div>
 
-      {/* Bottom Bar for mobile, visible only if no chat is selected */}
-      {!selectedChat && (
-        <BottomBar toggleSidebarRight={toggleSidebarRight} />
-      )}
+      {/* BottomBar */}
+      {!selectedChat && <BottomBar toggleSidebarRight={toggleSidebarRight} />}
     </div>
   );
 };
