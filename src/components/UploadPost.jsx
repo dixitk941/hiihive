@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaCamera, FaFileVideo, FaFileAudio } from 'react-icons/fa';
 import { AiOutlineClose, AiOutlineCloudUpload } from 'react-icons/ai';
 import { getFirestore, collection, addDoc } from 'firebase/firestore';
@@ -34,6 +34,86 @@ const UploadPost = () => {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [fileType, setFileType] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  const [hashtags, setHashtags] = useState([]);
+  const [filteredHashtags, setFilteredHashtags] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // Fetch trending hashtags
+  useEffect(() => {
+    const fetchTrendingHashtags = async () => {
+      // Replace this with your actual API logic
+      const trendingHashtags = [
+'ReactJS',
+        'WebDevelopment',
+        'AI',
+        'HiiHiveLaunch',
+        'JavaScript',
+        'TailwindCSS',
+        'OpenSource',
+        'CloudComputing',
+        'MVP',
+        'TrendingNow',
+        'StartupLife',
+        'Innovation',
+        'DataScience',
+        'Coding',
+        'TechNews',
+        'Design',
+        'Productivity',
+        'Crypto',
+        'Blockchain',
+        'MachineLearning',
+        'UIUX',
+        'FullStack',
+        'FrontEnd',
+        'BackEnd',
+        'DevOps',
+        'MobileDevelopment',
+        'CloudNative',
+        'OpenAI',
+        'ReactNative',
+        'VueJS',
+        'Angular',
+        'NextJS',
+        'NodeJS',
+        'CyberSecurity',
+        'Agile',
+        'Scrum',
+        'StartupIdeas',
+        'Entrepreneurship',
+        'TechTrends',
+
+      ];
+      setHashtags(trendingHashtags);
+    };
+
+    fetchTrendingHashtags();
+  }, []);
+
+  const handleCaptionChange = (e) => {
+    const value = e.target.value;
+    setCaption(value);
+
+    // Detect if `#` is typed
+    const lastWord = value.split(' ').pop();
+    if (lastWord.startsWith('#')) {
+      const query = lastWord.slice(1).toLowerCase();
+      const matches = hashtags.filter((hashtag) =>
+        hashtag.toLowerCase().includes(query)
+      );
+      setFilteredHashtags(matches);
+      setShowSuggestions(true);
+    } else {
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleHashtagClick = (hashtag) => {
+    const words = caption.split(' ');
+    words.pop(); // Remove the last word (the one being typed)
+    setCaption([...words, `#${hashtag}`].join(' ') + ' ');
+    setShowSuggestions(false);
+  };
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -116,19 +196,27 @@ const UploadPost = () => {
         <AiOutlineCloudUpload size={32} color="#4e8bff" />
       </div>
       <div className="flex items-start space-x-3 mb-4">
-        {/* <img
-          src="/default-profile.png" // Replace with the user’s profile image URL
-          alt="User"
-          className="w-10 h-10 rounded-full object-cover"
-        /> */}
         <div className="w-full">
           <textarea
             value={caption}
-            onChange={(e) => setCaption(e.target.value)}
+            onChange={handleCaptionChange}
             placeholder="Write a caption..."
             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm text-gray-700 resize-none"
             rows={3}
           />
+          {showSuggestions && (
+            <ul className="bg-white border border-gray-300 rounded-lg shadow-md mt-2 max-h-32 overflow-y-auto">
+              {filteredHashtags.map((hashtag, index) => (
+                <li
+                  key={index}
+                  className="p-2 hover:bg-blue-100 cursor-pointer"
+                  onClick={() => handleHashtagClick(hashtag)}
+                >
+                  #{hashtag}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
 
