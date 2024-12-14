@@ -47,31 +47,6 @@ function App() {
     }
   }, [authLoading]);
 
-  // Request camera and microphone permissions
-  useEffect(() => {
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-      .then((stream) => {
-        console.log('Camera and microphone permissions granted');
-        // Do something with the stream
-      })
-      .catch((error) => {
-        console.error('Error accessing camera or microphone:', error);
-      });
-
-    // Check if Notification API is available
-    if (typeof Notification !== 'undefined' && typeof Notification.requestPermission === 'function') {
-      Notification.requestPermission().then((permission) => {
-        if (permission === 'granted') {
-          console.log('Notification permissions granted');
-        } else {
-          console.log('Notification permissions denied');
-        }
-      });
-    } else {
-      console.log('Notification API not supported');
-    }
-  }, []);
-
   // Show loading screen if authentication or app loading is still in progress
   if (authLoading || appLoading) {
     return <Loading />;
