@@ -11,7 +11,6 @@ const SidebarRight = ({ setSelectedChat }) => {
   const [following, setFollowing] = useState([]);
   const [recentChats, setRecentChats] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [userNames, setUserNames] = useState({});
   const [showFollowers, setShowFollowers] = useState(false);
   const [showFollowing, setShowFollowing] = useState(false);
@@ -29,8 +28,6 @@ const SidebarRight = ({ setSelectedChat }) => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setCurrentUser(user);
-      } else {
-        setLoading(false);
       }
     });
     return () => unsubscribe();
@@ -81,13 +78,12 @@ const SidebarRight = ({ setSelectedChat }) => {
             ...fetchedRecentChats.map(c => c.otherUserId),
           ].filter(Boolean);
 
+          // Fetch names for all users in one go
           const names = await fetchUserNamesInBulk(allUserIds);
           setUserNames(names);
         }
       } catch (error) {
         console.error('Error fetching user data:', error);
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -167,10 +163,6 @@ const SidebarRight = ({ setSelectedChat }) => {
     createOrRetrieveChatRoom(userId);
   };
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
   return (
     <aside
       className={`${isCollapsed ? 'w-20' : 'w-64'} fixed right-0 top-24 h-[calc(100vh-6rem)] bg-white text-gray-800 flex flex-col justify-between p-4 shadow-md border-l border-gray-200 transition-all duration-300 overflow-y-auto`}
@@ -199,7 +191,7 @@ const SidebarRight = ({ setSelectedChat }) => {
               >
                 <FiMessageSquare className="text-blue-500" size={20} />
                 <span className={`${isCollapsed ? 'hidden' : 'ml-3 font-semibold'}`}>
-                  {userNames[chat.otherUserId] || 'Loading...'}
+                  {userNames[chat.otherUserId] || 'Unknown'}
                 </span>
               </div>
             ))}
@@ -244,7 +236,7 @@ const SidebarRight = ({ setSelectedChat }) => {
                 >
                   <FiMessageSquare className="text-blue-500" size={20} />
                   <span className={`${isCollapsed ? 'hidden' : 'ml-3 font-semibold'}`}>
-                    {userNames[follower.id] || 'Loading...'}
+                    {userNames[follower.id] || 'Unknown'}
                   </span>
                 </div>
               ))}
@@ -275,7 +267,7 @@ const SidebarRight = ({ setSelectedChat }) => {
                 >
                   <FiMessageSquare className="text-blue-500" size={20} />
                   <span className={`${isCollapsed ? 'hidden' : 'ml-3 font-semibold'}`}>
-                    {userNames[followed.id] || 'Loading...'}
+                    {userNames[followed.id] || 'Unknown'}
                   </span>
                 </div>
               ))}
@@ -288,6 +280,3 @@ const SidebarRight = ({ setSelectedChat }) => {
 };
 
 export default SidebarRight;
-
-
-
