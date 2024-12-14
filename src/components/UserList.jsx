@@ -81,7 +81,7 @@ const UsersList = () => {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <span>{user.username[0].toUpperCase()}</span>
+                  <span>{user.username ? user.username[0].toUpperCase() : ''}</span>
                 )}
               </div>
               <div className="text-center mt-2">
