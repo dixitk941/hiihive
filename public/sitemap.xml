@@ -12,8 +12,6 @@
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
-
-  <!-- Add more URLs here -->
   <url>
     <loc>https://hiihive.vercel.app/login</loc>
     <lastmod>2024-12-14T12:48:43+00:00</lastmod>
