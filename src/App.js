@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "r
 import { auth } from "./Pages/firebaseConfig";
 import Loading from "./components/Loading";
 import KnowledgeHub from "./components/KnowledgeHub/KnowledgeHub";
+import ReferralPage from "./Pages/ReferralPage";
 
 // Lazy loading components
 const HomePage = React.lazy(() => import("./Pages/HomePage"));
@@ -22,6 +23,20 @@ function App() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [appLoading, setAppLoading] = useState(true);
+
+  const requestNotificationPermissions = () => {
+    if (typeof Notification !== 'undefined' && typeof Notification.requestPermission === 'function') {
+      Notification.requestPermission().then((permission) => {
+        if (permission === 'granted') {
+          console.log('Notification permissions granted');
+        } else {
+          console.log('Notification permissions denied');
+        }
+      });
+    } else {
+      console.log('Notification API not supported');
+    }
+  };
 
   // Track authentication state
   useEffect(() => {
@@ -47,6 +62,10 @@ function App() {
     }
   }, [authLoading]);
 
+  useEffect(() => {
+    requestNotificationPermissions();
+  }, []);
+
   // Show loading screen if authentication or app loading is still in progress
   if (authLoading || appLoading) {
     return <Loading />;
@@ -65,6 +84,11 @@ function App() {
           path="/"
           element={user ? <Suspense fallback={<Loading />}><HomePage /></Suspense> : <Navigate to="/login" />}
         />
+        <Route
+  path="/refer"
+  element={user ? <Suspense fallback={<Loading />}><ReferralPage user={user} /></Suspense> : <Navigate to="/login" />}
+/>
+
         <Route
           path="/hivee"
           element={user ? <Suspense fallback={<Loading />}><HiveePage /></Suspense> : <Navigate to="/login" />}
@@ -104,6 +128,10 @@ function App() {
         <Route
           path="/knowledgehub"
           element={user ? <Suspense fallback={<Loading />}><KnowledgeHub /></Suspense> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/sitemap.xml"
+          element={<iframe src="/sitemap.xml" style={{ display: 'none' }} title="sitemap" />}
         />
       </Routes>
     </Router>

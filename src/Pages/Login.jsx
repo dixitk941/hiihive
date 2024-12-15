@@ -297,7 +297,7 @@ const LoginPage = () => {
             communities, and explore knowledge-rich content in an elegant,
             seamless environment.
           </p>
-          {/* Features / Benefits */}
+
           <div className="flex justify-start space-x-8 mt-8">
             <div className="flex flex-col items-center space-y-2">
               <svg
@@ -321,19 +321,7 @@ const LoginPage = () => {
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
               </svg>
-              <p className="mt-2 text-lg font-medium text-gray-900">Knowledge Hub</p>
-            </div>
-            <div className="flex flex-col items-center space-y-2">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-12 w-12 text-yellow-600"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-              </svg>
-              <p className="mt-2 text-lg font-medium text-gray-900">Explore</p>
+              <p className="mt-2 text-lg font-medium text-gray-900">KnowledgeHub</p>
             </div>
           </div>
         </div>
