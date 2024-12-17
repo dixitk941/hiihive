@@ -6,6 +6,9 @@ module.exports = {
   darkMode: false, // or 'media' or 'class'
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['ui-sans-serif', 'system-ui', 'Segoe UI Emoji', 'Apple Color Emoji', 'sans-serif'],
+      },
       keyframes: {
         slideIn: {
           '0%': { transform: 'translateY(-100%)', opacity: '0' },
