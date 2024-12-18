@@ -224,7 +224,11 @@ const LoginPage = () => {
                 onChange={handleInputChange}
                 className="w-full p-3 rounded-lg bg-gray-100 border focus:outline-none focus:ring-2 focus:ring-blue-300"
               />
-
+ {isSignUp && (
+    <p className="text-sm text-gray-500 mt-2">
+      Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a number, and a special character.
+    </p>
+  )}
               <button
                 type="button"
                 onClick={isSignUp ? handleSignUp : handleLogin}
@@ -252,7 +256,7 @@ const LoginPage = () => {
               </p>
             )}
 
-            {isDesktop && (
+            {/* {isDesktop && (
               <div className="text-center mt-4">
                 <a
                   href="https://expo.dev/artifacts/eas/n9249p3RDhDhzurJQkwxYe.apk"
@@ -261,7 +265,7 @@ const LoginPage = () => {
                   Download Android App
                 </a>
               </div>
-            )}
+            )} */}
 
             <p className="text-center text-gray-600 mt-4">
               {isSignUp ? (
@@ -297,7 +301,7 @@ const LoginPage = () => {
             communities, and explore knowledge-rich content in an elegant,
             seamless environment.
           </p>
-          {/* Features / Benefits */}
+
           <div className="flex justify-start space-x-8 mt-8">
             <div className="flex flex-col items-center space-y-2">
               <svg
@@ -321,19 +325,7 @@ const LoginPage = () => {
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
               </svg>
-              <p className="mt-2 text-lg font-medium text-gray-900">Knowledge Hub</p>
-            </div>
-            <div className="flex flex-col items-center space-y-2">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-12 w-12 text-yellow-600"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-              </svg>
-              <p className="mt-2 text-lg font-medium text-gray-900">Explore</p>
+              <p className="mt-2 text-lg font-medium text-gray-900">KnowledgeHub</p>
             </div>
           </div>
         </div>
