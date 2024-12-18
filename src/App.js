@@ -47,6 +47,49 @@ function App() {
     }
   }, [authLoading]);
 
+  // Disable right-click, double-click, long hold, web developer tools, and zooming
+  useEffect(() => {
+    const preventDefault = (e) => e.preventDefault();
+
+    document.addEventListener('contextmenu', preventDefault);
+    document.addEventListener('dblclick', preventDefault);
+    document.addEventListener('mousedown', (e) => {
+      if (e.detail > 1) {
+        preventDefault(e);
+      }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || (e.ctrlKey && (e.key === '+' || e.key === '-' || e.key === '0'))) {
+        preventDefault(e);
+      }
+    });
+    document.addEventListener('wheel', (e) => {
+      if (e.ctrlKey) {
+        preventDefault(e);
+      }
+    }, { passive: false });
+
+    return () => {
+      document.removeEventListener('contextmenu', preventDefault);
+      document.removeEventListener('dblclick', preventDefault);
+      document.removeEventListener('mousedown', (e) => {
+        if (e.detail > 1) {
+          preventDefault(e);
+        }
+      });
+      document.removeEventListener('keydown', (e) => {
+        if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || (e.ctrlKey && (e.key === '+' || e.key === '-' || e.key === '0'))) {
+          preventDefault(e);
+        }
+      });
+      document.removeEventListener('wheel', (e) => {
+        if (e.ctrlKey) {
+          preventDefault(e);
+        }
+      });
+    };
+  }, []);
+
   // Show loading screen if authentication or app loading is still in progress
   if (authLoading || appLoading) {
     return <Loading />;
@@ -55,57 +98,59 @@ function App() {
   return (
     <Router>
       <ConditionalHeader user={user} />
-      <Routes>
-        {/* Lazy-loaded routes */}
-        <Route
-          path="/login"
-          element={user ? <Navigate to="/" /> : <Suspense fallback={<Loading />}><LoginPage /></Suspense>}
-        />
-        <Route
-          path="/"
-          element={user ? <Suspense fallback={<Loading />}><HomePage /></Suspense> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/hivee"
-          element={user ? <Suspense fallback={<Loading />}><HiveePage /></Suspense> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/chat/:chatRoomId"
-          element={user ? <Suspense fallback={<Loading />}><ChatInterface currentUser={user} /></Suspense> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/explore"
-          element={user ? <Suspense fallback={<Loading />}><Explore /></Suspense> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/settings"
-          element={user ? <Suspense fallback={<Loading />}><Settings /></Suspense> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/user/:userId"
-          element={user ? <Suspense fallback={<Loading />}><UserProfile /></Suspense> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/chatlist"
-          element={user ? <Suspense fallback={<Loading />}><ChatList currentUser={user} /></Suspense> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/upload"
-          element={user ? <Suspense fallback={<Loading />}><UploadPost currentUser={user} /></Suspense> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/notifications"
-          element={user ? <Suspense fallback={<Loading />}><Notification currentUser={user} /></Suspense> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/stories"
-          element={user ? <Suspense fallback={<Loading />}><Stories currentUser={user} /></Suspense> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/knowledgehub"
-          element={user ? <Suspense fallback={<Loading />}><KnowledgeHub /></Suspense> : <Navigate to="/login" />}
-        />
-      </Routes>
+      <Suspense fallback={<Loading />}>
+        <Routes>
+          {/* Lazy-loaded routes */}
+          <Route
+            path="/login"
+            element={user ? <Navigate to="/" /> : <Suspense fallback={<Loading />}><LoginPage /></Suspense>}
+          />
+          <Route
+            path="/"
+            element={user ? <Suspense fallback={<Loading />}><HomePage /></Suspense> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/hivee"
+            element={user ? <Suspense fallback={<Loading />}><HiveePage /></Suspense> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/chat/:chatRoomId"
+            element={user ? <Suspense fallback={<Loading />}><ChatInterface currentUser={user} /></Suspense> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/explore"
+            element={user ? <Suspense fallback={<Loading />}><Explore /></Suspense> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/settings"
+            element={user ? <Suspense fallback={<Loading />}><Settings /></Suspense> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/user/:userId"
+            element={user ? <Suspense fallback={<Loading />}><UserProfile /></Suspense> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/chatlist"
+            element={user ? <Suspense fallback={<Loading />}><ChatList currentUser={user} /></Suspense> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/upload"
+            element={user ? <Suspense fallback={<Loading />}><UploadPost currentUser={user} /></Suspense> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/notifications"
+            element={user ? <Suspense fallback={<Loading />}><Notification currentUser={user} /></Suspense> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/stories"
+            element={user ? <Suspense fallback={<Loading />}><Stories currentUser={user} /></Suspense> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/knowledgehub"
+            element={user ? <Suspense fallback={<Loading />}><KnowledgeHub /></Suspense> : <Navigate to="/login" />}
+          />
+        </Routes>
+      </Suspense>
     </Router>
   );
 }
