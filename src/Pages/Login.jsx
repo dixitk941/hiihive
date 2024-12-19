@@ -28,6 +28,36 @@ const LoginPage = () => {
   const [isDesktop, setIsDesktop] = useState(window.innerWidth > 768);
   const navigate = useNavigate();
 
+  const prohibitedWords = [
+    "sex", "sexual", "explicit", "violence", "hate", "abuse", 
+    "racism", "offensive", "bullying", "terrorism", "murder", "drugs",
+    "illegal", "torture", "pedophilia", "slut", "bitch", "asshole",
+    "nigger", "faggot", "cunt", "motherfucker", "cock", "dick", 
+    "whore", "rape", "incest", "pussy", "porn", "prostitution",
+    // Hindi offensive words
+    "गंदी", "रंडी", "कुत्ता", "चूत", "लौंडा", "लुंगी", "मादरचोद", 
+    "बहनचोद", "भोसड़ी", "साले", "सुसरा", "चूतिया", "हरामखोर", 
+    "गांजा", "शराब", "बलात्कार", "मुत", "पागल", "बेशर्म", "गधें", 
+    "साला", "कुत्ते", "गधा", "दुष्कर्म", "महिला तशदद", "लड़की की इज्जत",
+    "जघन्य अपराध", "अश्लील", "अश्लीलता"
+    // Add more words as needed
+  ];
+  
+  const containsProhibitedWords = () => {
+    const inputValues = Object.values(formData);
+    for (let value of inputValues) {
+      if (typeof value === "string") {
+        const words = value.split(/\s+/); // Split by spaces or whitespace
+        for (let word of words) {
+          if (prohibitedWords.includes(word.toLowerCase())) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -46,6 +76,13 @@ const LoginPage = () => {
   const handleSignUp = async () => {
     setLoading(true);
     setError("");
+
+    if (containsProhibitedWords()) {
+      setError("Your input contains prohibited words. Please remove them.");
+      setLoading(false);
+      return;
+    }
+
     try {
       if (parseInt(formData.age) < 18) {
         setError("You must be 18 or older to sign up.");
