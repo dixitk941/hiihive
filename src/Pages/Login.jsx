@@ -84,11 +84,11 @@ const LoginPage = () => {
     }
 
     try {
-      if (parseInt(formData.age) < 18) {
-        setError("You must be 18 or older to sign up.");
-        setLoading(false);
-        return;
-      }
+      // if (parseInt(formData.age) < 18) {
+      //   setError("You must be 18 or older to sign up.");
+      //   setLoading(false);
+      //   return;
+      // }
 
       const userCredential = await createUserWithEmailAndPassword(
         auth,
