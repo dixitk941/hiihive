@@ -19,6 +19,7 @@ const Feeds = () => {
   const [comments, setComments] = useState({});
   const [userDetails, setUserDetails] = useState({});
   const [expandedComments, setExpandedComments] = useState({});
+  const [activeCommentPostId, setActiveCommentPostId] = useState(null); // Track active comment box
   const db = getDatabase();
   const firestore = getFirestore();
 
@@ -153,15 +154,20 @@ const Feeds = () => {
     window.location.href = `/user/${userId}`; // Redirect to profile page
   };
 
+  // Handle comment button click
+  const handleCommentButtonClick = (postId) => {
+    setActiveCommentPostId(activeCommentPostId === postId ? null : postId);
+  };
+
   return (
-    <div className="max-w-[600px] mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="max-w-[600px] mx-auto px-4 sm:px-6 lg:px-8 bg-transparent text-black">
       {posts.length > 0 ? (
         posts
           .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
           .map((post) => (
             <div
               key={post.id}
-              className="bg-white rounded-lg shadow-lg mb-4 w-full sm:max-w-[500px] mx-auto"
+              className="bg-transparent mb-4 w-full sm:max-w-[500px] mx-auto"
             >
               {/* User Info */}
               <div className="flex items-center p-4">
@@ -175,7 +181,7 @@ const Feeds = () => {
                   <p className="font-semibold text-gray-800">
                     {userDetails[post.userId]?.fullName || "Unknown User"}
                   </p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-600">
                     @{userDetails[post.userId]?.username || "Unknown"}
                   </p>
                 </div>
@@ -191,24 +197,24 @@ const Feeds = () => {
               )}
               {post.fileType === "video" && post.fileUrl && (
                 <video
-                  className="w-full h-auto rounded-lg shadow-lg"
+                  className="w-full h-auto rounded-lg"
                   controls
                   src={post.fileUrl}
                 />
               )}
               {post.fileType === "audio" && post.fileUrl && (
-                <audio className="w-full mt-4 rounded-lg shadow-lg" controls src={post.fileUrl} />
+                <audio className="w-full mt-4 rounded-lg" controls src={post.fileUrl} />
               )}
               {post.fileType === "text" && post.caption && (
-                <p className="p-4 text-gray-700 bg-gray-100 rounded-lg shadow-lg">{post.caption}</p>
+                <p className="p-4 text-gray-800 bg-gray-100 rounded-lg">{post.caption}</p>
               )}
 
               {/* Post Actions */}
-              <div className="flex justify-between items-center p-4 border-t border-gray-200 bg-gray-50 rounded-b-lg shadow-lg">
+              <div className="flex justify-between items-center p-4 border-t border-gray-300 bg-gray-100 rounded-b-lg">
                 <button
                   className={`flex items-center ${
-                    post.likes?.[user?.uid] ? "text-blue-600" : "text-gray-600"
-                  } hover:text-blue-500 transition duration-300 ease-in-out`}
+                    post.likes?.[user?.uid] ? "text-blue-400" : "text-gray-600"
+                  } hover:text-blue-300 transition duration-300 ease-in-out`}
                   onClick={() => handleLike(post)}
                 >
                   <FiThumbsUp size={20} />
@@ -216,12 +222,15 @@ const Feeds = () => {
                     {Object.keys(post.likes || {}).length} Likes
                   </span>
                 </button>
-                <button className="flex items-center text-gray-600 hover:text-blue-500 transition duration-300 ease-in-out">
+                <button
+                  className="flex items-center text-gray-600 hover:text-blue-300 transition duration-300 ease-in-out"
+                  onClick={() => handleCommentButtonClick(post.id)}
+                >
                   <FiMessageCircle size={20} />
                   <span className="ml-2">Comment</span>
                 </button>
                 <button
-                  className="flex items-center text-gray-600 hover:text-blue-500 transition duration-300 ease-in-out"
+                  className="flex items-center text-gray-600 hover:text-blue-300 transition duration-300 ease-in-out"
                   onClick={() => handleShare(post.id)} // Pass the post ID to share
                 >
                   <FiShare size={20} />
@@ -230,61 +239,63 @@ const Feeds = () => {
               </div>
 
               {/* Comments Section */}
-              <div className="p-4">
-                <input
-                  type="text"
-                  className="w-full border rounded-lg p-2 mb-2"
-                  placeholder="Add a comment..."
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                />
-                <button
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg"
-                  onClick={() => handleAddComment(post.id)}
-                >
-                  Post
-                </button>
+              {activeCommentPostId === post.id && (
+                <div className="p-4">
+                  <input
+                    type="text"
+                    className="w-full border p-2 mb-2 bg-gray-100 text-black rounded-lg"
+                    placeholder="Add a comment..."
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                  />
+                  <button
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg"
+                    onClick={() => handleAddComment(post.id)}
+                  >
+                    Post
+                  </button>
 
-                {/* Display Comments */}
-                <div className="mt-4 space-y-2">
-                  {Object.values(comments[post.id] || {})
-                    .slice(0, expandedComments[post.id] ? undefined : 2)
-                    .map((comment, index) => (
-                      <div key={index} className="bg-gray-100 p-2 rounded-lg">
-                        <div className="flex items-center">
-                          <img
-                            src={userDetails[comment.userId]?.avatar || "/default-avatar.png"}
-                            alt="Commenter Avatar"
-                            className="w-8 h-8 rounded-full object-cover cursor-pointer"
-                            onClick={() => handleUserProfileClick(comment.userId)} // Navigate to user profile
-                          />
-                          <div className="ml-3">
-                            <p
-                              className="text-sm font-semibold cursor-pointer text-blue-600"
+                  {/* Display Comments */}
+                  <div className="mt-4 space-y-2">
+                    {Object.values(comments[post.id] || {})
+                      .slice(0, expandedComments[post.id] ? undefined : 2)
+                      .map((comment, index) => (
+                        <div key={index} className="bg-gray-100 p-2 rounded-lg">
+                          <div className="flex items-center">
+                            <img
+                              src={userDetails[comment.userId]?.avatar || "/default-avatar.png"}
+                              alt="Commenter Avatar"
+                              className="w-8 h-8 rounded-full object-cover cursor-pointer"
                               onClick={() => handleUserProfileClick(comment.userId)} // Navigate to user profile
-                            >
-                              {userDetails[comment.userId]?.fullName || "Unknown"}
-                            </p>
-                            <p className="text-sm text-gray-600">{comment.text}</p>
+                            />
+                            <div className="ml-3">
+                              <p
+                                className="text-sm font-semibold cursor-pointer text-blue-400"
+                                onClick={() => handleUserProfileClick(comment.userId)} // Navigate to user profile
+                              >
+                                {userDetails[comment.userId]?.fullName || "Unknown"}
+                              </p>
+                              <p className="text-sm text-gray-800">{comment.text}</p>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
 
-                  {Object.values(comments[post.id] || {}).length > 2 && (
-                    <button
-                      className="text-blue-600"
-                      onClick={() => toggleExpandComments(post.id)}
-                    >
-                      {expandedComments[post.id] ? "Show less" : `+${Object.values(comments[post.id]).length - 2} more`}
-                    </button>
-                  )}
+                    {Object.values(comments[post.id] || {}).length > 2 && (
+                      <button
+                        className="text-blue-400"
+                        onClick={() => toggleExpandComments(post.id)}
+                      >
+                        {expandedComments[post.id] ? "Show less" : `+${Object.values(comments[post.id]).length - 2} more`}
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           ))
       ) : (
-        <div className="text-center">No posts available</div>
+        <div className="text-center text-gray-600">No posts available</div>
       )}
     </div>
   );
