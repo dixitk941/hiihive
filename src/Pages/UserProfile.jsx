@@ -73,13 +73,13 @@ const UserProfile = () => {
     setIsSidebarRightVisible(!isSidebarRightVisible);
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-          <img src={loaderGif} alt="Loading" className="w-32 h-32" /> {/* Increased size */}
-          </div>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <div className="flex justify-center items-center h-screen">
+  //         <img src={loaderGif} alt="Loading" className="w-32 h-32" /> {/* Increased size */}
+  //         </div>
+  //   );
+  // }
 
   return (
     <div className="flex flex-col h-screen">
