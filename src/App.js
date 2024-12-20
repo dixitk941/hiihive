@@ -21,7 +21,6 @@ const Stories = React.lazy(() => import("./components/Stories"));
 function App() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [appLoading, setAppLoading] = useState(true);
 
   // Track authentication state
   useEffect(() => {
@@ -36,62 +35,8 @@ function App() {
     return () => unsubscribe();
   }, []);
 
-  // Delay hiding the loading screen for at least 2 seconds after authentication check is done
-  useEffect(() => {
-    if (!authLoading) {
-      const loadingDelay = setTimeout(() => {
-        setAppLoading(false); // Final app loading complete after 2 seconds
-      }, 2000);
-
-      return () => clearTimeout(loadingDelay); // Cleanup timeout on unmount
-    }
-  }, [authLoading]);
-
-  // Disable right-click, double-click, long hold, web developer tools, and zooming
-  useEffect(() => {
-    const preventDefault = (e) => e.preventDefault();
-
-    document.addEventListener('contextmenu', preventDefault);
-    document.addEventListener('dblclick', preventDefault);
-    document.addEventListener('mousedown', (e) => {
-      if (e.detail > 1) {
-        preventDefault(e);
-      }
-    });
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || (e.ctrlKey && (e.key === '+' || e.key === '-' || e.key === '0'))) {
-        preventDefault(e);
-      }
-    });
-    document.addEventListener('wheel', (e) => {
-      if (e.ctrlKey) {
-        preventDefault(e);
-      }
-    }, { passive: false });
-
-    return () => {
-      document.removeEventListener('contextmenu', preventDefault);
-      document.removeEventListener('dblclick', preventDefault);
-      document.removeEventListener('mousedown', (e) => {
-        if (e.detail > 1) {
-          preventDefault(e);
-        }
-      });
-      document.removeEventListener('keydown', (e) => {
-        if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || (e.ctrlKey && (e.key === '+' || e.key === '-' || e.key === '0'))) {
-          preventDefault(e);
-        }
-      });
-      document.removeEventListener('wheel', (e) => {
-        if (e.ctrlKey) {
-          preventDefault(e);
-        }
-      });
-    };
-  }, []);
-
-  // Show loading screen if authentication or app loading is still in progress
-  if (authLoading || appLoading) {
+  // Show loading screen if authentication is still in progress
+  if (authLoading) {
     return <Loading />;
   }
 
@@ -103,51 +48,51 @@ function App() {
           {/* Lazy-loaded routes */}
           <Route
             path="/login"
-            element={user ? <Navigate to="/" /> : <Suspense fallback={<Loading />}><LoginPage /></Suspense>}
+            element={user ? <Navigate to="/" /> : <LoginPage />}
           />
           <Route
             path="/"
-            element={user ? <Suspense fallback={<Loading />}><HomePage /></Suspense> : <Navigate to="/login" />}
+            element={user ? <HomePage /> : <Navigate to="/login" />}
           />
           <Route
             path="/hivee"
-            element={user ? <Suspense fallback={<Loading />}><HiveePage /></Suspense> : <Navigate to="/login" />}
+            element={user ? <HiveePage /> : <Navigate to="/login" />}
           />
           <Route
             path="/chat/:chatRoomId"
-            element={user ? <Suspense fallback={<Loading />}><ChatInterface currentUser={user} /></Suspense> : <Navigate to="/login" />}
+            element={user ? <ChatInterface currentUser={user} /> : <Navigate to="/login" />}
           />
           <Route
             path="/explore"
-            element={user ? <Suspense fallback={<Loading />}><Explore /></Suspense> : <Navigate to="/login" />}
+            element={user ? <Explore /> : <Navigate to="/login" />}
           />
           <Route
             path="/settings"
-            element={user ? <Suspense fallback={<Loading />}><Settings /></Suspense> : <Navigate to="/login" />}
+            element={user ? <Settings /> : <Navigate to="/login" />}
           />
           <Route
             path="/user/:userId"
-            element={user ? <Suspense fallback={<Loading />}><UserProfile /></Suspense> : <Navigate to="/login" />}
+            element={user ? <UserProfile /> : <Navigate to="/login" />}
           />
           <Route
             path="/chatlist"
-            element={user ? <Suspense fallback={<Loading />}><ChatList currentUser={user} /></Suspense> : <Navigate to="/login" />}
+            element={user ? <ChatList currentUser={user} /> : <Navigate to="/login" />}
           />
           <Route
             path="/upload"
-            element={user ? <Suspense fallback={<Loading />}><UploadPost currentUser={user} /></Suspense> : <Navigate to="/login" />}
+            element={user ? <UploadPost currentUser={user} /> : <Navigate to="/login" />}
           />
           <Route
             path="/notifications"
-            element={user ? <Suspense fallback={<Loading />}><Notification currentUser={user} /></Suspense> : <Navigate to="/login" />}
+            element={user ? <Notification currentUser={user} /> : <Navigate to="/login" />}
           />
           <Route
             path="/stories"
-            element={user ? <Suspense fallback={<Loading />}><Stories currentUser={user} /></Suspense> : <Navigate to="/login" />}
+            element={user ? <Stories currentUser={user} /> : <Navigate to="/login" />}
           />
           <Route
             path="/knowledgehub"
-            element={user ? <Suspense fallback={<Loading />}><KnowledgeHub /></Suspense> : <Navigate to="/login" />}
+            element={user ? <KnowledgeHub /> : <Navigate to="/login" />}
           />
         </Routes>
       </Suspense>

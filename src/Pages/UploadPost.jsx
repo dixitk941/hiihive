@@ -38,13 +38,13 @@ const UploadPage = () => {
 
   const toggleSidebarRight = () => setIsSidebarRightVisible(!isSidebarRightVisible);
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen bg-gray-100">
-        <img src={loaderGif} alt="Loading" className="w-20 h-20 animate-spin" />
-      </div>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <div className="flex justify-center items-center h-screen bg-gray-100">
+  //       <img src={loaderGif} alt="Loading" className="w-20 h-20 animate-spin" />
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="flex flex-col h-screen bg-gray-50 text-gray-900">
