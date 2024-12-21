@@ -19,6 +19,7 @@ const Explore = React.lazy(() => import("./Pages/UserList"));
 const ChatInterface = React.lazy(() => import("./Pages/ChatInterface"));
 const ChatList = React.lazy(() => import("./Pages/ChatList"));
 const UploadPost = React.lazy(() => import("./Pages/UploadPost"));
+const FusionPost = React.lazy(() => import("./components/FusionPost"));
 const UserProfile = React.lazy(() => import("./Pages/UserProfile"));
 const Settings = React.lazy(() => import("./Pages/SettingPage"));
 const Notification = React.lazy(() => import("./components/Notifications"));

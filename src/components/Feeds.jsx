@@ -10,7 +10,7 @@ import {
 import { FiThumbsUp, FiMessageCircle, FiShare } from 'react-icons/fi';
 import { auth } from './firebaseConfig';
 import { onAuthStateChanged } from 'firebase/auth';
-import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 
 const Feeds = () => {
   const [posts, setPosts] = useState([]);
@@ -159,6 +159,45 @@ const Feeds = () => {
     setActiveCommentPostId(activeCommentPostId === postId ? null : postId);
   };
 
+  // Fetch user ID by username
+  const fetchUserIdByUsername = async (username) => {
+    const usersRef = collection(firestore, 'users');
+    const q = query(usersRef, where('username', '==', username));
+    const querySnapshot = await getDocs(q);
+    if (!querySnapshot.empty) {
+      const userDoc = querySnapshot.docs[0];
+      return userDoc.id;
+    }
+    return null;
+  };
+
+  // Render caption with clickable usernames
+  const renderCaptionWithUsernames = (caption) => {
+    const words = caption.split(' ');
+    return words.map((word, index) => {
+      if (word.startsWith('@')) {
+        const username = word.slice(1);
+        return (
+          <span
+            key={index}
+            className="text-blue-500 cursor-pointer"
+            onClick={async () => {
+              const userId = await fetchUserIdByUsername(username);
+              if (userId) {
+                handleUserProfileClick(userId);
+              } else {
+                alert('User not found');
+              }
+            }}
+          >
+            {word}
+          </span>
+        );
+      }
+      return <span key={index}>{word} </span>;
+    });
+  };
+
   return (
     <div className="max-w-[600px] mx-auto px-4 sm:px-6 lg:px-8 bg-transparent text-black">
       {posts.length > 0 ? (
@@ -206,7 +245,12 @@ const Feeds = () => {
                 <audio className="w-full mt-4 rounded-lg" controls src={post.fileUrl} />
               )}
               {post.fileType === "text" && post.caption && (
-                <p className="p-4 text-gray-800 bg-gray-100 rounded-lg">{post.caption}</p>
+                <p className="p-4 text-gray-800 bg-gray-100 rounded-lg">{renderCaptionWithUsernames(post.caption)}</p>
+              )}
+
+              {/* Post Caption */}
+              {post.caption && (
+                <p className="p-4 text-gray-800 bg-gray-100 rounded-lg">{renderCaptionWithUsernames(post.caption)}</p>
               )}
 
               {/* Post Actions */}

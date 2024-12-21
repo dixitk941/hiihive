@@ -9,6 +9,7 @@ import UploadHivee from '../components/UploadHivee';
 import ChatInterface from '../components/ChatInterface';
 import BottomBar from '../components/BottomBar';
 import loaderGif from '../assets/normload.gif';
+import FusionPost from '../components/FusionPost';
 
 const UploadPage = () => {
   const [currentUser, setCurrentUser] = useState(null);
@@ -80,7 +81,7 @@ const UploadPage = () => {
               </button>
             </div>
             {uploadType === 'Post' ? (
-              <UploadPost currentUser={currentUser} />
+              <FusionPost currentUser={currentUser} />
             ) : (
               <UploadHivee currentUser={currentUser} />
             )}
