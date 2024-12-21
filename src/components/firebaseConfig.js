@@ -4,7 +4,7 @@ import { getAuth } from "firebase/auth";
 import { getFirestore, getDoc } from "firebase/firestore"; // Corrected import
 import { getStorage } from "firebase/storage";
 import { getDatabase } from "firebase/database";
-import { getMessaging, getToken, onMessage } from "firebase/messaging";
+// import { getMessaging, getToken, onMessage } from "firebase/messaging";
 
 const firebaseConfig = {
   apiKey: "AIzaSyB--KSDIQ_rkc1myOfFBgNjUka30VAKOtM",
@@ -23,7 +23,7 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);  // Firestore
 export const dbRealtime = getDatabase(app);  // Realtime Database
 export const storage = getStorage(app);
-export const messaging = getMessaging(app);
+// export const messaging = getMessaging(app);
 
 // Export app to use in other files
 export { app };

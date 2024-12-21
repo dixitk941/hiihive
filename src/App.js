@@ -63,8 +63,8 @@ function AppContent({ user, showPopUp, setShowPopUp }) {
     <>
       <ConditionalHeader user={user} location={location} />
       
-      {/* Add PopUp component */}
-      {showPopUp && <PopUp onClose={() => setShowPopUp(false)} />}
+      {/* Conditionally render PopUp component */}
+      {showPopUp && location.pathname !== "/login" && <PopUp onClose={() => setShowPopUp(false)} />}
       
       <Suspense fallback={<Loading />}>
         <AnimatePresence mode="wait">
@@ -153,8 +153,8 @@ const AnimatedPage = ({ children }) => {
     <motion.div
       initial={{ opacity: 0, y: 50 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -50 }}
-      transition={{ duration: 0.5, ease: "easeInOut" }}
+      exit={{ opacity: 0, y: 50 }}
+      transition={{ duration: 0.5 }}
     >
       {children}
     </motion.div>
