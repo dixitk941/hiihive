@@ -8,7 +8,7 @@ import { arrayUnion, arrayRemove } from 'firebase/firestore';
 import Avatar from '@mui/material/Avatar';
 import Modal from '@mui/material/Modal';
 import loaderGif from '../assets/normload.gif'; // Adjust path to loader asset
-import Notification from './Notifications';
+// import Notification from './Notifications';
 
 const UserProfile = () => {
   const { userId } = useParams();

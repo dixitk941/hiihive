@@ -10,6 +10,7 @@ import { auth } from "./Pages/firebaseConfig";
 import { AnimatePresence, motion } from "framer-motion";
 import Loading from "./components/Loading";
 import KnowledgeHub from "./components/KnowledgeHub/KnowledgeHub";
+import PopUp from "./components/PopUp"; // Import your PopUp component
 
 const HomePage = React.lazy(() => import("./Pages/HomePage"));
 const HiveePage = React.lazy(() => import("./components/Hivee"));
@@ -29,6 +30,9 @@ function App() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
 
+  // State to control PopUp visibility
+  const [showPopUp, setShowPopUp] = useState(true);
+
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user && user.emailVerified) {
@@ -47,17 +51,21 @@ function App() {
 
   return (
     <Router>
-      <AppContent user={user} />
+      <AppContent user={user} showPopUp={showPopUp} setShowPopUp={setShowPopUp} />
     </Router>
   );
 }
 
-function AppContent({ user }) {
+function AppContent({ user, showPopUp, setShowPopUp }) {
   const location = useLocation();
 
   return (
     <>
       <ConditionalHeader user={user} location={location} />
+      
+      {/* Add PopUp component */}
+      {showPopUp && <PopUp onClose={() => setShowPopUp(false)} />}
+      
       <Suspense fallback={<Loading />}>
         <AnimatePresence mode="wait">
           <Routes location={location} key={location.pathname}>
