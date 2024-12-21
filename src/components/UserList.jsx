@@ -3,6 +3,7 @@ import { collection, getDocs, query, limit, startAfter } from 'firebase/firestor
 import { db } from './firebaseConfig';
 import { useNavigate } from 'react-router-dom';
 import InfiniteScroll from 'react-infinite-scroll-component';
+import SearchBar from './SearchBar';
 import loaderGif from '../assets/normload.gif'; // Adjust the path according to your project structure
 
 const UsersList = () => {
@@ -53,6 +54,7 @@ const UsersList = () => {
 
   return (
     <div className="p-4 bg-gray-100 min-h-screen">
+      <SearchBar />
       <h1 className="text-xl sm:text-2xl font-semibold mb-4">Available Users</h1>
       <InfiniteScroll
         dataLength={users.length}
