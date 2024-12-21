@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { db, auth, storage } from './firebaseConfig';
-import { doc, getDoc, collection, getDocs, updateDoc } from 'firebase/firestore';
+import { addDoc , doc, getDoc, collection, getDocs, updateDoc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { getDownloadURL, ref as storageRef } from "firebase/storage";
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { arrayUnion, arrayRemove } from 'firebase/firestore';
 import Avatar from '@mui/material/Avatar';
 import Modal from '@mui/material/Modal';
 import loaderGif from '../assets/normload.gif'; // Adjust path to loader asset
+import Notification from './Notifications';
 
 const UserProfile = () => {
   const { userId } = useParams();
+  const navigate = useNavigate();
   const [userDetails, setUserDetails] = useState({
     displayName: '',
     avatar: '',
@@ -23,6 +25,8 @@ const UserProfile = () => {
   const [followingData, setFollowingData] = useState([]);
   const [userPosts, setUserPosts] = useState([]);
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [currentUserDetails, setCurrentUserDetails] = useState({});
+  const [notifications, setNotifications] = useState([]);
   const [isFollowing, setIsFollowing] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
@@ -31,11 +35,20 @@ const UserProfile = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Fetch current user ID
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setCurrentUserId(user ? user.uid : null);
+      if (user) {
+        setCurrentUserId(user.uid);
+        fetchCurrentUserDetails(user.uid);
+      }
     });
     return () => unsubscribe();
   }, []);
+
+  const fetchCurrentUserDetails = async (userId) => {
+    const userDoc = await getDoc(doc(db, 'users', userId));
+    setCurrentUserDetails(userDoc.data());
+  };
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -129,7 +142,7 @@ const UserProfile = () => {
   const handleFollowToggle = async () => {
     const currentUserRef = doc(db, 'users', currentUserId);
     const followedUserRef = doc(db, 'users', userId);
-
+  
     try {
       if (isFollowing) {
         await updateDoc(currentUserRef, {
@@ -145,13 +158,23 @@ const UserProfile = () => {
         await updateDoc(followedUserRef, {
           followers: arrayUnion(currentUserId),
         });
+  
+        // Add a notification to the followed user's notifications collection
+        const notificationMessage = `${currentUserDetails.username} started following you.`;
+        await addDoc(collection(db, `users/${userId}/notifications`), {
+          type: 'follow',
+          message: notificationMessage,
+          timestamp: new Date().toISOString(),
+          seen: false,
+        });
       }
+  
       setIsFollowing(!isFollowing);
     } catch (error) {
       console.error("Error toggling follow status: ", error);
     }
   };
-
+  
   const shareProfile = () => {
     const profileLink = `https://hiihive.vercel.app/user/${userId}`;
     navigator.clipboard.writeText(profileLink);
@@ -190,6 +213,50 @@ const UserProfile = () => {
         </a>
       </div>
     );
+  };
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      if (!userId) return;
+      const notificationsRef = collection(db, 'users', userId, 'notifications');
+      const notificationsSnapshot = await getDocs(notificationsRef);
+      const notificationsList = notificationsSnapshot.docs.map(doc => doc.data());
+      setNotifications(notificationsList);
+    };
+
+    fetchNotifications();
+  }, [userId]);
+
+  const handleFollow = async (followedUserId) => {
+    if (!currentUserId) return;
+
+    const userRef = doc(db, 'users', followedUserId);
+    const currentUserRef = doc(db, 'users', currentUserId);
+
+    await updateDoc(userRef, {
+      followers: arrayUnion(currentUserId)
+    });
+
+    await updateDoc(currentUserRef, {
+      following: arrayUnion(followedUserId)
+    });
+
+    // Add notification
+    await addNotification(followedUserId, currentUserId);
+  };
+
+  const addNotification = async (followedUserId, followerId) => {
+    const followerDoc = await getDoc(doc(db, 'users', followerId));
+    const followerData = followerDoc.data();
+
+    const notificationRef = collection(db, 'users', followedUserId, 'notifications');
+    await addDoc(notificationRef, {
+      type: 'follow',
+      followerId: followerId,
+      followerName: currentUserDetails.username, // Use current user's username
+      followerAvatar: followerData.avatar,
+      timestamp: new Date()
+    });
   };
 
   if (loading) {
@@ -271,6 +338,11 @@ const UserProfile = () => {
           </ul>
         </div>
       </Modal>
+      {/* <div>
+        {notifications.map((notification, index) => (
+          <Notification key={index} notification={notification} />
+        ))}
+      </div> */}
     </div>
   );
 };

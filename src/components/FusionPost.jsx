@@ -34,8 +34,8 @@ const UploadPost = () => {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [fileType, setFileType] = useState('');
   const [isUploading, setIsUploading] = useState(false);
-  const [users, setUsers] = useState([]); // All users
-  const [filteredUsers, setFilteredUsers] = useState([]); // Filtered users for suggestions
+  const [users, setUsers] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState([]);
   const [showUserSuggestions, setShowUserSuggestions] = useState(false);
 
   const auth = getAuth();
@@ -62,7 +62,6 @@ const UploadPost = () => {
     const value = e.target.value;
     setCaption(value);
 
-    // Detect if `@` is typed
     const lastWord = value.split(' ').pop();
     if (lastWord.startsWith('@')) {
       const query = lastWord.slice(1).toLowerCase();
@@ -78,7 +77,7 @@ const UploadPost = () => {
 
   const handleUserClick = (user) => {
     const words = caption.split(' ');
-    words.pop(); // Remove the last word (the one being typed)
+    words.pop();
     setCaption([...words, `@${user.username}`].join(' ') + ' ');
     setShowUserSuggestions(false);
   };
@@ -89,7 +88,7 @@ const UploadPost = () => {
       const type = selectedFile.type.split('/')[0];
       setFile(selectedFile);
       setFileType(type);
-      setPreviewUrl(type === 'text' ? null : URL.createObjectURL(selectedFile)); // No preview for text files
+      setPreviewUrl(type === 'text' ? null : URL.createObjectURL(selectedFile));
     }
   };
 
@@ -139,17 +138,24 @@ const UploadPost = () => {
         id: postId,
       });
 
-      // Identify mentioned users and store posts in their databases
+      // Identify mentioned users and create notifications
       const mentionedUsers = users.filter(user =>
         caption.includes(`@${user.username}`)
       );
 
       for (const mentionedUser of mentionedUsers) {
-        await addDoc(collection(firestore, `users/${mentionedUser.id}/posts`), {
-          ...newPost,
-          sharedBy: user.displayName || user.email,
+        const notificationMessage = `${user.displayName || user.email} mentioned you in a post: "${caption.slice(0, 30)}..."`; // Truncate caption for brevity
+      
+        await addDoc(collection(firestore, `users/${mentionedUser.id}/notifications`), {
+          type: 'mention',
+          postId,
+          mentionedBy: user.displayName || user.email,
+          timestamp: new Date().toISOString(),
+          message: notificationMessage, // Add the notification message
+          seen: false,
         });
       }
+      
 
       setFile(null);
       setCaption('');
@@ -175,31 +181,28 @@ const UploadPost = () => {
         <AiOutlineCloudUpload size={32} color="#4e8bff" />
       </div>
       <div className="flex items-start space-x-3 mb-4">
-        <div className="w-full">
-          <textarea
-            value={caption}
-            onChange={handleCaptionChange}
-            placeholder="Write a caption... Mention users with @username"
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm text-gray-700 resize-none"
-            rows={3}
-          />
-          {showUserSuggestions && (
-            <ul className="bg-white border border-gray-300 rounded-lg shadow-md mt-2 max-h-32 overflow-y-auto">
-              {filteredUsers.map(user => (
-                <li
-                  key={user.id}
-                  className="p-2 hover:bg-blue-100 cursor-pointer"
-                  onClick={() => handleUserClick(user)}
-                >
-                  @{user.username}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <textarea
+          value={caption}
+          onChange={handleCaptionChange}
+          placeholder="Write a caption... Mention users with @username"
+          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm text-gray-700 resize-none"
+          rows={3}
+        />
+        {showUserSuggestions && (
+          <ul className="bg-white border border-gray-300 rounded-lg shadow-md mt-2 max-h-32 overflow-y-auto">
+            {filteredUsers.map(user => (
+              <li
+                key={user.id}
+                className="p-2 hover:bg-blue-100 cursor-pointer"
+                onClick={() => handleUserClick(user)}
+              >
+                @{user.username}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
-      {/* Preview */}
       {previewUrl && (
         <div className="relative mb-4">
           {fileType === 'image' && (
@@ -224,7 +227,6 @@ const UploadPost = () => {
         </div>
       )}
 
-      {/* File Type Selection */}
       <div className="flex justify-between mb-6">
         <label className="flex items-center space-x-2 cursor-pointer text-blue-500 hover:text-blue-700">
           <FaCamera size={20} />
@@ -258,7 +260,6 @@ const UploadPost = () => {
         </label>
       </div>
 
-      {/* Post Button */}
       <Button
         onClick={handleSubmit}
         disabled={isUploading}

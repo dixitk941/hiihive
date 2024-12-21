@@ -48,12 +48,12 @@ const SidebarLeft = () => {
               <span className={`${isCollapsed ? 'hidden' : 'ml-2 font-semibold'}`}>Explore</span>
             </button>
           </Link>
-          <Link to="/notifications">
+          {/* <Link to="/notifications">
             <button className={`flex items-center p-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-300 ${isCollapsed ? 'justify-center' : ''}`}>
               <FiBell size={20} />
               <span className={`${isCollapsed ? 'hidden' : 'ml-2 font-semibold'}`}>Notifications</span>
             </button>
-          </Link>
+          </Link> */}
           <Link to="/upload">
             <button className={`flex items-center p-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition duration-300 ${isCollapsed ? 'justify-center' : ''}`}>
               <FiUpload size={20} />

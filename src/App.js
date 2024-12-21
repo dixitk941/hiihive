@@ -22,7 +22,7 @@ const UploadPost = React.lazy(() => import("./Pages/UploadPost"));
 const FusionPost = React.lazy(() => import("./components/FusionPost"));
 const UserProfile = React.lazy(() => import("./Pages/UserProfile"));
 const Settings = React.lazy(() => import("./Pages/SettingPage"));
-const Notification = React.lazy(() => import("./components/Notifications"));
+const Notification = React.lazy(() => import("./Pages/NotificationPage"));
 const Stories = React.lazy(() => import("./components/Stories"));
 
 function App() {
