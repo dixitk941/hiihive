@@ -159,6 +159,34 @@ const ChatListPage = () => {
     </div>
   );
 
+  const renderUsersList = () => {
+    const availableUsers = getAvailableUsers();
+    return (
+      <div className="w-full max-w-md mt-4 mb-16">
+        {availableUsers.length > 0 ? (
+          availableUsers.map((user) => (
+            <div
+              key={user.id}
+              className="flex items-center p-4 bg-white shadow-sm rounded-lg mb-2 hover:bg-gray-200 transition cursor-pointer border border-black"
+              onClick={() => createNewChatRoom(user.id)}
+            >
+              <img
+                src={user.avatar || '/default-avatar.png'}
+                alt="Avatar"
+                className="w-12 h-12 rounded-full mr-4 shadow-lg"
+              />
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-gray-800">{user.fullName || 'Unknown User'}</h3>
+              </div>
+            </div>
+          ))
+        ) : (
+          <p className="text-center text-gray-500 mt-4">No available users</p>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center">
       <Header title="Chats" />
@@ -175,20 +203,18 @@ const ChatListPage = () => {
       </div>
 
       {/* Render Chats */}
-      {renderChats()}
+      {!showUsersList && renderChats()}
+
+      {/* Show Users List */}
+      {showUsersList && renderUsersList()}
 
       {/* Floating Action Button */}
       <button
-
-onClick={() => setShowUsersList((prev) => !prev)} // Toggle the visibility of the user list
-
-className="fixed bottom-20 right-8 p-4 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 transition z-50"
-
->
-
-<FontAwesomeIcon icon={faPlus} size="lg" />
-
-</button>
+        onClick={() => setShowUsersList(prevState => !prevState)} // Toggle the visibility of the user list
+        className="fixed bottom-20 right-8 p-4 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 transition z-50"
+      >
+        <FontAwesomeIcon icon={faPlus} size="lg" />
+      </button>
     </div>
   );
 };
