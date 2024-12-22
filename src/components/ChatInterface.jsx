@@ -10,6 +10,7 @@ import {
   doc,
   deleteDoc,
   getDoc,
+  updateDoc,
 } from 'firebase/firestore';
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import Picker from '@emoji-mart/react';
@@ -87,6 +88,7 @@ const ChatInterface = ({ currentUser }) => {
     if (messageInput.trim() === '' && !file && !image) return;
 
     const messagesRef = collection(db, 'chatRooms', currentChatRoomId, 'messages');
+    const chatRoomRef = doc(db, 'chatRooms', currentChatRoomId);
 
     let fileUrl = null;
     let imageUrl = null;
@@ -140,12 +142,24 @@ const ChatInterface = ({ currentUser }) => {
 
   const sendMessage = async (fileUrl, imageUrl) => {
     const messagesRef = collection(db, 'chatRooms', currentChatRoomId, 'messages');
-    await addDoc(messagesRef, {
+    const chatRoomRef = doc(db, 'chatRooms', currentChatRoomId);
+
+    const newMessage = {
       text: messageInput,
       senderId: currentUser.uid,
       createdAt: serverTimestamp(),
       file: fileUrl,
       image: imageUrl,
+      seen: false, // Add seen field
+    };
+
+    const messageDocRef = await addDoc(messagesRef, newMessage);
+
+    // Update the chat room document with the last message and seen status
+    await updateDoc(chatRoomRef, {
+      lastMessage: newMessage.text,
+      lastMessageTimestamp: serverTimestamp(),
+      lastMessageSeen: false,
     });
 
     setMessageInput('');

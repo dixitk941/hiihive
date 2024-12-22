@@ -88,6 +88,12 @@ function AppContent({ user, showPopUp, setShowPopUp }) {
               }
             />
             <Route
+              path="/community/:communityId"
+              element={
+                user ? <AnimatedPage><ChatInterface currentUser={user} /></AnimatedPage> : <Navigate to="/login" />
+              }
+            />
+            <Route
               path="/explore"
               element={user ? <AnimatedPage><Explore /></AnimatedPage> : <Navigate to="/login" />}
             />
