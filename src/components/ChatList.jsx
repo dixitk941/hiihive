@@ -1,247 +1,238 @@
-import React, { useState, useEffect } from 'react';
-import { FiMessageSquare, FiChevronLeft, FiChevronRight, FiChevronDown, FiChevronUp } from 'react-icons/fi';
-import { doc, getDoc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from './firebaseConfig'; // Import Firebase config
-import { getAuth, onAuthStateChanged } from 'firebase/auth'; // Firebase Auth
+import React, { useState, useEffect, startTransition } from 'react';
+import { db } from './firebaseConfig'; // Import your Firebase config
+import { collection, query, where, onSnapshot, getDoc, doc, addDoc } from 'firebase/firestore';
+import { useNavigate } from 'react-router-dom'; // For navigation
+import { getAuth } from 'firebase/auth';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlus } from '@fortawesome/free-solid-svg-icons'; // Import faPlus icon
+import Header from './Header'; // Import your Header component
 
-const SidebarRight = ({ setSelectedChat }) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [followers, setFollowers] = useState([]);
-  const [following, setFollowing] = useState([]);
-  const [recentChats, setRecentChats] = useState([]);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [userNames, setUserNames] = useState({});
-  const [showFollowers, setShowFollowers] = useState(false);
-  const [showFollowing, setShowFollowing] = useState(false);
+const ChatListPage = () => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [chatRooms, setChatRooms] = useState([]);
+  const [communities, setCommunities] = useState([]);
+  const [users, setUsers] = useState([]); // List of all users for creating a new chat
+  const [filteredChatRooms, setFilteredChatRooms] = useState([]);
+  const [filteredCommunities, setFilteredCommunities] = useState([]);
+  const [activeTab, setActiveTab] = useState('chats'); // State to track active tab
+  const [showUsersList, setShowUsersList] = useState(false); // Show/hide users list
+  const [selectedUser, setSelectedUser] = useState(null); // Track selected user for new chat
+  const navigate = useNavigate();
+  const currentUser = getAuth().currentUser;
 
-  // Hardcode the communities
-  const hardcodedCommunities = [
-    { name: 'RATM-BCA' },
-    { name: 'RATM-BBA' }
-  ];
-
-  // Fetch current user data
-  useEffect(() => {
-    const auth = getAuth();
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setCurrentUser(user);
-      } else {
-        setLoading(false);
-      }
-    });
-    return () => unsubscribe();
-  }, []);
-
-  // Fetch user details
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (!currentUser) return;
-
-      try {
-        const userRef = doc(db, 'users', currentUser.uid);
-        const userDoc = await getDoc(userRef);
-
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          const fetchedFollowers = userData.followers || [];
-          const fetchedFollowing = userData.following || [];
-
-          setFollowers(fetchedFollowers.map(f => (typeof f === 'string' ? { id: f } : f)));
-          setFollowing(fetchedFollowing);
-
-          const recentChatRoomsQuery = query(
-            collection(db, 'chatRooms'),
-            where('users', 'array-contains', currentUser.uid)
-          );
-          const recentChatRoomsSnapshot = await getDocs(recentChatRoomsQuery);
-
-          const fetchedRecentChats = [];
-          recentChatRoomsSnapshot.forEach((doc) => {
-            const chatRoomData = doc.data();
-            if (chatRoomData.users) {
-              const otherUserId = chatRoomData.users.find(userId => userId !== currentUser.uid);
-              if (otherUserId) {
-                fetchedRecentChats.push({
-                  id: doc.id,
-                  otherUserId: otherUserId,
-                });
-              }
-            }
-          });
-
-          setRecentChats(fetchedRecentChats);
-
-          const allUserIds = [
-            ...fetchedFollowers.map(f => f.id),
-            ...fetchedFollowing.map(f => f.id),
-            ...fetchedRecentChats.map(c => c.otherUserId),
-          ].filter(Boolean);
-
-          const names = await fetchUserNamesInBulk(allUserIds);
-          setUserNames(names);
-        }
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUserData();
-  }, [currentUser]);
-
-  // Fetch usernames in bulk
-  const fetchUserNamesInBulk = async (userIds) => {
-    const names = {};
-    const userFetchPromises = userIds.map((userId) => {
-      return getDoc(doc(db, 'users', userId))
-        .then((userDoc) => {
-          if (userDoc.exists()) {
-            names[userId] = userDoc.data().fullName || 'Unknown';
-          } else {
-            names[userId] = 'Unknown';
-          }
-        })
-        .catch((error) => {
-          console.error(`Error fetching name for ${userId}:`, error);
-          names[userId] = 'Error';
-        });
-    });
-    await Promise.all(userFetchPromises);
-    return names;
-  };
-
-  // Handle chatroom selection
-  const handleChatSelection = (userId) => {
-    const selectedChat = recentChats.find((chat) => chat.otherUserId === userId);
-    if (selectedChat) {
-      setSelectedChat(selectedChat.id);
-    } else {
-      const newChatRoomId = [currentUser.uid, userId].sort().join('_');
-      setSelectedChat(newChatRoomId); // Replace current chat with the new one
+  const fetchOtherUserDetails = async (userId) => {
+    try {
+      if (!userId) return null;
+      const userDoc = await getDoc(doc(db, 'users', userId));
+      return userDoc.exists() ? userDoc.data() : null;
+    } catch (error) {
+      console.error('Error fetching user details:', error);
+      return null;
     }
   };
 
-  // if (loading) {
-  //   return <div>Loading...</div>;
-  // }
+  useEffect(() => {
+    if (!currentUser) return;
+
+    // Fetch communities from Firestore
+    const communityQuery = collection(db, 'communities');
+    const unsubscribeCommunities = onSnapshot(communityQuery, (snapshot) => {
+      const communityList = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setCommunities(communityList);
+      setFilteredCommunities(communityList); // Initially set filtered communities to all
+    });
+
+    // Fetch chat rooms where the current user is part of the users array
+    const q = query(
+      collection(db, 'chatRooms'),
+      where('users', 'array-contains', currentUser.uid)
+    );
+
+    const unsubscribeChatRooms = onSnapshot(q, async (snapshot) => {
+      const rooms = await Promise.all(snapshot.docs.map(async (doc) => {
+        const data = doc.data();
+        const otherUser = data.users.find((user) => user !== currentUser.uid);
+        if (!otherUser) {
+          console.warn('No other user found in chat room:', doc.id);
+          return null;
+        }
+        const otherUserDetails = await fetchOtherUserDetails(otherUser);
+        return {
+          id: doc.id,
+          otherUser,
+          otherUserFullName: otherUserDetails?.fullName || 'Unknown User',
+          otherUserAvatar: otherUserDetails?.avatar || '/default-avatar.png',
+          ...data,
+        };
+      }));
+      setChatRooms(rooms.filter(Boolean));
+      setFilteredChatRooms(rooms.filter(Boolean)); // Initially set filtered chat rooms to all
+    });
+
+    // Fetch all users (for new chat)
+    const userQuery = collection(db, 'users');
+    const unsubscribeUsers = onSnapshot(userQuery, (snapshot) => {
+      const usersList = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setUsers(usersList);
+    });
+
+    return () => {
+      unsubscribeCommunities();
+      unsubscribeChatRooms();
+      unsubscribeUsers();
+    };
+  }, [currentUser]);
+
+  // Filter chat rooms based on search term
+  const handleSearchChange = (event) => {
+    const value = event.target.value;
+    startTransition(() => {
+      setSearchTerm(value);
+    });
+  };
+
+  const handleChatRoomClick = (roomId) => {
+    navigate(`/chat/${roomId}`); // Navigate to the chat room page
+  };
+
+  // Create a new chat room
+  const createNewChatRoom = async (userId) => {
+    try {
+      if (!userId) return;
+      
+      // Create a new chat room with the selected user
+      const newChatRoomRef = await addDoc(collection(db, 'chatRooms'), {
+        users: [currentUser.uid, userId],
+        messages: [],
+      });
+
+      // Navigate to the new chat room
+      navigate(`/chat/${newChatRoomRef.id}`);
+    } catch (error) {
+      console.error('Error creating new chat room:', error);
+    }
+  };
+
+  // Exclude users who are already in the current chat rooms
+  const getAvailableUsers = () => {
+    const usersInCurrentChats = chatRooms.map(room => room.otherUser);
+    return users.filter(user => !usersInCurrentChats.includes(user.id));
+  };
+
+  const renderChats = () => (
+    <div className="w-full max-w-md mt-4 mb-16">
+      {filteredChatRooms.length > 0 ? (
+        filteredChatRooms.map((room) => (
+          <div
+            key={room.id}
+            className="flex items-center p-4 bg-white shadow-sm rounded-lg mb-2 hover:bg-gray-200 transition cursor-pointer border border-black"
+            onClick={() => handleChatRoomClick(room.id)}
+          >
+            <img
+              src={room.otherUserAvatar || '/default-avatar.png'}
+              alt="Avatar"
+              className="w-12 h-12 rounded-full mr-4 shadow-lg"
+            />
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-gray-800">{room.otherUserFullName || 'Unknown User'}</h3>
+              <p className="text-sm text-gray-500 truncate">
+                {room.lastMessage || 'No messages yet'}
+              </p>
+            </div>
+          </div>
+        ))
+      ) : (
+        <p className="text-center text-gray-500 mt-4">No chat rooms found</p>
+      )}
+    </div>
+  );
+
+  const renderCommunities = () => (
+    <div className="w-full max-w-md mt-4 mb-16">
+      {filteredCommunities.length > 0 ? (
+        filteredCommunities.map((community) => (
+          <div
+            key={community.id}
+            className="flex items-center p-4 bg-white shadow-sm rounded-lg mb-2 hover:bg-gray-200 transition cursor-pointer border border-black"
+          >
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-gray-800">{community.name}</h3>
+            </div>
+          </div>
+        ))
+      ) : (
+        <p className="text-center text-gray-500 mt-4">No communities found</p>
+      )}
+    </div>
+  );
 
   return (
-    <aside
-      className={`${isCollapsed ? 'w-20' : 'w-64'} fixed left-0 top-24 h-[calc(100vh-6rem)] bg-white text-gray-800 flex flex-col justify-between p-4 shadow-md border-r border-gray-200 transition-all duration-300 overflow-y-auto`}
-    >
-      <div>
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center">
+      <Header title="Chats" />
+      {/* Search Bar */}
+      <div className="w-full px-4 py-2 bg-white shadow-md rounded-lg mt-4 mb-2 border border-gray-300">
+        <input
+          type="text"
+          className="w-full p-3 rounded-md text-lg placeholder-gray-400 border border-gray-300 focus:outline-none focus:ring focus:ring-blue-500 transition"
+          placeholder="Search chats and communities..."
+          value={searchTerm}
+          onChange={handleSearchChange}
+        />
+      </div>
+
+      {/* Tabs - Chats and Communities */}
+      <div className="w-full flex justify-between bg-white shadow-md rounded-lg border border-gray-300 mb-4">
         <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="text-gray-500 hover:text-blue-600 transition-colors duration-300 mb-4"
+          className={`p-3 w-1/2 text-lg text-center ${activeTab === 'chats' ? 'bg-indigo-600 text-white rounded-l-lg' : 'bg-transparent text-gray-600 hover:bg-indigo-100'}`}
+          onClick={() => setActiveTab('chats')}
         >
-          {isCollapsed ? <FiChevronRight size={24} /> : <FiChevronLeft size={24} />}
+          Chats
         </button>
+        <button
+          className={`p-3 w-1/2 text-lg text-center ${activeTab === 'communities' ? 'bg-indigo-600 text-white rounded-r-lg' : 'bg-transparent text-gray-600 hover:bg-indigo-100'}`}
+          onClick={() => setActiveTab('communities')}
+        >
+          Communities
+        </button>
+      </div>
 
-        <h2 className={`${isCollapsed ? 'hidden' : 'text-xl font-bold mb-6 text-gray-700'}`}>Chats</h2>
+      {/* Floating New Chat Button */}
+      <button
+  onClick={() => setShowUsersList((prev) => !prev)} // Toggle the visibility of the user list
+  className="fixed bottom-20 right-8 p-4 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 transition z-50"
+>
+  <FontAwesomeIcon icon={faPlus} size="lg" />
+</button>
 
-        {/* Recent Chats */}
-        <div>
-          <h3 className={`${isCollapsed ? 'hidden' : 'text-lg font-semibold text-gray-700 mb-3'}`}>Recent Chats</h3>
-          <div className="max-h-64 overflow-y-auto">
-            {recentChats.map((chat) => (
-              <div
-                key={chat.id}
-                onClick={() => handleChatSelection(chat.otherUserId)}
-                className={`flex items-center p-3 mb-2 bg-gray-100 rounded-lg hover:bg-blue-50 transition duration-300 ${
-                  isCollapsed ? 'justify-center' : ''
-                }`}
-              >
-                <FiMessageSquare className="text-blue-500" size={20} />
-                <span className={`${isCollapsed ? 'hidden' : 'ml-3 font-semibold'}`}>
-                  {userNames[chat.otherUserId] || 'Loading...'}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
 
-        {/* Hardcoded Communities */}
-        <div>
-          <h3 className={`${isCollapsed ? 'hidden' : 'text-lg font-semibold text-gray-700 mb-3'}`}>Communities</h3>
-          {hardcodedCommunities.map((community, index) => (
+
+      {/* Show users list for new chat */}
+      {showUsersList && (
+        <div className="w-full max-w-md mt-4 bg-white p-4 rounded-lg shadow-md mb-8">
+          <h3 className="text-xl font-semibold text-gray-800 mb-4">Select a User to Chat</h3>
+          {getAvailableUsers().map((user) => (
             <div
-              key={index}
-              onClick={() => handleChatSelection(community.name)}
-              className={`flex items-center p-3 mb-2 bg-gray-100 rounded-lg hover:bg-blue-50 transition duration-300 ${isCollapsed ? 'justify-center' : ''}`}
+              key={user.id}
+              className="flex items-center p-4 bg-white shadow-sm rounded-lg mb-2 hover:bg-gray-200 cursor-pointer"
+              onClick={() => createNewChatRoom(user.id)}
             >
-              <FiMessageSquare className="text-blue-500" size={20} />
-              <span className={`${isCollapsed ? 'hidden' : 'ml-3 font-semibold'}`}>{community.name}</span>
+              <img
+                src={user.avatar || '/default-avatar.png'}
+                alt="Avatar"
+                className="w-12 h-12 rounded-full mr-4 shadow-lg"
+              />
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-gray-800">{user.username}</h3>
+              </div>
             </div>
           ))}
         </div>
+      )}
 
-        {/* Followers Section */}
-        <div>
-          <h3 className={`${isCollapsed ? 'hidden' : 'text-lg font-semibold text-gray-700 mb-3 mt-6'}`}>
-            Followers
-            <button
-              onClick={() => setShowFollowers(!showFollowers)}
-              className="ml-2 text-gray-500 hover:text-blue-600 transition-colors duration-300"
-            >
-              {showFollowers ? <FiChevronUp size={20} /> : <FiChevronDown size={20} />}
-            </button>
-          </h3>
-          {showFollowers && (
-            <div className="max-h-64 overflow-y-auto">
-              {followers.map((follower) => (
-                <div
-                  key={follower.id}
-                  onClick={() => handleChatSelection(follower.id)}
-                  className={`flex items-center p-3 mb-2 bg-gray-100 rounded-lg hover:bg-blue-50 transition duration-300 ${
-                    isCollapsed ? 'justify-center' : ''
-                  }`}
-                >
-                  <FiMessageSquare className="text-blue-500" size={20} />
-                  <span className={`${isCollapsed ? 'hidden' : 'ml-3 font-semibold'}`}>
-                    {userNames[follower.id] || 'Loading...'}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Following Section */}
-        <div>
-          <h3 className={`${isCollapsed ? 'hidden' : 'text-lg font-semibold text-gray-700 mb-3 mt-6'}`}>
-            Following
-            <button
-              onClick={() => setShowFollowing(!showFollowing)}
-              className="ml-2 text-gray-500 hover:text-blue-600 transition-colors duration-300"
-            >
-              {showFollowing ? <FiChevronUp size={20} /> : <FiChevronDown size={20} />}
-            </button>
-          </h3>
-          {showFollowing && (
-            <div className="max-h-64 overflow-y-auto">
-              {following.map((followed) => (
-                <div
-                  key={followed.id}
-                  onClick={() => handleChatSelection(followed.id)}
-                  className={`flex items-center p-3 mb-2 bg-gray-100 rounded-lg hover:bg-blue-50 transition duration-300 ${
-                    isCollapsed ? 'justify-center' : ''
-                  }`}
-                >
-                  <FiMessageSquare className="text-blue-500" size={20} />
-                  <span className={`${isCollapsed ? 'hidden' : 'ml-3 font-semibold'}`}>
-                    {userNames[followed.id] || 'Loading...'}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </aside>
+      {/* Display chats or communities based on active tab */}
+      {activeTab === 'chats' ? renderChats() : renderCommunities()}
+    </div>
   );
 };
 
-export default SidebarRight;
+export default ChatListPage;

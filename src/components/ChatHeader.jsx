@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { FaArrowLeft } from 'react-icons/fa';
 
-const ChatHeader = ({ chatRoomId, currentUser, onBack }) => {
+const ChatHeader = ({ chatRoomId, currentUser }) => {
   const [oppositeUser, setOppositeUser] = useState({ fullName: '', avatar: '', id: '' });
   const navigate = useNavigate(); // For navigation
   const db = getFirestore();
@@ -40,8 +40,8 @@ const ChatHeader = ({ chatRoomId, currentUser, onBack }) => {
             if (oppositeUserDoc.exists()) {
               // Set opposite user data to state
               setOppositeUser({
-                fullName: oppositeUserDoc.data().fullName,
-                avatar: oppositeUserDoc.data().avatar,
+                fullName: oppositeUserDoc.data().fullName || 'Unnamed User',
+                avatar: oppositeUserDoc.data().avatar || '/default-avatar.png', // Provide a default avatar
                 id: oppositeUserId, // Add user ID for navigation
               });
             } else {
@@ -63,7 +63,7 @@ const ChatHeader = ({ chatRoomId, currentUser, onBack }) => {
 
   return (
     <div className="flex items-center justify-between p-4 bg-white text-black shadow-lg">
-      <button onClick={() => navigate('/')} className="text-black font-bold flex items-center">
+      <button onClick={() => navigate('/chatlist')} className="text-black font-bold flex items-center">
         <FaArrowLeft className="mr-2" /> Back
       </button>
       <div className="flex items-center space-x-4">

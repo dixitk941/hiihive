@@ -1,26 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { FiMessageSquare, FiChevronLeft, FiChevronRight, FiChevronDown, FiChevronUp } from 'react-icons/fi';
-import { doc, getDoc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { FiChevronLeft, FiChevronRight, FiChevronDown, FiChevronUp } from 'react-icons/fi';
+import { doc, getDoc } from 'firebase/firestore';
 import { db } from './firebaseConfig'; // Import Firebase config
 import { getAuth, onAuthStateChanged } from 'firebase/auth'; // Firebase Auth
 import { useNavigate } from 'react-router-dom';
 
-const SidebarRight = ({ setSelectedChat }) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+const SidebarRight = ({ isCollapsed, setIsCollapsed }) => {
   const [followers, setFollowers] = useState([]);
   const [following, setFollowing] = useState([]);
-  const [recentChats, setRecentChats] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
-  const [userNames, setUserNames] = useState({});
+  const [userDetails, setUserDetails] = useState({}); // Stores fullName and avatar for each user
   const [showFollowers, setShowFollowers] = useState(false);
   const [showFollowing, setShowFollowing] = useState(false);
   const navigate = useNavigate();
-
-  // Hardcode the communities
-  const hardcodedCommunities = [
-    { name: 'RATM-BCA' },
-    { name: 'RATM-BBA' }
-  ];
 
   // Fetch current user data
   useEffect(() => {
@@ -33,7 +25,7 @@ const SidebarRight = ({ setSelectedChat }) => {
     return () => unsubscribe();
   }, []);
 
-  // Fetch user details
+  // Fetch followers and following, then fetch their details
   useEffect(() => {
     const fetchUserData = async () => {
       if (!currentUser) return;
@@ -44,43 +36,23 @@ const SidebarRight = ({ setSelectedChat }) => {
 
         if (userDoc.exists()) {
           const userData = userDoc.data();
-          const fetchedFollowers = userData.followers || [];
-          const fetchedFollowing = userData.following || [];
+          // Ensure followers and following are arrays of user IDs
+          const fetchedFollowers = Array.isArray(userData.followers) ? userData.followers : [];
+          const fetchedFollowing = Array.isArray(userData.following) ? userData.following : [];
 
-          setFollowers(fetchedFollowers.map(f => (typeof f === 'string' ? { id: f } : f)));
+          // Set followers and following IDs (both are arrays)
+          setFollowers(fetchedFollowers);
           setFollowing(fetchedFollowing);
 
-          const recentChatRoomsQuery = query(
-            collection(db, 'chatRooms'),
-            where('users', 'array-contains', currentUser.uid)
-          );
-          const recentChatRoomsSnapshot = await getDocs(recentChatRoomsQuery);
-
-          const fetchedRecentChats = [];
-          recentChatRoomsSnapshot.forEach((doc) => {
-            const chatRoomData = doc.data();
-            if (chatRoomData.users) {
-              const otherUserId = chatRoomData.users.find(userId => userId !== currentUser.uid);
-              if (otherUserId) {
-                fetchedRecentChats.push({
-                  id: doc.id,
-                  otherUserId: otherUserId,
-                });
-              }
-            }
-          });
-
-          setRecentChats(fetchedRecentChats);
-
+          // Fetch details (fullName and avatar) for all followers and following users in one go
           const allUserIds = [
-            ...fetchedFollowers.map(f => f.id),
-            ...fetchedFollowing.map(f => f.id),
-            ...fetchedRecentChats.map(c => c.otherUserId),
+            ...fetchedFollowers,
+            ...fetchedFollowing, // Following is now just an array of user IDs
           ].filter(Boolean);
 
-          // Fetch names for all users in one go
-          const names = await fetchUserNamesInBulk(allUserIds);
-          setUserNames(names);
+          // Fetch details for all user IDs
+          const details = await fetchUserDetailsInBulk(allUserIds);
+          setUserDetails(details);
         }
       } catch (error) {
         console.error('Error fetching user data:', error);
@@ -90,77 +62,41 @@ const SidebarRight = ({ setSelectedChat }) => {
     fetchUserData();
   }, [currentUser]);
 
-  // Fetch usernames in bulk
-  const fetchUserNamesInBulk = async (userIds) => {
-    const names = {};
+  // Fetch user details (fullName and avatar) for each user ID
+  const fetchUserDetailsInBulk = async (userIds) => {
+    const details = {};
     const userFetchPromises = userIds.map((userId) => {
       return getDoc(doc(db, 'users', userId))
         .then((userDoc) => {
           if (userDoc.exists()) {
-            names[userId] = userDoc.data().fullName || 'Unknown';
+            const userData = userDoc.data();
+            details[userId] = {
+              fullName: userData.fullName || 'Unknown',
+              avatar: userData.avatar || 'default-avatar-url', // Use a default avatar URL if none exists
+            };
           } else {
-            names[userId] = 'Unknown';
+            details[userId] = { fullName: 'Unknown', avatar: 'default-avatar-url' };
           }
         })
         .catch((error) => {
-          console.error(`Error fetching name for ${userId}:`, error);
-          names[userId] = 'Error';
+          console.error(`Error fetching details for ${userId}:`, error);
+          details[userId] = { fullName: 'Error', avatar: 'default-avatar-url' };
         });
     });
+
+    // Wait for all the user details to be fetched
     await Promise.all(userFetchPromises);
-    return names;
+    return details;
   };
 
-  // Function to create a community chatroom
-  const createCommunityChatRoom = async (communityName) => {
-    if (!currentUser) return;
-
-    // Create a unique chatroom ID based on the community name
-    const chatRoomRef = doc(db, 'chatRooms', communityName);
-    const chatRoomDoc = await getDoc(chatRoomRef);
-
-    if (!chatRoomDoc.exists()) {
-      // Create a new chatroom in Firestore
-      await setDoc(chatRoomRef, {
-        name: communityName,
-        users: [currentUser.uid], // Initially add the current user
-        createdAt: new Date().toISOString(),
-        isOpen: true, // Open for all users
-        messages: [],
-      });
-    }
-
-    // Navigate to the community chat interface
-    navigate(`/chat/${communityName}`);
+  // Handle follower click (navigate to user profile)
+  const handleFollowerClick = (userId) => {
+    navigate(`/profile/${userId}`);
   };
 
-  // Handle community selection (e.g., RATM-BCA or RATM-BBA)
-  const handleCommunitySelection = (communityName) => {
-    createCommunityChatRoom(communityName);
-  };
-
-  // Reusable function to create or retrieve a chat room
-  const createOrRetrieveChatRoom = async (selectedUserId) => {
-    if (!currentUser) return;
-
-    const chatRoomId = [currentUser.uid, selectedUserId].sort().join('_');
-    const chatRoomRef = doc(db, 'chatRooms', chatRoomId);
-    const chatRoomDoc = await getDoc(chatRoomRef);
-
-    if (!chatRoomDoc.exists()) {
-      await setDoc(chatRoomRef, {
-        users: [currentUser.uid, selectedUserId],
-        createdAt: new Date().toISOString(),
-        lastMessage: null,
-        messages: [],
-      });
-    }
-
-    navigate(`/chat/${chatRoomId}`);
-  };
-
-  const handleChatSelection = (userId) => {
-    createOrRetrieveChatRoom(userId);
+  // Handle following click (navigate to user profile)
+  const handleFollowingClick = (userId) => {
+    navigate(`/user/${userId}`);
   };
 
   return (
@@ -175,43 +111,7 @@ const SidebarRight = ({ setSelectedChat }) => {
           {isCollapsed ? <FiChevronRight size={24} /> : <FiChevronLeft size={24} />}
         </button>
 
-        <h2 className={`${isCollapsed ? 'hidden' : 'text-xl font-bold mb-6 text-gray-700'}`}>Chats</h2>
-
-        {/* Recent Chats */}
-        <div>
-          <h3 className={`${isCollapsed ? 'hidden' : 'text-lg font-semibold text-gray-700 mb-3'}`}>Recent Chats</h3>
-          <div className="max-h-64 overflow-y-auto">
-            {recentChats.map((chat) => (
-              <div
-                key={chat.id}
-                onClick={() => handleChatSelection(chat.otherUserId)}
-                className={`flex items-center p-3 mb-2 bg-gray-100 rounded-lg hover:bg-blue-50 transition duration-300 ${
-                  isCollapsed ? 'justify-center' : ''
-                }`}
-              >
-                <FiMessageSquare className="text-blue-500" size={20} />
-                <span className={`${isCollapsed ? 'hidden' : 'ml-3 font-semibold'}`}>
-                  {userNames[chat.otherUserId] || 'Unknown'}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Hardcoded Communities */}
-        <div>
-          <h3 className={`${isCollapsed ? 'hidden' : 'text-lg font-semibold text-gray-700 mb-3'}`}>Communities</h3>
-          {hardcodedCommunities.map((community, index) => (
-            <div
-              key={index}
-              onClick={() => handleCommunitySelection(community.name)}
-              className={`flex items-center p-3 mb-2 bg-gray-100 rounded-lg hover:bg-blue-50 transition duration-300 ${isCollapsed ? 'justify-center' : ''}`}
-            >
-              <FiMessageSquare className="text-blue-500" size={20} />
-              <span className={`${isCollapsed ? 'hidden' : 'ml-3 font-semibold'}`}>{community.name}</span>
-            </div>
-          ))}
-        </div>
+        <h2 className={`${isCollapsed ? 'hidden' : 'text-xl font-bold mb-6 text-gray-700'}`}>Users</h2>
 
         {/* Followers Section */}
         <div>
@@ -226,17 +126,22 @@ const SidebarRight = ({ setSelectedChat }) => {
           </h3>
           {showFollowers && (
             <div className="max-h-64 overflow-y-auto">
-              {followers.map((follower) => (
+              {followers.map((followerId) => (
                 <div
-                  key={follower.id}
-                  onClick={() => handleChatSelection(follower.id)}
+                  key={followerId}
+                  onClick={() => handleFollowerClick(followerId)}
                   className={`flex items-center p-3 mb-2 bg-gray-100 rounded-lg hover:bg-blue-50 transition duration-300 ${
                     isCollapsed ? 'justify-center' : ''
                   }`}
                 >
-                  <FiMessageSquare className="text-blue-500" size={20} />
+                  {/* Display avatar */}
+                  <img
+                    src={userDetails[followerId]?.avatar || 'default-avatar-url'}
+                    alt={userDetails[followerId]?.fullName}
+                    className="w-8 h-8 rounded-full"
+                  />
                   <span className={`${isCollapsed ? 'hidden' : 'ml-3 font-semibold'}`}>
-                    {userNames[follower.id] || 'Unknown'}
+                    {userDetails[followerId]?.fullName || 'Unknown'}
                   </span>
                 </div>
               ))}
@@ -257,17 +162,22 @@ const SidebarRight = ({ setSelectedChat }) => {
           </h3>
           {showFollowing && (
             <div className="max-h-64 overflow-y-auto">
-              {following.map((followed) => (
+              {following.map((followedUserId) => (
                 <div
-                  key={followed.id}
-                  onClick={() => handleChatSelection(followed.id)}
+                  key={followedUserId}
+                  onClick={() => handleFollowingClick(followedUserId)}
                   className={`flex items-center p-3 mb-2 bg-gray-100 rounded-lg hover:bg-blue-50 transition duration-300 ${
                     isCollapsed ? 'justify-center' : ''
                   }`}
                 >
-                  <FiMessageSquare className="text-blue-500" size={20} />
+                  {/* Display avatar */}
+                  <img
+                    src={userDetails[followedUserId]?.avatar || 'default-avatar-url'}
+                    alt={userDetails[followedUserId]?.fullName}
+                    className="w-8 h-8 rounded-full"
+                  />
                   <span className={`${isCollapsed ? 'hidden' : 'ml-3 font-semibold'}`}>
-                    {userNames[followed.id] || 'Unknown'}
+                    {userDetails[followedUserId]?.fullName || 'Unknown'}
                   </span>
                 </div>
               ))}
