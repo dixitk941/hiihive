@@ -175,6 +175,11 @@ const ChatInterface = ({ currentUser }) => {
     }
   };
 
+  const handleLongClick = (e, messageId) => {
+    e.preventDefault();
+    handleDeleteMessage(messageId);
+  };
+
   const handleEmojiSelect = (emoji) => {
     setMessageInput((prev) => prev + emoji.native);
     setShowEmojiPicker(false);
@@ -203,6 +208,19 @@ const ChatInterface = ({ currentUser }) => {
     }
   };
 
+  const renderMessageText = (text) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    return text.split(urlRegex).map((part, index) =>
+      urlRegex.test(part) ? (
+        <a key={index} href={part} className="text-blue-600" target="_blank" rel="noopener noreferrer">
+          {part}
+        </a>
+      ) : (
+        part
+      )
+    );
+  };
+
   return (
     <div className="flex flex-col h-screen bg-white text-black">
       <ChatHeader 
@@ -215,7 +233,7 @@ const ChatInterface = ({ currentUser }) => {
 
       <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-100 rounded-t-2xl shadow-lg sm:p-6">
         {messages.map((message) => (
-          <div key={message.id} className={`flex items-start space-x-2 ${message.senderId === currentUser.uid ? 'justify-end' : 'justify-start'} relative`}>
+          <div key={message.id} onContextMenu={(e) => handleLongClick(e, message.id)} className={`flex items-start space-x-2 ${message.senderId === currentUser.uid ? 'justify-end' : 'justify-start'} relative`}>
             <div className="flex items-center space-x-2">
               <img
                 src={userAvatars[message.senderId] || 'default-avatar-url'}
@@ -223,9 +241,11 @@ const ChatInterface = ({ currentUser }) => {
                 className="w-8 h-8 rounded-full"
               />
               <div className={`p-3 max-w-[75%] sm:max-w-[65%] rounded-lg shadow-md ${message.senderId === currentUser.uid ? 'bg-black text-white' : 'bg-white text-black border border-gray-300'}`}>
-                <p>{message.text}</p>
+                <p>{renderMessageText(message.text)}</p>
                 {message.file && <a href={message.file} className="text-xs truncate text-blue-600">📄 File</a>}
                 {message.image && <img src={message.image} alt="uploaded" className="rounded-md mt-2 w-full object-contain" />}
+                {message.video && <video controls src={message.video} className="rounded-md mt-2 w-full object-contain" />}
+                {message.link && <a href={message.link} className="text-xs truncate text-blue-600" target="_blank" rel="noopener noreferrer">{message.link}</a>}
               </div>
             </div>
           </div>
@@ -278,21 +298,28 @@ const ChatInterface = ({ currentUser }) => {
             onChange={(e) => setMessageInput(e.target.value)}
             className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring focus:ring-blue-300 resize-none"
             rows="2"
+            onKeyDown={handleKeyDown}
           ></textarea>
           <input type="file" id="fileInput" onChange={handleFileChange} className="hidden" />
           <input type="file" id="imageInput" onChange={handleImageChange} className="hidden" />
 
           {/* File and image upload buttons */}
           <label htmlFor="fileInput">
-            <IoDocumentTextOutline size={24} className="text-gray-500 cursor-pointer" />
+            <IoDocumentTextOutline size={24} className="text-gray-500 cursor-pointer hover:text-blue-500 transition-transform duration-300" />
           </label>
           <label htmlFor="imageInput">
-            <IoImageOutline size={24} className="text-gray-500 cursor-pointer" />
+            <IoImageOutline size={24} className="text-gray-500 cursor-pointer hover:text-blue-500 transition-transform duration-300" />
           </label>
-          <button onClick={handleSendMessage} className="p-2 text-blue-500">
+          <button onClick={handleSendMessage} className="p-2 text-white bg-blue-500 rounded-full hover:bg-blue-600 transition-transform duration-300">
             <IoSend size={24} />
           </button>
         </div>
+
+        {showEmojiPicker && (
+          <div className="absolute bottom-16 left-4 z-50">
+            <Picker onEmojiSelect={handleEmojiSelect} theme="light" />
+          </div>
+        )}
       </div>
     </div>
   );
