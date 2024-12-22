@@ -67,11 +67,11 @@ function UserList() {
         {/* Conditionally render SidebarRight or ChatInterface */}
         <div className="hidden lg:flex flex-col w-96">
           {/* If no chat is selected, show SidebarRight */}
-          {!selectedChat ? (
+          {/* {!selectedChat ? (
             <SidebarRight setSelectedChat={setSelectedChat} />
           ) : (
             <ChatInterface selectedChat={selectedChat} onBack={handleBackToSidebar} /> // Pass handleBackToSidebar to ChatInterface
-          )}
+          )} */}
         </div>
 
         {/* Show ChatInterface on mobile if chat is selected */}

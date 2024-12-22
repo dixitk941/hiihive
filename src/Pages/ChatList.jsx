@@ -60,11 +60,11 @@ const ChatList = () => {
         {/* Conditionally render SidebarRight or ChatInterface */}
         <div className="hidden lg:flex flex-col w-96">
           {/* If no chat is selected, show SidebarRight */}
-          {!selectedChat ? (
+          {/* {!selectedChat ? (
             <SidebarRight currentUser={currentUser} setSelectedChat={setSelectedChat} /> 
           ) : (
             <ChatInterface currentUser={currentUser} chatRoomId={selectedChat} onBack={handleBackToSidebar} /> 
-          )}
+          )} */}
         </div>
 
         {/* Show ChatInterface on mobile if chat is selected */}

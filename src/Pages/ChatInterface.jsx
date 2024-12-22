@@ -54,13 +54,13 @@ const ChatPage = () => {
         </main>
 
         {/* SidebarRight - only visible on larger screens */}
-        <div className="hidden lg:flex flex-col w-96">
+        {/* <div className="hidden lg:flex flex-col w-96">
           {!selectedChat ? (
             <SidebarRight currentUser={currentUser} setSelectedChat={setSelectedChat} />
           ) : (
             <ChatInterface currentUser={currentUser} chatRoomId={selectedChat} onBack={handleBackToSidebar} />
           )}
-        </div>
+        </div> */}
       </div>
 
       {/* Show ChatInterface on mobile if chat is selected */}

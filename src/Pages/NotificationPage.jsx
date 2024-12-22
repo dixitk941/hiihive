@@ -107,11 +107,11 @@ const NotificationPage = () => {
         </div>
 
         {/* Show SidebarRight on mobile if isSidebarRightVisible is true */}
-        {isSidebarRightVisible && (
+        {/* {isSidebarRightVisible && (
           <div ref={sidebarRightRef} className="lg:hidden fixed bottom-0 left-0 right-0 bg-white shadow-lg z-50 p-4">
             <SidebarRight currentUser={currentUser} setSelectedChat={setSelectedChat} />
           </div>
-        )}
+        )} */}
       </div>
 
       {/* Floating menu for additional options */}

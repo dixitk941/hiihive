@@ -89,7 +89,7 @@ const UploadPage = () => {
         )}
 
         {/* SidebarRight or ChatInterface */}
-        <div className="hidden lg:block w-80 bg-white shadow-md">
+        {/* <div className="hidden lg:block w-80 bg-white shadow-md">
           {!selectedChat ? (
             <SidebarRight currentUser={currentUser} setSelectedChat={setSelectedChat} />
           ) : (
@@ -99,7 +99,7 @@ const UploadPage = () => {
               onBack={() => setSelectedChat(null)}
             />
           )}
-        </div>
+        </div> */}
 
         {/* Mobile SidebarRight */}
         {isSidebarRightVisible && (
