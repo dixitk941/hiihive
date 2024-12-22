@@ -83,12 +83,27 @@ const ChatListPage = () => {
     };
   }, [currentUser]);
 
-  // Filter chat rooms based on search term
+  // Filter chat rooms and communities based on search term
   const handleSearchChange = (event) => {
     const value = event.target.value;
     startTransition(() => {
       setSearchTerm(value);
+      filterChatRoomsAndCommunities(value);
     });
+  };
+
+  const filterChatRoomsAndCommunities = (term) => {
+    // Filter chat rooms
+    const filteredRooms = chatRooms.filter((room) =>
+      room.otherUserFullName.toLowerCase().includes(term.toLowerCase())
+    );
+    setFilteredChatRooms(filteredRooms);
+
+    // Filter communities
+    const filteredComms = communities.filter((community) =>
+      community.name.toLowerCase().includes(term.toLowerCase())
+    );
+    setFilteredCommunities(filteredComms);
   };
 
   const handleChatRoomClick = (roomId) => {
@@ -198,13 +213,11 @@ const ChatListPage = () => {
 
       {/* Floating New Chat Button */}
       <button
-  onClick={() => setShowUsersList((prev) => !prev)} // Toggle the visibility of the user list
-  className="fixed bottom-20 right-8 p-4 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 transition z-50"
->
-  <FontAwesomeIcon icon={faPlus} size="lg" />
-</button>
-
-
+        onClick={() => setShowUsersList((prev) => !prev)} // Toggle the visibility of the user list
+        className="fixed bottom-20 right-8 p-4 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 transition z-50"
+      >
+        <FontAwesomeIcon icon={faPlus} size="lg" />
+      </button>
 
       {/* Show users list for new chat */}
       {showUsersList && (
