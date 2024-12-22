@@ -221,6 +221,43 @@ const ChatInterface = ({ currentUser }) => {
     );
   };
 
+  const forceDownload = (url, fileName) => {
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const renderFileLink = (fileUrl) => {
+    const fileExtension = fileUrl.split('.').pop();
+    const isDownloadable = fileExtension === 'txt' || fileExtension === 'pdf';
+    const fileName = fileUrl.split('/').pop().split('?')[0]; // Extract the file name from the URL
+
+    if (isDownloadable) {
+      return (
+        <button
+          onClick={() => forceDownload(fileUrl, fileName)}
+          className="text-xs truncate text-blue-600"
+        >
+          📄 File
+        </button>
+      );
+    }
+
+    return (
+      <a
+        href={fileUrl}
+        className="text-xs truncate text-blue-600"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        📄 File
+      </a>
+    );
+  };
+
   return (
     <div className="flex flex-col h-screen bg-white text-black">
       <ChatHeader 
@@ -242,7 +279,7 @@ const ChatInterface = ({ currentUser }) => {
               />
               <div className={`p-3 max-w-[75%] sm:max-w-[65%] rounded-lg shadow-md ${message.senderId === currentUser.uid ? 'bg-black text-white' : 'bg-white text-black border border-gray-300'}`}>
                 <p>{renderMessageText(message.text)}</p>
-                {message.file && <a href={message.file} className="text-xs truncate text-blue-600">📄 File</a>}
+                {message.file && renderFileLink(message.file)}
                 {message.image && <img src={message.image} alt="uploaded" className="rounded-md mt-2 w-full object-contain" />}
                 {message.video && <video controls src={message.video} className="rounded-md mt-2 w-full object-contain" />}
                 {message.link && <a href={message.link} className="text-xs truncate text-blue-600" target="_blank" rel="noopener noreferrer">{message.link}</a>}
