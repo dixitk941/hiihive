@@ -38,9 +38,7 @@ const NotificationsPage = () => {
               return {
                 id: doc.id,
                 ...data,
-                timestamp: data.timestamp?.toDate
-                  ? data.timestamp.toDate()
-                  : new Date(), // Fallback to current date
+                // timestamp: data.timestamp?.toDate ? data.timestamp.toDate() : null, // Commented timestamp conversion
               };
             });
             console.log('Fetched notifications:', notificationsData);
@@ -71,14 +69,6 @@ const NotificationsPage = () => {
     }
   };
 
-  const formatDateTime = (timestamp) => {
-    const date = timestamp || new Date();
-    return new Intl.DateTimeFormat('en-US', {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    }).format(date);
-  };
-
   return (
     <div className="notifications-page-container bg-white text-gray-800 min-h-screen p-4 sm:p-5 md:p-6">
       <header className="header bg-gray-900 text-white py-4 px-6 rounded-lg shadow-md">
@@ -106,9 +96,10 @@ const NotificationsPage = () => {
                 <p className="font-medium text-base sm:text-lg text-black">
                   {notification.message}
                 </p>
-                <p className="text-xs sm:text-sm text-gray-500">
+                {/* Commented out timestamp display */}
+                {/* <p className="text-xs sm:text-sm text-gray-500">
                   {formatDateTime(notification.timestamp)}
-                </p>
+                </p> */}
                 {!notification.seen && (
                   <button
                     className="mt-3 text-blue-500 text-sm hover:text-blue-600 underline"
