@@ -14,6 +14,11 @@ import logo from "../assets/logo.svg";
 import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
 import ReactAvatar from 'react-avatar';
 
+const colleges = [
+  "Rajiv Academy For Technology and Management, Mathura",
+  "GLA University, Mathura",
+  "GL Bajaj, Mathura"
+];
 
 const LoginPage = () => {
   const [loading, setLoading] = useState(false);
@@ -26,6 +31,7 @@ const LoginPage = () => {
     age: "",
     bio: "",
     avatar: null,
+    college: "" // Add college field
   });
   const [error, setError] = useState("");
   const [isDesktop, setIsDesktop] = useState(window.innerWidth > 768);
@@ -110,7 +116,7 @@ const LoginPage = () => {
       return;
     }
 
-    if (!formData.email || !formData.password || !formData.username || !formData.fullName || !formData.age) {
+    if (!formData.email || !formData.password || !formData.username || !formData.fullName || !formData.age || !formData.college) {
       setError("All fields are required.");
       setLoading(false);
       return;
@@ -143,6 +149,7 @@ const LoginPage = () => {
         avatar: avatarUrl,
         username: formData.username,
         bio: formData.bio,
+        college: formData.college, // Store college in Firestore
         createdAt: serverTimestamp(),
       });
 
@@ -310,7 +317,19 @@ const LoginPage = () => {
   </div>
 </div>
 
-
+                  <select
+                    name="college"
+                    value={formData.college}
+                    onChange={handleInputChange}
+                    className="w-full p-3 rounded-lg bg-gray-100 border focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  >
+                    <option value="">Select College</option>
+                    {colleges.map((college, index) => (
+                      <option key={index} value={college}>
+                        {college}
+                      </option>
+                    ))}
+                  </select>
                 </>
               )}
 
