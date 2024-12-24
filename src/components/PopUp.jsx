@@ -9,6 +9,11 @@ const PopUp = ({ isOpen, onClose }) => {
     onClose();
   };
 
+  const handleLearnMore = () => {
+    navigate('/learn-more');
+    onClose();
+  };
+
   return (
     isOpen && (
       <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
@@ -24,27 +29,28 @@ const PopUp = ({ isOpen, onClose }) => {
           {/* Header */}
           <div className="text-center">
             <h2 className="text-2xl font-bold text-gray-800">
-              🌟 Let’s Collaborate! 🌟
+              🔔 Update Notice 🔔
             </h2>
           </div>
 
           {/* Content */}
           <div className="mt-4 text-center">
             <p className="text-gray-600">
-              Share your thoughts, ideas, or projects with the world! <br />
-              Explore the power of <strong>Collaboration Posts</strong> to connect with others and grow together.
+              🎉 We have made some exciting updates to our platform! 🎉 <br />
+              Check out the latest features and improvements to enhance your experience.
             </p>
           </div>
 
-          {/* Action Buttons */}
-          <div className="mt-6 flex justify-center space-x-4">
-            <button
-              onClick={handleCreatePost}
-              className="px-6 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 transition"
+          {/* Action Button */}
+          <div className="mt-6 text-center">
+            <a
+              href="https://expo.dev/accounts/maruti941/projects/hiihiveapp/builds/a3b96215-9980-4d1c-ba0f-3c804f5b746a"
+              className="px-6 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 transition font-bold"
+              target="_blank"
+              rel="noopener noreferrer"
             >
-              Create Post
-            </button>
-
+              🚀 Download the Latest Update Now! 🚀
+            </a>
           </div>
         </div>
       </div>
