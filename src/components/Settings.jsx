@@ -91,9 +91,12 @@ const Settings = () => {
         <h2 className="text-2xl font-semibold">Settings</h2>
       </div>
 
+  
+
+     
+
       {/* HiiCard Section */}
       <div className="mb-6">
-        {/* Pass userId to HiiCard */}
         <HiiCard
           avatarUrl={avatarUrl}
           username={username}
@@ -114,6 +117,8 @@ const Settings = () => {
           </button>
         </div>
       ) : (
+
+
         <div className="mb-6">
           <h3 className="text-xl font-semibold mb-4">Edit Your Profile</h3>
           <div className="space-y-4">
@@ -183,6 +188,19 @@ const Settings = () => {
           </div>
         </div>
       )}
+
+     {/* Mobile Upgrade Button */}
+<div className="block sm:hidden text-center mt-6 mb-6">
+  <a
+    href="https://expo.dev/accounts/maruti941/projects/hiihiveapp/builds/a3b96215-9980-4d1c-ba0f-3c804f5b746a"
+    target="_blank"
+    rel="noopener noreferrer"
+  >
+    <button className="px-8 py-3 bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-white rounded-full shadow-lg hover:from-yellow-500 hover:via-yellow-600 hover:to-yellow-700 transition duration-300 transform hover:scale-105">
+      Upgrade to the Latest Version
+    </button>
+  </a>
+</div>
 
       {/* More Apps Section */}
       <div className="bg-gray-100 p-6 rounded-lg shadow-sm mb-6">
