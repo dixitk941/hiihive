@@ -5,7 +5,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCog, faBell } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate } from 'react-router-dom';
-import logo from '../assets/logo.svg';
+import logo from '../assets/logo.png';
 import { Link, useLocation } from 'react-router-dom';
 
 const Header = () => {
@@ -120,11 +120,11 @@ const Header = () => {
       <div className="flex items-center space-x-3">
       <Link to="/">
 
-<img src={logo} alt="Logo" className="w-12 h-12 sm:w-14 sm:h-14" />
-
-</Link>        <h1 className="text-lg sm:text-2xl font-bold tracking-wide text-gray-800">
+      <img src={logo} alt="Logo" className="w-24 h-4 sm:w-28 sm:h-6" />
+            </Link>   
+     {/* <h1 className="text-lg sm:text-2xl font-bold tracking-wide text-gray-800">
           Hii<span className="text-blue-500">Hive</span>
-        </h1>
+        </h1> */}
       </div>
 
       {/* Right Side (Profile Pic, Settings, Notification) */}
