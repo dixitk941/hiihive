@@ -1,0 +1,20 @@
+.custom-video-controls::-webkit-media-controls-panel,
+.custom-video-controls::-webkit-media-controls-play-button,
+.custom-video-controls::-webkit-media-controls-volume-control-container,
+.custom-video-controls::-webkit-media-controls-mute-button,
+.custom-video-controls::-webkit-media-controls-timeline,
+.custom-video-controls::-webkit-media-controls-current-time-display,
+.custom-video-controls::-webkit-media-controls-time-remaining-display,
+.custom-video-controls::-webkit-media-controls-seek-back-button,
+.custom-video-controls::-webkit-media-controls-seek-forward-button,
+.custom-video-controls::-webkit-media-controls-fullscreen-button,
+.custom-video-controls::-webkit-media-controls-rewind-button,
+.custom-video-controls::-webkit-media-controls-return-to-realtime-button,
+.custom-video-controls::-webkit-media-controls-toggle-closed-captions-button,
+.custom-video-controls::-webkit-media-controls-status-display {
+  display: none !important;
+}
+
+.custom-video-controls::-webkit-media-controls-enclosure {
+  overflow: hidden;
+}

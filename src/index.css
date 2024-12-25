@@ -11,6 +11,28 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.group:hover .controls {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.progress-bar {
+  position: relative;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+}
+
+.progress-bar .progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #00f, #0ff);
+  transition: width 0.2s ease;
+}
+
 @keyframes pulse {
   0% {
     transform: scale(1);

@@ -8,6 +8,8 @@ import {
   push,
   serverTimestamp,
 } from 'firebase/database';
+import './Feed.css';
+import CustomVideoPlayer from './VideoPlayer';
 import { FiThumbsUp, FiMessageCircle, FiShare } from 'react-icons/fi';
 import { auth } from './firebaseConfig';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -329,13 +331,10 @@ const Feeds = () => {
                 className="w-full h-auto rounded-lg"
               />
             )}
-            {content.fileType === "video" && content.fileUrl && (
-              <video
-                className="w-full h-auto rounded-lg"
-                controls
-                src={content.fileUrl}
-              />
-            )}
+{content.fileType === "video" && content.fileUrl && (
+  <CustomVideoPlayer videoUrl={content.fileUrl} />
+)}
+
             {content.fileType === "audio" && content.fileUrl && (
               <audio className="w-full mt-4 rounded-lg" controls src={content.fileUrl} />
             )}
