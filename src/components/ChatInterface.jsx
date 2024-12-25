@@ -300,7 +300,7 @@ const ChatInterface = ({ currentUser }) => {
   </div>
 
   <div className="flex flex-col h-screen">
-  <div className="flex-1 overflow-y-auto p-4" style={{ marginBottom: '6rem' }}>
+  <div className="flex-1 overflow-y-auto p-4" style={{ marginBottom: '3rem' }}>
     {messages.map((message) => (
       <div
         key={message.id}
@@ -342,68 +342,77 @@ const ChatInterface = ({ currentUser }) => {
 
 
 
-  <div className="fixed bottom-0 left-0 w-full sm:left-[20%] sm:w-[80%] p-4 bg-gray-200 border-t flex flex-col gap-2 sm:p-6">
-  {/* Preview of selected file or image */}
-        {file && (
-          <div className="flex items-center space-x-2 mb-2">
-            <IoDocumentTextOutline size={24} className="text-gray-500" />
-            <span className="text-sm">{file.name}</span>
-            <button onClick={() => setFile(null)} className="text-red-500">
-              <IoClose size={24} />
-            </button>
-          </div>
-        )}
-        {image && (
-          <div className="flex items-center space-x-2 mb-2">
-            <img src={URL.createObjectURL(image)} alt="preview" className="w-10 h-10 object-cover rounded" />
-            <span className="text-sm">{image.name}</span>
-            <button onClick={() => setImage(null)} className="text-red-500">
-              <IoClose size={24} />
-            </button>
-          </div>
-        )}
+  <div className="fixed bottom-0 left-0 w-full sm:left-[20%] sm:w-[80%] p-2 bg-white border-t flex flex-col gap-2 sm:p-3 rounded-t-lg shadow-xl z-10">
 
-        {/* Uploading Progress */}
-        {fileUploadProgress > 0 && fileUploadProgress < 100 && (
-          <div className="w-full bg-gray-300 rounded-full h-2 mb-2">
-            <div
-              className="bg-blue-500 h-2 rounded-full"
-              style={{ width: `${fileUploadProgress}%`, transition: 'width 0.5s ease-out' }}
-            />
-          </div>
-        )}
+{/* File and Image preview section */}
+{file && (
+  <div className="flex items-center space-x-2 mb-2">
+    <IoDocumentTextOutline size={24} className="text-black" />
+    <span className="text-sm text-black">{file.name}</span>
+    <button onClick={() => setFile(null)} className="text-red-500">
+      <IoClose size={24} />
+    </button>
+  </div>
+)}
+{image && (
+  <div className="flex items-center space-x-2 mb-2">
+    <img src={URL.createObjectURL(image)} alt="preview" className="w-10 h-10 object-cover rounded" />
+    <span className="text-sm text-black">{image.name}</span>
+    <button onClick={() => setImage(null)} className="text-red-500">
+      <IoClose size={24} />
+    </button>
+  </div>
+)}
 
-        <div className="flex items-center gap-2">
-          {showEmojiPicker && (
-            <div className="absolute bottom-16 left-4 z-50">
-              <Picker onEmojiSelect={handleEmojiSelect} theme="light" />
-            </div>
-          )}
-          <button onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="p-2 text-gray-500 hover:text-blue-500 transition-transform duration-300">
-            😊
-          </button>
-          <textarea
-            placeholder="Type a message..."
-            value={messageInput}
-            onChange={(e) => setMessageInput(e.target.value)}
-            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring focus:ring-blue-300 resize-none"
-            rows="2"
-            onKeyDown={handleKeyDown}
-          ></textarea>
-          <input type="file" id="fileInput" onChange={handleFileChange} className="hidden" />
-          <input type="file" id="imageInput" onChange={handleImageChange} className="hidden" />
+{/* File upload progress */}
+{fileUploadProgress > 0 && fileUploadProgress < 100 && (
+  <div className="w-full bg-gray-300 rounded-full h-2 mb-2">
+    <div
+      className="bg-blue-500 h-2 rounded-full"
+      style={{ width: `${fileUploadProgress}%`, transition: 'width 0.5s ease-out' }}
+    />
+  </div>
+)}
 
-          {/* File and image upload buttons */}
-          <label htmlFor="fileInput">
-            <IoDocumentTextOutline size={24} className="text-gray-500 cursor-pointer hover:text-blue-500 transition-transform duration-300" />
-          </label>
-          <label htmlFor="imageInput">
-            <IoImageOutline size={24} className="text-gray-500 cursor-pointer hover:text-blue-500 transition-transform duration-300" />
-          </label>
-          <button onClick={handleSendMessage} className="p-2 text-white bg-blue-500 rounded-full hover:bg-blue-600 transition-transform duration-300">
-            <IoSend size={24} />
-          </button>
-        </div>
+<div className="flex items-center gap-2">
+  {/* Emoji picker */}
+  {showEmojiPicker && (
+    <div className="absolute bottom-16 left-4 z-50">
+      <Picker onEmojiSelect={handleEmojiSelect} theme="light" />
+    </div>
+  )}
+  <button onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="p-2 text-black hover:text-blue-500">
+    😊
+  </button>
+
+  {/* Text Input area */}
+  <textarea
+    placeholder="Type a message..."
+    value={messageInput}
+    onChange={(e) => setMessageInput(e.target.value)}
+    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring focus:ring-blue-300 resize-none text-black"
+    rows="2"
+    onKeyDown={handleKeyDown}
+  ></textarea>
+
+  {/* Hidden File and Image input */}
+  <input type="file" id="fileInput" onChange={handleFileChange} className="hidden" />
+  <input type="file" id="imageInput" onChange={handleImageChange} className="hidden" />
+
+  {/* File and Image Upload Buttons */}
+  <label htmlFor="fileInput">
+    <IoDocumentTextOutline size={24} className="text-black cursor-pointer hover:text-blue-500" />
+  </label>
+  <label htmlFor="imageInput">
+    <IoImageOutline size={24} className="text-black cursor-pointer hover:text-blue-500" />
+  </label>
+
+  {/* Send Message Button */}
+  <button onClick={handleSendMessage} className="p-2 text-white bg-blue-500 rounded-full hover:bg-blue-600">
+    <IoSend size={24} />
+  </button>
+</div>
+
 
         {showEmojiPicker && (
           <div className="absolute bottom-16 left-4 z-50">

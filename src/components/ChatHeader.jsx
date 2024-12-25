@@ -62,8 +62,8 @@ const ChatHeader = ({ chatRoomId, currentUser }) => {
   }, [chatRoomId, currentUser, db]);
 
   return (
-    <div className="flex items-center justify-between p-4 bg-white text-black shadow-lg">
-      <button onClick={() => navigate('/chatlist')} className="text-black font-bold flex items-center">
+<div className="flex items-center justify-between p-1.5 bg-white text-black shadow-2xl rounded-xl">
+        <button onClick={() => navigate('/chatlist')} className="text-black font-bold flex items-center">
         <FaArrowLeft className="mr-2" /> Back
       </button>
       <div className="flex items-center space-x-4">
