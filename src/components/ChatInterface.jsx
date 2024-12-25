@@ -17,6 +17,14 @@ import Picker from '@emoji-mart/react';
 import { IoSend, IoDocumentTextOutline, IoImageOutline, IoClose } from 'react-icons/io5';
 import { useParams } from 'react-router-dom';
 import ChatHeader from './ChatHeader';
+import { format } from 'date-fns';
+
+const formatTimestamp = (timestamp) => {
+  if (!timestamp) return ''; // Handle missing timestamp
+  const date = timestamp.toDate(); // Convert Firestore Timestamp to JS Date
+  return format(date, "dd MMM yyyy, h:mm a"); // Example: "24 Dec 2024, 3:45 PM"
+};
+
 
 const ChatInterface = ({ currentUser }) => {
   const [messages, setMessages] = useState([]);
@@ -174,6 +182,26 @@ const ChatInterface = ({ currentUser }) => {
       await deleteDoc(messageRef);
     }
   };
+  const formatTimestamp = (timestamp) => {
+    let date;
+
+    if (timestamp?.toDate) {
+        // Firestore Timestamp
+        date = timestamp.toDate();
+    } else if (timestamp?.seconds) {
+        // Plain object with seconds
+        date = new Date(timestamp.seconds * 1000);
+    } else if (typeof timestamp === "string") {
+        // String timestamp
+        date = new Date(timestamp);
+    } else {
+        // Fallback for invalid timestamps
+        return "Invalid time";
+    }
+
+    // Format to "hh:mm AM/PM"
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+};
 
   const handleLongClick = (e, messageId) => {
     e.preventDefault();
@@ -268,26 +296,26 @@ const ChatInterface = ({ currentUser }) => {
         onBack={() => console.log('Go Back')} 
       />
 
-      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-100 rounded-t-2xl shadow-lg sm:p-6">
-        {messages.map((message) => (
-          <div key={message.id} onContextMenu={(e) => handleLongClick(e, message.id)} className={`flex items-start space-x-2 ${message.senderId === currentUser.uid ? 'justify-end' : 'justify-start'} relative`}>
-            <div className="flex items-center space-x-2">
-              <img
-                src={userAvatars[message.senderId] || 'default-avatar-url'}
-                alt="avatar"
-                className="w-8 h-8 rounded-full"
-              />
-              <div className={`p-3 max-w-[75%] sm:max-w-[65%] rounded-lg shadow-md ${message.senderId === currentUser.uid ? 'bg-black text-white' : 'bg-white text-black border border-gray-300'}`}>
-                <p>{renderMessageText(message.text)}</p>
-                {message.file && renderFileLink(message.file)}
-                {message.image && <img src={message.image} alt="uploaded" className="rounded-md mt-2 w-full object-contain" />}
-                {message.video && <video controls src={message.video} className="rounded-md mt-2 w-full object-contain" />}
-                {message.link && <a href={message.link} className="text-xs truncate text-blue-600" target="_blank" rel="noopener noreferrer">{message.link}</a>}
-              </div>
-            </div>
-          </div>
-        ))}
+{messages.map((message) => (
+  <div key={message.id} onContextMenu={(e) => handleLongClick(e, message.id)} 
+       className={`flex items-start space-x-2 ${message.senderId === currentUser.uid ? 'justify-end' : 'justify-start'} relative`}>
+    <div className="flex items-center space-x-2">
+      <img
+        src={userAvatars[message.senderId] || 'default-avatar-url'}
+        alt="avatar"
+        className="w-8 h-8 rounded-full"
+      />
+      <div className={`p-3 max-w-[75%] sm:max-w-[65%] rounded-lg shadow-md ${message.senderId === currentUser.uid ? 'bg-black text-white' : 'bg-white text-black border border-gray-300'}`}>
+        <p>{renderMessageText(message.text)}</p>
+        {message.file && renderFileLink(message.file)}
+        {message.image && <img src={message.image} alt="uploaded" className="rounded-md mt-2 w-full object-contain" />}
+        <span className="text-xs text-gray-500 mt-1 block">
+          {message.createdAt ? formatTimestamp(message.createdAt) : 'Sending...'}
+        </span>
       </div>
+    </div>
+  </div>
+))}
 
       <div className="p-4 bg-gray-200 border-t flex flex-col gap-2 sm:p-6">
         {/* Preview of selected file or image */}
