@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from './firebaseConfig'; // Import your Firebase config
-import SidebarLeft from '../components/SidebarLeft';
-import SidebarRight from '../components/SidebarRight';
+import ChatList from '../components/ChatListDesktop';
 import ChatInterface from '../components/ChatInterface';
+import './ChatPage.css'; // Import the CSS file
 
 const ChatPage = () => {
   const [currentUser, setCurrentUser] = useState(null);
@@ -37,38 +37,20 @@ const ChatPage = () => {
   };
 
   if (loading) {
-    return <p>Loading...</p>;
+    return <div>Loading...</div>;
   }
 
   return (
-    <div className="flex flex-col h-screen">
-      <div className="flex flex-1 w-full">
-        {/* SidebarLeft - only visible on larger screens */}
-        <div className="hidden lg:block w-[250px]">
-          <SidebarLeft currentUser={currentUser} />
-        </div>
-
-        {/* Main content section */}
-        <main className="flex-1 p-4 lg:p-0 w-full">
-          <ChatInterface currentUser={currentUser} chatRoomId={selectedChat} onBack={handleBackToSidebar} />
-        </main>
-
-        {/* SidebarRight - only visible on larger screens */}
-        {/* <div className="hidden lg:flex flex-col w-96">
-          {!selectedChat ? (
-            <SidebarRight currentUser={currentUser} setSelectedChat={setSelectedChat} />
-          ) : (
-            <ChatInterface currentUser={currentUser} chatRoomId={selectedChat} onBack={handleBackToSidebar} />
-          )}
-        </div> */}
+    <div className="chat-page-container flex h-screen">
+      {/* Chat List Section */}
+      <div className="chat-list-container w-[300px] bg-gray-100 p-4 overflow-y-auto">
+        <ChatList />
       </div>
 
-      {/* Show ChatInterface on mobile if chat is selected */}
-      {selectedChat && (
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white shadow-lg z-50 p-4 w-full">
-          <ChatInterface currentUser={currentUser} chatRoomId={selectedChat} onBack={handleBackToSidebar} />
-        </div>
-      )}
+      {/* Chat Interface Section */}
+      <div className="chat-interface-container flex-1 bg-white p-4 overflow-y-auto">
+        <ChatInterface currentUser={currentUser} selectedChat={selectedChat} />
+      </div>
     </div>
   );
 };

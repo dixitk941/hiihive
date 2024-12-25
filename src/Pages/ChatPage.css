@@ -1,0 +1,32 @@
+/* ChatPage.css */
+.chat-page-container {
+    display: flex;
+    height: 100vh; /* Ensures the container takes up the full screen height */
+  }
+  
+  .chat-list-container {
+    width: 300px; /* Adjust based on your design */
+    background-color: #f7f7f7;
+    padding: 20px;
+    overflow-y: auto; /* Makes it scrollable */
+  }
+  
+  .chat-interface-container {
+    flex-grow: 1;
+    background-color: #ffffff;
+    padding: 20px;
+    overflow-y: auto; /* Makes it scrollable */
+    scrollbar-width: none; /* For Firefox */
+    -ms-overflow-style: none;  /* For Internet Explorer and Edge */
+  }
+
+  ::-webkit-scrollbar {
+    display: none; /* For Chrome, Safari, and Opera */
+  }
+  
+  /* Hide chat list on mobile view */
+  @media (max-width: 768px) {
+    .chat-list-container {
+      display: none;
+    }
+  }

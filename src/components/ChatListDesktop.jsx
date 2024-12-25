@@ -198,7 +198,7 @@ const ChatListPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center">
-      <Header title="Chats" />
+      {/* <Header title="Chats" /> */}
       
       {/* Search Bar */}
       <div className="w-full px-4 py-2 bg-white shadow-md rounded-lg mt-4 mb-2 border border-gray-300">
@@ -216,14 +216,6 @@ const ChatListPage = () => {
 
       {/* Show Users List */}
       {showUsersList && renderUsersList()}
-
-      {/* Floating Action Button */}
-      <button
-        onClick={() => setShowUsersList(prevState => !prevState)} // Toggle the visibility of the user list
-        className="fixed bottom-20 right-8 p-4 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 transition z-50"
-      >
-        <FontAwesomeIcon icon={faPlus} size="lg" />
-      </button>
     </div>
   );
 };

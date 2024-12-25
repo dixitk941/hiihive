@@ -287,38 +287,63 @@ const ChatInterface = ({ currentUser }) => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-white text-black">
-      <ChatHeader 
-        chatRoomName={chatRoomName} 
-        chatRoomEmoji={chatRoomEmoji} 
-        chatRoomId={currentChatRoomId} 
-        currentUser={currentUser} 
-        onBack={() => console.log('Go Back')} 
-      />
-
-{messages.map((message) => (
-  <div key={message.id} onContextMenu={(e) => handleLongClick(e, message.id)} 
-       className={`flex items-start space-x-2 ${message.senderId === currentUser.uid ? 'justify-end' : 'justify-start'} relative`}>
-    <div className="flex items-center space-x-2">
-      <img
-        src={userAvatars[message.senderId] || 'default-avatar-url'}
-        alt="avatar"
-        className="w-8 h-8 rounded-full"
-      />
-      <div className={`p-3 max-w-[75%] sm:max-w-[65%] rounded-lg shadow-md ${message.senderId === currentUser.uid ? 'bg-black text-white' : 'bg-white text-black border border-gray-300'}`}>
-        <p>{renderMessageText(message.text)}</p>
-        {message.file && renderFileLink(message.file)}
-        {message.image && <img src={message.image} alt="uploaded" className="rounded-md mt-2 w-full object-contain" />}
-        <span className="text-xs text-gray-500 mt-1 block">
-          {message.createdAt ? formatTimestamp(message.createdAt) : 'Sending...'}
-        </span>
-      </div>
-    </div>
+<div className="flex flex-col h-screen bg-white text-black">
+  {/* Fixed Header */}
+  <div className="fixed top-0 left-0 w-full sm:left-[20%] sm:w-[80%] z-10 bg-white shadow-md">
+  <ChatHeader
+      chatRoomName={chatRoomName}
+      chatRoomEmoji={chatRoomEmoji}
+      chatRoomId={currentChatRoomId}
+      currentUser={currentUser}
+      onBack={() => console.log('Go Back')}
+    />
   </div>
-))}
 
-      <div className="p-4 bg-gray-200 border-t flex flex-col gap-2 sm:p-6">
-        {/* Preview of selected file or image */}
+  <div className="flex flex-col h-screen">
+  <div className="flex-1 overflow-y-auto p-4" style={{ marginBottom: '6rem' }}>
+    {messages.map((message) => (
+      <div
+        key={message.id}
+        onContextMenu={(e) => handleLongClick(e, message.id)}
+        className={`flex items-start space-x-2 ${
+          message.senderId === currentUser.uid ? 'justify-end' : 'justify-start'
+        } relative`}
+      >
+        <div className="flex items-center space-x-2">
+          <img
+            src={userAvatars[message.senderId] || 'default-avatar-url'}
+            alt="avatar"
+            className="w-8 h-8 rounded-full"
+          />
+          <div
+            className={`p-3 max-w-[75%] sm:max-w-[65%] rounded-lg shadow-md ${
+              message.senderId === currentUser.uid
+                ? 'bg-black text-white'
+                : 'bg-white text-black border border-gray-300'
+            }`}
+          >
+            <p>{renderMessageText(message.text)}</p>
+            {message.file && renderFileLink(message.file)}
+            {message.image && (
+              <img
+                src={message.image}
+                alt="uploaded"
+                className="rounded-md mt-2 w-full object-contain"
+              />
+            )}
+            <span className="text-xs text-gray-500 mt-1 block">
+              {message.createdAt ? formatTimestamp(message.createdAt) : 'Sending...'}
+            </span>
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+
+
+
+  <div className="fixed bottom-0 left-0 w-full sm:left-[20%] sm:w-[80%] p-4 bg-gray-200 border-t flex flex-col gap-2 sm:p-6">
+  {/* Preview of selected file or image */}
         {file && (
           <div className="flex items-center space-x-2 mb-2">
             <IoDocumentTextOutline size={24} className="text-gray-500" />
@@ -386,6 +411,7 @@ const ChatInterface = ({ currentUser }) => {
           </div>
         )}
       </div>
+    </div>
     </div>
   );
 };
