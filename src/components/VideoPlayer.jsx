@@ -47,6 +47,35 @@ const InstagramStyleVideoPlayer = ({ videoUrl }) => {
     };
   }, []);
 
+  useEffect(() => {
+    const handleIntersection = (entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          if (videoRef.current.paused) {
+            videoRef.current.play();
+            setIsPlaying(true);
+          }
+        } else {
+          if (!videoRef.current.paused) {
+            videoRef.current.pause();
+            setIsPlaying(false);
+          }
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(handleIntersection, { threshold: 0.5 });
+    if (videoRef.current) {
+      observer.observe(videoRef.current);
+    }
+
+    return () => {
+      if (videoRef.current) {
+        observer.unobserve(videoRef.current);
+      }
+    };
+  }, []);
+
   return (
     <div className="relative w-full max-w-md mx-auto rounded-lg overflow-hidden shadow-lg bg-gradient-to-r from-purple-500 to-indigo-500">
       <video
