@@ -64,7 +64,7 @@ function AppContent({ user, showPopUp, setShowPopUp }) {
       <ConditionalHeader user={user} location={location} />
       
       {/* Conditionally render PopUp component */}
-      {showPopUp && location.pathname !== "/login" && <PopUp onClose={() => setShowPopUp(false)} />}
+      {/* {showPopUp && location.pathname !== "/login" && <PopUp onClose={() => setShowPopUp(false)} />} */}
       
       <Suspense fallback={<Loading />}>
         <AnimatePresence mode="wait">
