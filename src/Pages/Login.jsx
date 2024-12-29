@@ -276,7 +276,6 @@ const LoginPage = () => {
                     onChange={handleInputChange}
                     className="w-full p-3 rounded-lg bg-gray-100 border focus:outline-none focus:ring-2 focus:ring-blue-300"
                   ></textarea>
-      import ReactAvatar from 'react-avatar';
 
 <div className="relative w-full">
   <label htmlFor="avatar" className="block text-sm font-medium text-gray-700 mb-1">
@@ -489,7 +488,7 @@ const LoginPage = () => {
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
               </svg>
-              <p className="mt-2 text-lg font-medium text-gray-900">KnowledgeHub</p>
+              <p className="mt-2 text-lg font-medium text-gray-900">College Hive</p>
             </div>
           </div>
         </div>
