@@ -197,15 +197,15 @@ const ChatListPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center">
-      <Header title="Chats" />
+<div className="min-h-screen bg-gray-100 dark:bg-black flex flex-col items-center">
+<Header title="Chats" />
       
       {/* Search Bar */}
-      <div className="w-full px-4 py-2 bg-white shadow-md rounded-lg mt-4 mb-2 border border-gray-300">
+      <div className="w-full px-4 py-2 bg-white dark:bg-gray-800 shadow-md rounded-lg mt-4 mb-2 border border-gray-300 dark:border-gray-600">
         <input
           type="text"
-          className="w-full p-3 rounded-md text-lg placeholder-gray-400 border border-gray-300 focus:outline-none focus:ring focus:ring-blue-500 transition"
-          placeholder="Search chats..."
+          className="w-full p-3 rounded-md text-lg placeholder-gray-400 border border-gray-300 focus:outline-none focus:ring focus:ring-blue-500 transition dark:bg-gray-800 dark:text-white dark:placeholder-gray-500 dark:border-gray-600 dark:focus:ring-blue-400"          placeholder="Search chats..."
+          // placeholder="Search chats..."
           value={searchTerm}
           onChange={handleSearchChange}
         />

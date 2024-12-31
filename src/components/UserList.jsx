@@ -53,8 +53,8 @@ const UsersList = () => {
   }, []);
 
   return (
-    <div className="p-4 bg-gray-100 min-h-screen">
-      <SearchBar />
+<div className="p-4 bg-gray-100 min-h-screen dark:bg-black">
+<SearchBar />
       <h1 className="text-xl sm:text-2xl font-semibold mb-4">Available Users</h1>
       <InfiniteScroll
         dataLength={users.length}
@@ -69,8 +69,8 @@ const UsersList = () => {
           <p className="text-center text-gray-500 mt-4">No more users to display.</p>
         }
       >
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          {users.map((user) => (
+<div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 dark:bg-black">
+{users.map((user) => (
             <div
               key={user.id}
               className="flex flex-col items-center p-4 bg-white shadow rounded-lg"
@@ -92,8 +92,8 @@ const UsersList = () => {
               </div>
               <button
                 onClick={() => navigate(`/user/${user.id}`)}
-                className="mt-2 px-4 py-2 text-sm font-semibold bg-gray-300 rounded-full hover:bg-gray-400 transition-colors duration-200"
-              >
+                className="mt-2 px-4 py-2 text-sm font-semibold bg-gray-300 rounded-full hover:bg-gray-400 transition-colors duration-200 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white"
+                >
                 View Profile
               </button>
             </div>

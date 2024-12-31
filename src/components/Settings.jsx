@@ -3,7 +3,7 @@ import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { auth, db, storage } from "./firebaseConfig";
 import HiiCard from "./HiiCard";
 import MoreAppsSection from "./MoreAppsSection";
-import loaderGif from "../assets/normload.gif";
+// import loaderGif from "../assets/normload.gif";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import Footer from "./Footer";
 import { Link } from "react-router-dom";
@@ -140,19 +140,19 @@ const Settings = () => {
     setIsEditing(false);
   };
 
-  if (!user) {
-    return (
-      <div className="h-screen flex flex-col justify-center items-center bg-white">
-        <div className="flex items-center justify-center mb-4">
-          <img src={loaderGif} alt="Loading" className="w-32 h-32" />
-        </div>
-      </div>
-    );
-  }
+//   if (!user) {
+//     return (
+// <div className="h-screen flex flex-col justify-center items-center bg-white dark:bg-black">
+// <div className="flex items-center justify-center mb-4">
+//           <img src={loaderGif} alt="Loading" className="w-32 h-32" />
+//         </div>
+//       </div>
+//     );
+//   }
 
   return (
-    <div className="max-w-4xl mx-auto p-4 bg-white text-black">
-      {popupVisible && <PopUp onClose={() => setPopupVisible(false)} />}
+<div className="max-w-4xl mx-auto p-4 bg-white text-black dark:bg-black dark:text-white">
+{popupVisible && <PopUp onClose={() => setPopupVisible(false)} />}
 
       <div className="text-center mb-8">
         <h2 className="text-2xl font-semibold">Settings</h2>
@@ -172,8 +172,8 @@ const Settings = () => {
         <div className="text-center mb-6">
           <button
             onClick={handleEditProfile}
-            className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-          >
+            className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 dark:bg-blue-700 dark:hover:bg-blue-600"
+            >
             Edit Profile
           </button>
         </div>
@@ -187,14 +187,14 @@ const Settings = () => {
                 type="file"
                 onChange={handleFileChange}
                 accept="image/*"
-                className="w-full p-2 border border-gray-300 rounded-md"
-              />
+                className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-white dark:border-gray-600"
+                />
               {avatarUrl && (
                 <img
                   src={avatarUrl}
                   alt="Avatar Preview"
-                  className="mt-4 w-32 h-32 object-cover rounded-full mx-auto"
-                />
+                  className="mt-4 w-32 h-32 object-cover rounded-full mx-auto dark:border-2 dark:border-gray-600"
+                  />
               )}
             </div>
 
@@ -204,7 +204,7 @@ const Settings = () => {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md"
+                className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-white dark:border-gray-600"
                 placeholder="Enter Username"
               />
             </div>
@@ -215,7 +215,7 @@ const Settings = () => {
                 type="text"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md"
+                className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-white dark:border-gray-600"
                 placeholder="Enter Full Name"
               />
             </div>
@@ -225,7 +225,7 @@ const Settings = () => {
               <textarea
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md"
+                className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-white dark:border-gray-600"
                 placeholder="Enter Bio"
               />
             </div>
@@ -235,8 +235,8 @@ const Settings = () => {
               <select
                 value={college}
                 onChange={(e) => setCollege(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md"
-              >
+                className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-white dark:border-gray-600"
+                >
                 <option value="" disabled>
                   Select your college
                 </option>
@@ -251,7 +251,7 @@ const Settings = () => {
             <div className="text-center">
               <button
                 onClick={handleSaveProfile}
-                className="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+                className="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 dark:bg-green-700 dark:hover:bg-green-600"
                 disabled={loading}
               >
                 {loading ? "Saving..." : "Save Changes"}
@@ -261,7 +261,7 @@ const Settings = () => {
         </div>
       )}
 
-      <div className="bg-gray-100 p-6 rounded-lg shadow-sm mb-6">
+<div className="bg-black p-6 rounded-lg shadow-sm mb-6 dark:bg-black dark:text-white">
         <MoreAppsSection />
       </div>
 

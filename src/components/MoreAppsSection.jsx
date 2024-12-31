@@ -23,8 +23,8 @@ const MoreAppsSection = () => {
   ];
 
   return (
-    <div className="max-w-3xl mx-auto p-4">
-      <h2 className="text-2xl font-bold text-center mb-6">More Apps</h2>
+<div className="max-w-3xl mx-auto p-4 dark:bg-black dark:text-white">
+<h2 className="text-2xl font-bold text-center mb-6">More Apps</h2>
       <ul className="space-y-4">
         {apps.map((app, index) => (
           <li key={index} className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 flex items-center">

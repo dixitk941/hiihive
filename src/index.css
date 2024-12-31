@@ -160,3 +160,57 @@ button:hover {
 .scroll-item {
   scroll-snap-align: start;
 }
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+}
+
+body.dark {
+  background-color: black;
+  color: white;
+}
+
+.dark .bg-white {
+  background-color: black !important;
+}
+
+.dark .text-gray-900 {
+  color: white !important;
+}
+
+.dark .shadow-lg {
+  box-shadow: 0 4px 6px rgba(255, 255, 255, 0.1) !important;
+}
+
+.dark .hover\:shadow-2xl:hover {
+  box-shadow: 0 10px 15px rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Additional dark theme styles */
+.dark .bg-gray-200 {
+  background-color: #333 !important;
+}
+
+.dark .bg-gray-800 {
+  background-color: #111 !important;
+}
+
+.dark .text-gray-800 {
+  color: #ccc !important;
+}
+
+.dark .text-gray-300 {
+  color: #bbb !important;
+}
+
+.dark .text-blue-400 {
+  color: #4f83cc !important;
+}
+
+.dark .bg-blue-500 {
+  background-color: #1e3a8a !important;
+}
+
+.dark .bg-blue-600 {
+  background-color: #1e40af !important;
+}

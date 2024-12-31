@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FiSettings, FiLogOut, FiChevronLeft, FiChevronRight, FiHome, FiMessageSquare, FiUpload, FiUsers, FiCompass, FiBell } from 'react-icons/fi';
 import { Link, useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
@@ -7,14 +7,39 @@ import { auth } from './firebaseConfig';  // Your firebase config file to access
 const SidebarLeft = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showLogoutWarning, setShowLogoutWarning] = useState(false); // State to toggle logout warning modal
+  const [darkMode, setDarkMode] = useState(false); // State to manage dark mode
   const navigate = useNavigate();
+
+  // Automatically detect dark mode based on device preference
+  useEffect(() => {
+    const userPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    setDarkMode(userPrefersDark); // Set dark mode based on the device preference
+
+    // Save the preference in localStorage if it changes
+    const handleChange = (e) => {
+      setDarkMode(e.matches);
+    };
+
+    // Listen for system theme change
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    mediaQuery.addEventListener('change', handleChange);
+
+    // Clean up event listener on component unmount
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+
+  // Toggle dark mode manually and save it to localStorage
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+    localStorage.setItem('darkMode', !darkMode); // Save dark mode preference to localStorage
+  };
 
   const handleLogout = async () => {
     try {
       await signOut(auth); // Sign out from Firebase
       navigate('/login'); // Navigate to the login page
     } catch (error) {
-      // console.error("Error during logout", error);
+      // Handle error during logout
     }
   };
 
@@ -25,7 +50,13 @@ const SidebarLeft = () => {
   return (
     <>
       {/* Sidebar for larger screens */}
-      <aside className={`hidden sm:flex fixed left-0 top-24 h-[calc(100vh-6rem)] bg-white text-gray-800 flex-col justify-between p-4 shadow-md border-r border-gray-200 transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-64'}`}>
+      <aside
+        className={`hidden sm:flex fixed left-0 top-24 h-[calc(100vh-6rem)] 
+          ${darkMode ? 'bg-black text-white' : 'bg-white text-black'} 
+          flex-col justify-between p-4 shadow-md 
+          border-r ${darkMode ? 'border-gray-700' : 'border-gray-200'} 
+          transition-all duration-300 transition-colors ${isCollapsed ? 'w-20' : 'w-64'}`}
+      >
         {/* Button to toggle collapse */}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
@@ -61,6 +92,16 @@ const SidebarLeft = () => {
             </button>
           </Link>
         </nav>
+
+        {/* Dark Mode Toggle Button */}
+        {/* <div className="flex justify-center mt-4">
+          <button
+            onClick={toggleDarkMode}
+            className={`p-2 rounded-full ${darkMode ? 'bg-white text-black' : 'bg-black text-white'} transition-all duration-300`}
+          >
+            {darkMode ? '🌙' : '☀️'}
+          </button>
+        </div> */}
 
         {/* Settings and Logout links */}
         <div className="space-y-3">

@@ -13,6 +13,29 @@ const ChatList = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [selectedChat, setSelectedChat] = useState(null);
   const [loading, setLoading] = useState(true); // Manage loading state
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  useEffect(() => {
+    // Check system preference
+    const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    setIsDarkMode(prefersDarkMode);
+
+    // Update body class based on the theme
+    document.body.classList.toggle('dark', prefersDarkMode);
+
+    // Listener for theme change
+    const handleThemeChange = (e) => {
+      setIsDarkMode(e.matches);
+      document.body.classList.toggle('dark', e.matches);
+    };
+
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    mediaQuery.addEventListener('change', handleThemeChange);
+
+    return () => {
+      mediaQuery.removeEventListener('change', handleThemeChange);
+    };
+  }, []);
 
   useEffect(() => {
     const auth = getAuth();
@@ -39,12 +62,16 @@ const ChatList = () => {
     setSelectedChat(null);
   };
 
-  if (loading) {
-    return <p>Loading...</p>;
-  }
+  // if (loading) {
+  //   return (
+  //     <div className="flex justify-center items-center min-h-screen">
+  //       <img src={loaderGif} alt="Loading..." />
+  //     </div>
+  //   );
+  // }
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className={`flex flex-col min-h-screen ${isDarkMode ? 'bg-black text-white' : 'bg-white text-gray-900'}`}>
       <div className="flex flex-1 pt-24"> {/* Add padding-top to avoid being hidden by the header */}
         {/* SidebarLeft for main navigation */}
         <div className="hidden lg:block w-[250px]">

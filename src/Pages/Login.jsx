@@ -36,7 +36,30 @@ const LoginPage = () => {
   const [error, setError] = useState("");
   const [isDesktop, setIsDesktop] = useState(window.innerWidth > 768);
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check system preference
+    const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    setIsDarkMode(prefersDarkMode);
+
+    // Update body class based on the theme
+    document.body.classList.toggle('dark', prefersDarkMode);
+
+    // Listener for theme change
+    const handleThemeChange = (e) => {
+      setIsDarkMode(e.matches);
+      document.body.classList.toggle('dark', e.matches);
+    };
+
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    mediaQuery.addEventListener('change', handleThemeChange);
+
+    return () => {
+      mediaQuery.removeEventListener('change', handleThemeChange);
+    };
+  }, []);
 
   const prohibitedWords = [
     "sex", "sexual", "explicit", "violence", "hate", "abuse", 
@@ -232,13 +255,15 @@ const LoginPage = () => {
   }, []);
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-r from-white via-blue-50 to-blue-200 text-gray-900">
-      <div className="flex-grow flex flex-col md:flex-row p-8 space-y-6 md:space-y-0 md:space-x-12">
-        <div className="w-full md:w-2/5 flex justify-center items-center p-8">
-          <div className="w-full max-w-md p-8 rounded-xl bg-white shadow-lg transition-shadow hover:shadow-2xl space-y-6">
-            <h2 className="text-3xl font-bold text-center text-gray-900 mb-4">
-              {isSignUp ? "Create an Account" : "Welcome Back to HiiHive"}
-            </h2>
+<div className={`flex flex-col min-h-screen ${isDarkMode ? 'bg-black text-white' : 'bg-gradient-to-r from-white via-blue-50 to-blue-200 text-gray-900'}`}>
+  <div className="flex-grow flex flex-col md:flex-row p-8 space-y-6 md:space-y-0 md:space-x-12">
+    <div className="w-full md:w-2/5 flex justify-center items-center p-8">
+      <div
+        className={`w-full max-w-md p-8 rounded-xl ${isDarkMode ? 'bg-black shadow-gray-800' : 'bg-white shadow-lg'} transition-shadow hover:shadow-2xl space-y-6 ${isDarkMode ? 'border-none' : 'border md:border-gray-300'}`}
+      >
+        <h2 className={`text-3xl font-bold text-center ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-4`}>
+          {isSignUp ? "Create an Account" : "Welcome Back to HiiHive"}
+        </h2>
 
             {error && <p className="text-red-500 text-center">{error}</p>}
 
@@ -251,7 +276,7 @@ const LoginPage = () => {
                     placeholder="Full Name"
                     value={formData.fullName}
                     onChange={handleInputChange}
-                    className="w-full p-3 rounded-lg bg-gray-100 border focus:outline-none focus:ring-2 focus:ring-blue-300"
+                    className={`w-full p-3 rounded-lg ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-900'} border focus:outline-none focus:ring-2 focus:ring-blue-300`}
                   />
                   <input
                     type="text"
@@ -259,7 +284,7 @@ const LoginPage = () => {
                     placeholder="Username"
                     value={formData.username}
                     onChange={handleInputChange}
-                    className="w-full p-3 rounded-lg bg-gray-100 border focus:outline-none focus:ring-2 focus:ring-blue-300"
+                    className={`w-full p-3 rounded-lg ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-900'} border focus:outline-none focus:ring-2 focus:ring-blue-300`}
                   />
                   <input
                     type="number"
@@ -267,14 +292,14 @@ const LoginPage = () => {
                     placeholder="Age"
                     value={formData.age}
                     onChange={handleInputChange}
-                    className="w-full p-3 rounded-lg bg-gray-100 border focus:outline-none focus:ring-2 focus:ring-blue-300"
+                    className={`w-full p-3 rounded-lg ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-900'} border focus:outline-none focus:ring-2 focus:ring-blue-300`}
                   />
                   <textarea
                     name="bio"
                     placeholder="Bio"
                     value={formData.bio}
                     onChange={handleInputChange}
-                    className="w-full p-3 rounded-lg bg-gray-100 border focus:outline-none focus:ring-2 focus:ring-blue-300"
+                    className={`w-full p-3 rounded-lg ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-900'} border focus:outline-none focus:ring-2 focus:ring-blue-300`}
                   ></textarea>
 
 <div className="relative w-full">
@@ -320,7 +345,7 @@ const LoginPage = () => {
                     name="college"
                     value={formData.college}
                     onChange={handleInputChange}
-                    className="w-full p-3 rounded-lg bg-gray-100 border focus:outline-none focus:ring-2 focus:ring-blue-300"
+                    className={`w-full p-3 rounded-lg ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-900'} border focus:outline-none focus:ring-2 focus:ring-blue-300`}
                   >
                     <option value="">Select College</option>
                     {colleges.map((college, index) => (
@@ -338,7 +363,7 @@ const LoginPage = () => {
                 placeholder="Email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className="w-full p-3 rounded-lg bg-gray-100 border focus:outline-none focus:ring-2 focus:ring-blue-300"
+                className={`w-full p-3 rounded-lg ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-900'} border focus:outline-none focus:ring-2 focus:ring-blue-300`}
               />
              <div className="relative w-full">
   <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
@@ -350,7 +375,7 @@ const LoginPage = () => {
       name="password"
       value={formData.password}
       onChange={handleInputChange}
-      className="w-full px-4 py-2 pr-10 text-gray-900 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
+      className={`w-full px-4 py-2 pr-10 text-gray-900 ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-900'} border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300`}
       placeholder="Enter your password"
     />
     <button
@@ -456,8 +481,7 @@ const LoginPage = () => {
           </div>
         </div>
 
-        <div className="w-full md:w-3/5 flex flex-col justify-center items-start p-8 space-y-8">
-          <h2 className="text-3xl font-semibold text-gray-900">What is HiiHive?</h2>
+        <div className="w-full md:w-3/5 flex flex-col justify-center items-start p-8 space-y-8 hidden md:block">          <h2 className="text-3xl font-semibold text-gray-900">What is HiiHive?</h2>
           <p className="text-lg text-gray-600">
             HiiHive is your all-in-one community platform for learning,
             connecting, and growing together. Stay updated, join dynamic
@@ -494,11 +518,11 @@ const LoginPage = () => {
         </div>
       </div>
 
-      <footer className="w-full bg-transparent text-black py-6 mt-8">
+      <footer className={`w-full bg-transparent py-6 mt-8 ${isDarkMode ? 'text-white' : 'text-black'}`}>
         <div className="flex justify-center md:justify-end items-center space-x-6">
-          <p className="text-sm text-black">Created by <strong>DixitK941</strong></p>
+          <p className={`text-sm ${isDarkMode ? 'text-white' : 'text-black'}`}>Created by <strong>DixitK941</strong></p>
           <img src={logo} alt="Logo" className="h-12 w-12 rounded-full" />
-          <p className="text-sm text-black">Powered by <strong>AINOR</strong></p>
+          <p className={`text-sm ${isDarkMode ? 'text-white' : 'text-black'}`}>Powered by <strong>AINOR</strong></p>
         </div>
       </footer>
     </div>

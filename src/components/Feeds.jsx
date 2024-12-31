@@ -344,12 +344,14 @@ const Feeds = () => {
 
             {/* Post Caption */}
             {content.caption && (
-              <p className="p-4 text-gray-800 bg-gray-100 rounded-lg">{renderCaptionWithusernames(content.caption)}</p>
+              <p className="p-4 text-gray-800 bg-gray-100 rounded-lg dark:text-white dark:bg-black">
+  {renderCaptionWithusernames(content.caption)}
+</p>
             )}
 
             {/* Post Actions */}
-            <div className="flex justify-between items-center p-4 border-t border-gray-300 bg-gray-100 rounded-b-lg">
-              <button
+            <div className="flex justify-between items-center p-4 border-t border-gray-300 bg-gray-100 rounded-b-lg dark:bg-black dark:border-gray-600">
+            <button
                 className={`flex items-center ${
                   content.likes?.[user?.uid] ? "text-blue-400" : "text-gray-600"
                 } hover:text-blue-300 transition duration-300 ease-in-out`}

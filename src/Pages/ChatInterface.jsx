@@ -10,6 +10,13 @@ const ChatPage = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [selectedChat, setSelectedChat] = useState(null);
   const [loading, setLoading] = useState(true); // Manage loading state
+  const [darkMode, setDarkMode] = useState(false); // State for dark mode
+
+  // Detect system theme preference on initial load
+  useEffect(() => {
+    const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    setDarkMode(prefersDarkMode);
+  }, []);
 
   useEffect(() => {
     const auth = getAuth();
@@ -41,14 +48,14 @@ const ChatPage = () => {
   }
 
   return (
-    <div className="chat-page-container flex h-screen">
+    <div className={`chat-page-container flex h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-black'}`}>
       {/* Chat List Section */}
-      <div className="chat-list-container w-[300px] bg-gray-100 p-4 overflow-y-auto">
+      <div className={`chat-list-container w-[300px] p-4 overflow-y-auto ${darkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
         <ChatList />
       </div>
 
       {/* Chat Interface Section */}
-      <div className="chat-interface-container flex-1 bg-white p-4 overflow-y-auto">
+      <div className={`chat-interface-container flex-1 p-4 overflow-y-auto ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
         <ChatInterface currentUser={currentUser} selectedChat={selectedChat} />
       </div>
     </div>

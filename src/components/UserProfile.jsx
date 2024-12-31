@@ -33,6 +33,25 @@ const UserProfile = () => {
   const [isUserListModalOpen, setIsUserListModalOpen] = useState(false);
   const [listType, setListType] = useState(null); // 'followers' or 'following'
   const [loading, setLoading] = useState(true);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  useEffect(() => {
+    // Check system preference
+    const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    setIsDarkMode(prefersDarkMode);
+
+    // Listener for theme change
+    const handleThemeChange = (e) => {
+      setIsDarkMode(e.matches);
+    };
+
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    mediaQuery.addEventListener('change', handleThemeChange);
+
+    return () => {
+      mediaQuery.removeEventListener('change', handleThemeChange);
+    };
+  }, []);
 
   useEffect(() => {
     // Fetch current user ID
@@ -268,7 +287,7 @@ const UserProfile = () => {
   }
 
   return (
-    <div className="max-w-screen-lg mx-auto p-4 sm:p-6 bg-white">
+    <div className={`flex flex-col min-h-screen ${isDarkMode ? 'bg-black text-white' : 'bg-white text-gray-900'}`}>
       <div className="flex flex-col items-center text-center pb-6 mb-6 border-b border-gray-300">
         <Avatar
           src={userDetails.avatar || ''}
@@ -276,21 +295,21 @@ const UserProfile = () => {
           className="rounded-full border border-gray-300"
           style={{ width: '128px', height: '128px' }}
         />
-        <h2 className="text-2xl font-semibold text-gray-900 mt-4">{userDetails.username}</h2>
-        <p className="text-gray-500">{userDetails.displayName}</p>
-        <p className="text-sm text-gray-400 mt-2">{userDetails.bio}</p>
+        <h2 className="text-2xl font-semibold mt-4">{userDetails.username}</h2>
+        <p>{userDetails.displayName}</p>
+        <p className="text-sm mt-2">{userDetails.bio}</p>
         <div className="flex space-x-6 mt-4">
           <button
             className="text-sm font-semibold"
             onClick={() => handleUserListClick('followers')}
           >
-            <span className="text-gray-900">{followersData.length || 0}</span> followers
+            <span>{followersData.length || 0}</span> followers
           </button>
           <button
             className="text-sm font-semibold"
             onClick={() => handleUserListClick('following')}
           >
-            <span className="text-gray-900">{followingData.length || 0}</span> following
+            <span>{followingData.length || 0}</span> following
           </button>
         </div>
         {userId !== currentUserId && (
@@ -324,7 +343,7 @@ const UserProfile = () => {
       </div>
       {/* Followers/Following Modal */}
       <Modal open={isUserListModalOpen} onClose={() => setIsUserListModalOpen(false)}>
-        <div className="bg-white max-w-md mx-auto mt-20 p-6 rounded-lg shadow-lg">
+        <div className={`bg-white max-w-md mx-auto mt-20 p-6 rounded-lg shadow-lg ${isDarkMode ? 'bg-black text-white' : 'bg-white text-gray-900'}`}>
           <h3 className="text-lg font-semibold">
             {listType === 'followers' ? 'Followers' : 'Following'}
           </h3>
@@ -332,17 +351,12 @@ const UserProfile = () => {
             {(listType === 'followers' ? followersData : followingData).map((user, index) => (
               <li key={index} className="flex items-center space-x-4">
                 <Avatar src={user.avatar || ''} alt={user.fullName} />
-                <p className="text-gray-700">{user.fullName || 'Anonymous User'}</p>
+                <p className={`text-gray-700 ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>{user.fullName || 'Anonymous User'}</p>
               </li>
             ))}
           </ul>
         </div>
-      </Modal>
-      {/* <div>
-        {notifications.map((notification, index) => (
-          <Notification key={index} notification={notification} />
-        ))}
-      </div> */}
+        </Modal>
     </div>
   );
 };

@@ -26,7 +26,7 @@ const Settings = React.lazy(() => import("./Pages/SettingPage"));
 const Notification = React.lazy(() => import("./Pages/NotificationPage"));
 const Stories = React.lazy(() => import("./components/Stories"));
 
-function App() {
+function AppWrapper() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
 
@@ -167,4 +167,43 @@ const AnimatedPage = ({ children }) => {
   );
 };
 
-export default App;
+const App = ({ children }) => {
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  useEffect(() => {
+    // Check system preference
+    const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    setIsDarkMode(prefersDarkMode);
+
+    // Update body class based on the theme
+    document.body.classList.toggle('dark', prefersDarkMode);
+
+    // Listener for theme change
+    const handleThemeChange = (e) => {
+      setIsDarkMode(e.matches);
+      document.body.classList.toggle('dark', e.matches);
+    };
+
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    mediaQuery.addEventListener('change', handleThemeChange);
+
+    return () => {
+      mediaQuery.removeEventListener('change', handleThemeChange);
+    };
+  }, []);
+
+  return (
+    <div className={`flex flex-col min-h-screen ${isDarkMode ? 'bg-black text-white' : 'bg-white text-gray-900'}`}>
+      <motion.div
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 50 }}
+        transition={{ duration: 0.5 }}
+      >
+        {children}
+      </motion.div>
+    </div>
+  );
+};
+
+export default AppWrapper;

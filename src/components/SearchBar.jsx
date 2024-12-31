@@ -50,16 +50,16 @@ const SearchBar = () => {
   };
 
   return (
-    <div className="relative w-full max-w-md mx-auto">
-      <div className="flex items-center bg-white border-2 border-black rounded-lg p-3 shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 focus-within:ring-2 focus-within:ring-black">
+<div className="relative w-full max-w-md mx-auto dark:bg-black">
+<div className="flex items-center bg-white border-2 border-black rounded-lg p-3 shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 focus-within:ring-2 focus-within:ring-black dark:bg-gray-800 dark:border-gray-600 dark:focus-within:ring-white">
         <AiOutlineSearch size={24} color="#000" />
         <input
           type="text"
           placeholder="Search users..."
           value={searchQuery}
           onChange={handleInputChange}
-          className="w-full bg-transparent text-black text-sm px-3 py-2 ml-2 rounded-md placeholder-gray-500 outline-none transition-all duration-300 ease-in-out focus:ring-2 focus:ring-black"
-        />
+          className="w-full bg-transparent text-black text-sm px-3 py-2 ml-2 rounded-md placeholder-gray-500 outline-none transition-all duration-300 ease-in-out focus:ring-2 focus:ring-black dark:text-white dark:placeholder-gray-400 dark:focus:ring-white"
+          />
       </div>
 
       {showSuggestions && filteredUsers.length > 0 && (

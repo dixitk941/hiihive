@@ -7,41 +7,38 @@ const BottomBar = ({ toggleSidebarRight, isStoryActive }) => {
 
   return (
     <aside
-      className={`sm:hidden fixed bottom-0 left-0 right-0 bg-white text-gray-800 flex justify-between items-center p-2 rounded-lg transition-all duration-150 z-50 ${ // Reduced duration for faster transition
+      className={`sm:hidden fixed bottom-0 left-0 right-0 bg-black text-white flex justify-between items-center p-2 rounded-lg transition-all duration-150 z-50 ${ // Reduced duration for faster transition
         isStoryActive ? 'hidden' : ''
       }`}
-      style={{
-        // No floating effect or thickness styles
-      }}
     >
       <button
         onClick={() => navigate('/')}
-        className="flex flex-col items-center p-2 rounded-lg hover:bg-gray-100 hover:text-blue-600 transition-all duration-150" // Reduced duration for faster transition
+        className="flex flex-col items-center p-2 rounded-lg hover:bg-gray-700 hover:text-blue-600 transition-all duration-150" // Dark mode hover effects
       >
         <HomeIcon className="h-5 w-5" /> {/* Smaller Home Icon */}
       </button>
       <button
-      onClick={() => navigate('/chatlist')}
+        onClick={() => navigate('/chatlist')}
         // onClick={toggleSidebarRight}
-        className="flex flex-col items-center p-2 rounded-lg hover:bg-gray-100 hover:text-blue-600 transition-all duration-150" // Reduced duration for faster transition
+        className="flex flex-col items-center p-2 rounded-lg hover:bg-gray-700 hover:text-blue-600 transition-all duration-150" // Dark mode hover effects
       >
         <ChatBubbleLeftIcon className="h-5 w-5" /> {/* Smaller Message Icon */}
       </button>
       <button
         onClick={() => navigate('/upload')}
-        className="flex flex-col items-center p-2 rounded-lg hover:bg-gray-100 hover:text-blue-600 transition-all duration-150" // Reduced duration for faster transition
+        className="flex flex-col items-center p-2 rounded-lg hover:bg-gray-700 hover:text-blue-600 transition-all duration-150" // Dark mode hover effects
       >
         <ArrowUpTrayIcon className="h-5 w-5" /> {/* Smaller Upload Icon */}
       </button>
       <button
         onClick={() => navigate('/hivee')}
-        className="flex flex-col items-center p-2 rounded-lg hover:bg-gray-100 hover:text-blue-600 transition-all duration-150" // Reduced duration for faster transition
+        className="flex flex-col items-center p-2 rounded-lg hover:bg-gray-700 hover:text-blue-600 transition-all duration-150" // Dark mode hover effects
       >
         <PlayIcon className="h-5 w-5" /> {/* Smaller Hivees Icon */}
       </button>
       <button
         onClick={() => navigate('/explore')}
-        className="flex flex-col items-center p-2 rounded-lg hover:bg-gray-100 hover:text-blue-600 transition-all duration-150" // Reduced duration for faster transition
+        className="flex flex-col items-center p-2 rounded-lg hover:bg-gray-700 hover:text-blue-600 transition-all duration-150" // Dark mode hover effects
       >
         <MagnifyingGlassIcon className="h-5 w-5" /> {/* Smaller Explore Icon */}
       </button>

@@ -32,15 +32,15 @@ const PopUp = ({ onClose }) => {
         {/* Header */}
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-800">
-            🔔 Update Notice 🔔
+            🎆 Happy New Year 2024! 🎆
           </h2>
         </div>
 
         {/* Content */}
         <div className="mt-4 text-center">
           <p className="text-gray-600">
-            🎉 We have made some exciting updates to our platform! 🎉 <br />
-            Check out the latest features and improvements to enhance your experience.
+            🎉 Wishing you a year filled with joy, success, and amazing memories! 🎉 <br />
+            We're thrilled to have you with us and can't wait to bring you more exciting updates throughout the year. 🥳
           </p>
         </div>
 
@@ -52,7 +52,7 @@ const PopUp = ({ onClose }) => {
             target="_blank"
             rel="noopener noreferrer"
           >
-            🚀 Download the Latest Update Now! 🚀
+            🚀 Celebrate with Us! 🚀
           </a>
         </div>
       </div>
@@ -65,7 +65,7 @@ const Header = () => {
 
   return (
     <div>
-      {/* Collaboration Popup */}
+      {/* New Year PopUp */}
       <PopUp onClose={() => setPopupOpen(false)} />
     </div>
   );

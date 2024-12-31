@@ -10,7 +10,7 @@ import ChatInterface from '../components/ChatInterface';
 import BottomBar from '../components/BottomBar';
 import loaderGif from '../assets/normload.gif';
 import FusionPost from '../components/FusionPost';
-import PollPost from '../components/UploadPoll'; // Import the PollPost component
+import PollPost from '../components/UploadPoll';
 
 const UploadPage = () => {
   const [currentUser, setCurrentUser] = useState(null);
@@ -19,7 +19,19 @@ const UploadPage = () => {
   const [isSidebarRightVisible, setIsSidebarRightVisible] = useState(false);
   const [uploadType, setUploadType] = useState('Post');
   const [pollData, setPollData] = useState({ question: '', options: [] });
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const sidebarRightRef = useRef(null);
+
+  useEffect(() => {
+    // Detect system theme preference
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    setIsDarkMode(mediaQuery.matches);
+
+    const handleChange = (e) => setIsDarkMode(e.matches);
+    mediaQuery.addEventListener('change', handleChange);
+
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
 
   useEffect(() => {
     const auth = getAuth();
@@ -51,9 +63,7 @@ const UploadPage = () => {
       const auth = getAuth();
       const user = auth.currentUser;
       const newPoll = { question, options, votes: Array(options.length).fill(0), userId: user.uid };
-      
-      // Save poll data to Firestore
-      const docRef = await addDoc(collection(db, 'polls'), newPoll);
+      await addDoc(collection(db, 'polls'), newPoll);
       alert('Poll posted successfully!');
     } catch (error) {
       console.error('Error posting poll:', error);
@@ -62,55 +72,65 @@ const UploadPage = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50 text-gray-900">
+    <div
+      className={`flex flex-col h-screen ${
+        isDarkMode ? 'bg-black text-white' : 'bg-gray-50 text-gray-900'
+      }`}
+    >
       <div className="flex flex-1 pt-16 lg:pt-20">
         {/* SidebarLeft */}
-        <div className="hidden lg:block w-64 bg-white shadow-md">
+        <div className={`hidden lg:block w-64 ${isDarkMode ? 'bg-black' : 'bg-white'} shadow-md`}>
           <SidebarLeft currentUser={currentUser} />
         </div>
 
         {/* Main Content */}
         {!selectedChat && (
           <main className="flex-1 p-6 overflow-y-auto">
-            <div className="flex space-x-4 mb-4">
-              <button
-                className={`flex-1 py-2 rounded-lg font-semibold transition-all ${
-                  uploadType === 'Post' ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:bg-gray-300'
-                }`}
-                onClick={() => setUploadType('Post')}
-              >
-                Post
-              </button>
+          <div className="flex space-x-4 mb-4">
+  <button
+    className={`flex-1 py-2 rounded-lg font-semibold transition-all ${
+      uploadType === 'Post'
+        ? 'bg-blue-600 text-white shadow-md'
+        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+    }`}
+    onClick={() => setUploadType('Post')}
+  >
+    Post
+  </button>
 
-              <button
-                className={`flex-1 py-2 rounded-lg font-semibold transition-all ${
-                  uploadType === 'Hivee' ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:bg-gray-300'
-                }`}
-                onClick={() => setUploadType('Hivee')}
-              >
-                Hivee
-              </button>
+  <button
+    className={`flex-1 py-2 rounded-lg font-semibold transition-all ${
+      uploadType === 'Hivee'
+        ? 'bg-blue-600 text-white shadow-md'
+        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+    }`}
+    onClick={() => setUploadType('Hivee')}
+  >
+    Hivee
+  </button>
 
-              <button
-                className={`flex-1 py-2 rounded-lg font-semibold transition-all ${
-                  uploadType === 'Poll' ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:bg-gray-300'
-                }`}
-                onClick={() => setUploadType('Poll')}
-              >
-                Poll
-              </button>
-            </div>
+  <button
+    className={`flex-1 py-2 rounded-lg font-semibold transition-all ${
+      uploadType === 'Poll'
+        ? 'bg-blue-600 text-white shadow-md'
+        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+    }`}
+    onClick={() => setUploadType('Poll')}
+  >
+    Poll
+  </button>
+</div>
 
             {uploadType === 'Post' ? (
               <FusionPost currentUser={currentUser} />
             ) : uploadType === 'Hivee' ? (
               <UploadHivee currentUser={currentUser} />
             ) : (
-              <PollPost 
-                question={pollData.question} 
-                options={pollData.options} 
+              <PollPost
+                question={pollData.question}
+                options={pollData.options}
                 setPollData={setPollData}
-                handleSubmit={handlePollSubmit} 
+                handleSubmit={handlePollSubmit}
               />
             )}
           </main>
@@ -120,7 +140,9 @@ const UploadPage = () => {
         {isSidebarRightVisible && (
           <div
             ref={sidebarRightRef}
-            className="lg:hidden fixed inset-0 bg-white shadow-lg z-50"
+            className={`lg:hidden fixed inset-0 ${
+              isDarkMode ? 'bg-black' : 'bg-white'
+            } shadow-lg z-50`}
           >
             <SidebarRight currentUser={currentUser} setSelectedChat={setSelectedChat} />
           </div>

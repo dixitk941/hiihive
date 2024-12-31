@@ -1,4 +1,3 @@
-// UserList.js
 import React, { useState, useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
@@ -6,7 +5,6 @@ import { auth, db } from './firebaseConfig'; // Adjust the import path as necess
 import SidebarLeft from '../components/SidebarLeft';
 import SidebarRight from '../components/SidebarRight';
 import UsersList from '../components/UserList'; // Replace Feeds with UsersList
-// import FloatingMenu from '../components/FloatingMenu';
 import ChatInterface from '../components/ChatInterface';
 import BottomBar from '../components/BottomBar';
 import loaderGif from '../assets/normload.gif'; // Adjust the path according to your project structure
@@ -15,6 +13,7 @@ function UserList() {
   const [selectedChat, setSelectedChat] = useState(null); // Manage selected chat
   const [currentUser, setCurrentUser] = useState(null); // Manage current user
   const [loading, setLoading] = useState(true); // Manage loading state
+  const [isDarkMode, setIsDarkMode] = useState(false); // Manage dark mode state
 
   // Function to go back to SidebarRight
   const handleBackToSidebar = () => {
@@ -41,14 +40,32 @@ function UserList() {
     return () => unsubscribe();
   }, []);
 
-  // if (loading) {
-  //   return   <div className="h-screen flex flex-col justify-center items-center bg-gray-100">
-  //   {/* Loader GIF in the center */}
-  //   <div className="flex items-center justify-center mb-4">
-  //     <img src={loaderGif} alt="Loading" className="w-32 h-32" /> {/* Increased size */}
-  //   </div>
-  // </div>
-  // }
+  // Detect system theme preference
+  useEffect(() => {
+    const matchDarkMode = window.matchMedia('(prefers-color-scheme: dark)');
+    const updateTheme = () => {
+      setIsDarkMode(matchDarkMode.matches);
+    };
+    // Set the initial theme based on system preference
+    updateTheme();
+
+    // Listen for changes to system theme preference
+    matchDarkMode.addEventListener('change', updateTheme);
+
+    // Clean up event listener
+    return () => {
+      matchDarkMode.removeEventListener('change', updateTheme);
+    };
+  }, []);
+
+  // Apply dark or light class to the body based on the system preference
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
 
   return (
     <div className="flex flex-col h-screen">

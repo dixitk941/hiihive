@@ -41,6 +41,7 @@ const ChatInterface = ({ currentUser }) => {
   const db = getFirestore();
   const storage = getStorage();
   const messagesContainerRef = useRef(null);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
     if (!currentChatRoomId) return;
@@ -285,144 +286,152 @@ const ChatInterface = ({ currentUser }) => {
       </a>
     );
   };
+  useEffect(() => {
+    const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    setIsDarkMode(darkModeMediaQuery.matches);
+
+    const handleChange = (e) => setIsDarkMode(e.matches);
+    darkModeMediaQuery.addEventListener('change', handleChange);
+
+    return () => darkModeMediaQuery.removeEventListener('change', handleChange);
+  }, []);
+  const themeClasses = isDarkMode
+    ? {
+        bg: 'bg-black',
+        text: 'text-white',
+        border: 'border-gray-700',
+        shadow: 'shadow-md',
+        input: 'bg-gray-800 text-white border-gray-600 focus:ring-blue-500',
+        emojiPicker: 'dark',
+      }
+    : {
+        bg: 'bg-white',
+        text: 'text-black',
+        border: 'border-gray-300',
+        shadow: 'shadow-xl',
+        input: 'bg-white text-black border-gray-300 focus:ring-blue-300',
+        emojiPicker: 'light',
+      };
+
 
   return (
-<div className="flex flex-col h-screen bg-white text-black">
-  {/* Fixed Header */}
-  <div className="fixed top-0 left-0 w-full sm:left-[20%] sm:w-[80%] z-10 bg-white shadow-md">
-  <ChatHeader
-      chatRoomName={chatRoomName}
-      chatRoomEmoji={chatRoomEmoji}
-      chatRoomId={currentChatRoomId}
-      currentUser={currentUser}
-      onBack={() => console.log('Go Back')}
-    />
-  </div>
 
-  <div className="flex flex-col h-screen">
-  <div className="flex-1 overflow-y-auto p-4" style={{ marginBottom: '3rem' }}>
-    {messages.map((message) => (
-      <div
-        key={message.id}
-        onContextMenu={(e) => handleLongClick(e, message.id)}
-        className={`flex items-start space-x-2 ${
-          message.senderId === currentUser.uid ? 'justify-end' : 'justify-start'
-        } relative`}
-      >
-        <div className="flex items-center space-x-2">
-          <img
-            src={userAvatars[message.senderId] || 'default-avatar-url'}
-            alt="avatar"
-            className="w-8 h-8 rounded-full"
+      <div className={`flex flex-col h-screen ${themeClasses.bg} ${themeClasses.text}`}>
+        {/* Fixed Header */}
+        <div
+          className={`fixed top-0 left-0 w-full sm:left-[20%] sm:w-[80%] z-10 ${themeClasses.bg} ${themeClasses.shadow}`}
+        >
+          <ChatHeader
+            chatRoomName={chatRoomName}
+            chatRoomEmoji={chatRoomEmoji}
+            chatRoomId={currentChatRoomId}
+            currentUser={currentUser}
+            onBack={() => console.log('Go Back')}
           />
+        </div>
+  
+        {/* Chat Messages */}
+        <div className="flex flex-col h-screen">
+          <div className="flex-1 overflow-y-auto p-4" style={{ marginBottom: '3rem' }}>
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                onContextMenu={(e) => handleLongClick(e, message.id)}
+                className={`flex items-start space-x-2 ${
+                  message.senderId === currentUser.uid ? 'justify-end' : 'justify-start'
+                } relative`}
+              >
+                <div className="flex items-center space-x-2">
+                  <img
+                    src={userAvatars[message.senderId] || 'default-avatar-url'}
+                    alt="avatar"
+                    className="w-8 h-8 rounded-full"
+                  />
+                  <div
+                    className={`p-3 max-w-[75%] sm:max-w-[65%] rounded-lg shadow-md ${
+                      message.senderId === currentUser.uid
+                        ? `${themeClasses.bg} ${themeClasses.text}`
+                        : `${themeClasses.bg} ${themeClasses.text} ${themeClasses.border}`
+                    }`}
+                  >
+                    <p>{renderMessageText(message.text)}</p>
+                    {message.file && renderFileLink(message.file)}
+                    {message.image && (
+                      <img
+                        src={message.image}
+                        alt="uploaded"
+                        className="rounded-md mt-2 w-full object-contain"
+                      />
+                    )}
+                    <span className="text-xs text-gray-500 mt-1 block">
+                      {message.createdAt ? formatTimestamp(message.createdAt) : 'Sending...'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+  
+          {/* Input Section */}
           <div
-            className={`p-3 max-w-[75%] sm:max-w-[65%] rounded-lg shadow-md ${
-              message.senderId === currentUser.uid
-                ? 'bg-black text-white'
-                : 'bg-white text-black border border-gray-300'
-            }`}
+            className={`fixed bottom-0 left-0 w-full sm:left-[20%] sm:w-[80%] p-2 ${themeClasses.bg} ${themeClasses.border} flex flex-col gap-2 sm:p-3 rounded-t-lg ${themeClasses.shadow} z-10`}
           >
-            <p>{renderMessageText(message.text)}</p>
-            {message.file && renderFileLink(message.file)}
-            {message.image && (
-              <img
-                src={message.image}
-                alt="uploaded"
-                className="rounded-md mt-2 w-full object-contain"
-              />
+            {/* File and Image preview */}
+            {file && (
+              <div className="flex items-center space-x-2 mb-2">
+                <IoDocumentTextOutline size={24} className={themeClasses.text} />
+                <span className={`text-sm ${themeClasses.text}`}>{file.name}</span>
+                <button onClick={() => setFile(null)} className="text-red-500">
+                  <IoClose size={24} />
+                </button>
+              </div>
             )}
-            <span className="text-xs text-gray-500 mt-1 block">
-              {message.createdAt ? formatTimestamp(message.createdAt) : 'Sending...'}
-            </span>
+            {image && (
+              <div className="flex items-center space-x-2 mb-2">
+                <img src={URL.createObjectURL(image)} alt="preview" className="w-10 h-10 object-cover rounded" />
+                <span className={`text-sm ${themeClasses.text}`}>{image.name}</span>
+                <button onClick={() => setImage(null)} className="text-red-500">
+                  <IoClose size={24} />
+                </button>
+              </div>
+            )}
+  
+            {/* Input Area */}
+            <div className="flex items-center gap-2">
+              {showEmojiPicker && (
+                <div className="absolute bottom-16 left-4 z-50">
+                  <Picker onEmojiSelect={handleEmojiSelect} theme={themeClasses.emojiPicker} />
+                </div>
+              )}
+              <button
+                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                className={`p-2 ${themeClasses.text} hover:text-blue-500`}
+              >
+                😊
+              </button>
+              <textarea
+                placeholder="Type a message..."
+                value={messageInput}
+                onChange={(e) => setMessageInput(e.target.value)}
+                className={`w-full px-4 py-2 rounded-lg border ${themeClasses.input} resize-none`}
+                rows="2"
+                onKeyDown={handleKeyDown}
+              ></textarea>
+              <label htmlFor="fileInput">
+                <IoDocumentTextOutline size={24} className={`${themeClasses.text} cursor-pointer hover:text-blue-500`} />
+              </label>
+              <label htmlFor="imageInput">
+                <IoImageOutline size={24} className={`${themeClasses.text} cursor-pointer hover:text-blue-500`} />
+              </label>
+              <button onClick={handleSendMessage} className="p-2 text-white bg-blue-500 rounded-full hover:bg-blue-600">
+                <IoSend size={24} />
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    ))}
-  </div>
-
-
-
-  <div className="fixed bottom-0 left-0 w-full sm:left-[20%] sm:w-[80%] p-2 bg-white border-t flex flex-col gap-2 sm:p-3 rounded-t-lg shadow-xl z-10">
-
-{/* File and Image preview section */}
-{file && (
-  <div className="flex items-center space-x-2 mb-2">
-    <IoDocumentTextOutline size={24} className="text-black" />
-    <span className="text-sm text-black">{file.name}</span>
-    <button onClick={() => setFile(null)} className="text-red-500">
-      <IoClose size={24} />
-    </button>
-  </div>
-)}
-{image && (
-  <div className="flex items-center space-x-2 mb-2">
-    <img src={URL.createObjectURL(image)} alt="preview" className="w-10 h-10 object-cover rounded" />
-    <span className="text-sm text-black">{image.name}</span>
-    <button onClick={() => setImage(null)} className="text-red-500">
-      <IoClose size={24} />
-    </button>
-  </div>
-)}
-
-{/* File upload progress */}
-{fileUploadProgress > 0 && fileUploadProgress < 100 && (
-  <div className="w-full bg-gray-300 rounded-full h-2 mb-2">
-    <div
-      className="bg-blue-500 h-2 rounded-full"
-      style={{ width: `${fileUploadProgress}%`, transition: 'width 0.5s ease-out' }}
-    />
-  </div>
-)}
-
-<div className="flex items-center gap-2">
-  {/* Emoji picker */}
-  {showEmojiPicker && (
-    <div className="absolute bottom-16 left-4 z-50">
-      <Picker onEmojiSelect={handleEmojiSelect} theme="light" />
-    </div>
-  )}
-  <button onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="p-2 text-black hover:text-blue-500">
-    😊
-  </button>
-
-  {/* Text Input area */}
-  <textarea
-    placeholder="Type a message..."
-    value={messageInput}
-    onChange={(e) => setMessageInput(e.target.value)}
-    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring focus:ring-blue-300 resize-none text-black"
-    rows="2"
-    onKeyDown={handleKeyDown}
-  ></textarea>
-
-  {/* Hidden File and Image input */}
-  <input type="file" id="fileInput" onChange={handleFileChange} className="hidden" />
-  <input type="file" id="imageInput" onChange={handleImageChange} className="hidden" />
-
-  {/* File and Image Upload Buttons */}
-  <label htmlFor="fileInput">
-    <IoDocumentTextOutline size={24} className="text-black cursor-pointer hover:text-blue-500" />
-  </label>
-  <label htmlFor="imageInput">
-    <IoImageOutline size={24} className="text-black cursor-pointer hover:text-blue-500" />
-  </label>
-
-  {/* Send Message Button */}
-  <button onClick={handleSendMessage} className="p-2 text-white bg-blue-500 rounded-full hover:bg-blue-600">
-    <IoSend size={24} />
-  </button>
-</div>
-
-
-        {showEmojiPicker && (
-          <div className="absolute bottom-16 left-4 z-50">
-            <Picker onEmojiSelect={handleEmojiSelect} theme="light" />
-          </div>
-        )}
-      </div>
-    </div>
-    </div>
-  );
-};
-
-export default ChatInterface;
+    );
+  };
+  
+  export default ChatInterface;
+  
