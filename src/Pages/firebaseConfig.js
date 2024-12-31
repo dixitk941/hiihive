@@ -6,12 +6,12 @@ import { getStorage } from "firebase/storage";
 import { getDatabase } from "firebase/database"; // Import Realtime Database
 
 const firebaseConfig = {
-  apiKey: "AIzaSyB--KSDIQ_rkc1myOfFBgNjUka30VAKOtM",
-  authDomain: "fragveda.firebaseapp.com",
-  projectId: "fragveda",
-  storageBucket: "fragveda.appspot.com",
-  messagingSenderId: "709002213779",
-  appId: "1:709002213779:web:314ffb4f33c4b117cd5066",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
 // Initialize Firebase app
