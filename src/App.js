@@ -141,7 +141,11 @@ function AppContent({ user, showPopUp, setShowPopUp }) {
 }
 
 const ConditionalHeader = ({ user, location }) => {
-  const hideHeaderPaths = ["/chat/:chatRoomId", "/hivee"];
+  const hideHeaderPaths = [
+    "/chat/:chatRoomId", 
+    "/hivee",
+    "/user/:userId"  // Add this line to hide header on user profile pages
+  ];
 
   const shouldHideHeader = hideHeaderPaths.some((path) => {
     if (path.includes(":")) {
