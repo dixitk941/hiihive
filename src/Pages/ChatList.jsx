@@ -1,32 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from './firebaseConfig'; // Import your Firebase config
+import { db } from './firebaseConfig';
 import SidebarLeft from '../components/SidebarLeft';
-import SidebarRight from '../components/SidebarRight';
-import Feeds from '../components/ChatList';
-// import FloatingMenu from '../components/FloatingMenu';
-import ChatInterface from '../components/ChatInterface';
+import ChatListPage from '../components/ChatList'; // Updated import name
 import BottomBar from '../components/BottomBar';
+import loaderGif from '../assets/normload.gif';
 
 const ChatList = () => {
   const [currentUser, setCurrentUser] = useState(null);
-  const [selectedChat, setSelectedChat] = useState(null);
-  const [loading, setLoading] = useState(true); // Manage loading state
+  const [loading, setLoading] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
+  // Theme detection and management
   useEffect(() => {
-    // Check system preference
     const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
     setIsDarkMode(prefersDarkMode);
+    document.documentElement.classList.toggle('dark', prefersDarkMode);
 
-    // Update body class based on the theme
-    document.body.classList.toggle('dark', prefersDarkMode);
-
-    // Listener for theme change
     const handleThemeChange = (e) => {
       setIsDarkMode(e.matches);
-      document.body.classList.toggle('dark', e.matches);
+      document.documentElement.classList.toggle('dark', e.matches);
     };
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -37,17 +31,51 @@ const ChatList = () => {
     };
   }, []);
 
+  // User authentication and data fetching
   useEffect(() => {
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        setCurrentUser(user);
-        const userRef = doc(db, 'users', user.uid);
-        const userDoc = await getDoc(userRef);
-        if (userDoc.exists()) {
-          setCurrentUser({ ...user, ...userDoc.data() });
-        } else {
-          console.log('No such document!');
+        try {
+          const userRef = doc(db, 'users', user.uid);
+          const userDoc = await getDoc(userRef);
+          
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            setCurrentUser({
+              id: user.uid,
+              uid: user.uid, // Keep both for compatibility
+              email: user.email,
+              displayName: user.displayName,
+              photoURL: user.photoURL,
+              ...userData
+            });
+          } else {
+            // Fallback to Firebase Auth data if no Firestore document
+            setCurrentUser({
+              id: user.uid,
+              uid: user.uid,
+              email: user.email,
+              displayName: user.displayName || 'User',
+              photoURL: user.photoURL,
+              fullName: user.displayName || 'User',
+              username: user.email?.split('@')[0] || 'username',
+              avatar: user.photoURL || null
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+          // Fallback on error
+          setCurrentUser({
+            id: user.uid,
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName || 'User',
+            photoURL: user.photoURL,
+            fullName: user.displayName || 'User',
+            username: user.email?.split('@')[0] || 'username',
+            avatar: user.photoURL || null
+          });
         }
       } else {
         setCurrentUser(null);
@@ -58,55 +86,56 @@ const ChatList = () => {
     return () => unsubscribe();
   }, []);
 
-  const handleBackToSidebar = () => {
-    setSelectedChat(null);
-  };
+  // Loading state
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-black">
+        <div className="flex flex-col items-center space-y-4">
+          <img src={loaderGif} alt="Loading" className="w-16 h-16 opacity-75" />
+          <p className="text-gray-500 dark:text-gray-400">Loading messages...</p>
+        </div>
+      </div>
+    );
+  }
 
-  // if (loading) {
-  //   return (
-  //     <div className="flex justify-center items-center min-h-screen">
-  //       <img src={loaderGif} alt="Loading..." />
-  //     </div>
-  //   );
-  // }
+  // If no user is authenticated, show a message or redirect
+  if (!currentUser) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-black">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            Please sign in to view messages
+          </h2>
+          <p className="text-gray-500 dark:text-gray-400">
+            You need to be authenticated to access your messages.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`flex flex-col min-h-screen ${isDarkMode ? 'bg-black text-white' : 'bg-white text-gray-900'}`}>
-      <div className="flex flex-1 pt-24"> {/* Add padding-top to avoid being hidden by the header */}
-        {/* SidebarLeft for main navigation */}
-        <div className="hidden lg:block w-[250px]">
-          <SidebarLeft currentUser={currentUser} /> {/* Pass currentUser to SidebarLeft */}
-        </div>
+      {/* Main Layout */}
+      <div className="flex flex-1">
+        {/* Left Sidebar - Desktop Only */}
+        <SidebarLeft currentUser={currentUser} />
         
-        {/* Main content section with SearchBar and Feeds */}
-        <main className="flex-1 p-4 overflow-auto">
-          {/* <SearchBar currentUser={currentUser} /> Pass currentUser to SearchBar */}
-          <Feeds currentUser={currentUser} /> {/* Pass currentUser to Feeds */}
+        {/* Main Content Area */}
+        <main 
+          className={`
+            flex-1 transition-all duration-300 ease-in-out
+            ${/* Account for sidebar width on desktop */ ''}
+            lg:ml-72
+          `}
+        >
+          {/* ChatListPage Component - This handles its own layout and styling */}
+          <ChatListPage currentUser={currentUser} />
         </main>
-
-        {/* Conditionally render SidebarRight or ChatInterface */}
-        <div className="hidden lg:flex flex-col w-96">
-          {/* If no chat is selected, show SidebarRight */}
-          {/* {!selectedChat ? (
-            <SidebarRight currentUser={currentUser} setSelectedChat={setSelectedChat} /> 
-          ) : (
-            <ChatInterface currentUser={currentUser} chatRoomId={selectedChat} onBack={handleBackToSidebar} /> 
-          )} */}
-        </div>
-
-        {/* Show ChatInterface on mobile if chat is selected */}
-        {selectedChat && (
-          <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white shadow-lg z-50 p-4">
-            <ChatInterface currentUser={currentUser} chatRoomId={selectedChat} onBack={handleBackToSidebar} />
-          </div>
-        )}
       </div>
 
-      {/* Floating menu for additional options */}
-     
-
-      {/* Bottom Bar for mobile */}
-      <BottomBar currentUser={currentUser} /> {/* Pass currentUser to BottomBar */}
+      {/* Bottom Navigation - Mobile Only */}
+      <BottomBar currentUser={currentUser} />
     </div>
   );
 };

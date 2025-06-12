@@ -151,7 +151,12 @@ const ConditionalHeader = ({ user, location }) => {
     return location.pathname === path;
   });
 
-  return !shouldHideHeader && <Header user={user} />;
+  // Hide header on desktop (lg and above) but show on mobile/tablet
+  return !shouldHideHeader && (
+    <div className="lg:hidden">
+      <Header user={user} />
+    </div>
+  );
 };
 
 const AnimatedPage = ({ children }) => {

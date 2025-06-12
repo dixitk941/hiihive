@@ -1,35 +1,40 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from './firebaseConfig'; // Import your Firebase config
+import { db } from './firebaseConfig';
 import SidebarLeft from '../components/SidebarLeft';
-import SidebarRight from '../components/SidebarRight';
 import Feeds from '../components/Feeds';
-// import FloatingMenu from '../components/FloatingMenu';
 import ChatInterface from '../components/ChatInterface';
 import BottomBar from '../components/BottomBar';
-import loaderGif from '../assets/normload.gif'; // Adjust the path according to your project structure
+import loaderGif from '../assets/normload.gif';
 
 const HomePage = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [selectedChat, setSelectedChat] = useState(null);
-  const [loading, setLoading] = useState(true); // Manage loading state
-  const [isSidebarRightVisible, setIsSidebarRightVisible] = useState(false); // Manage SidebarRight visibility
-  const sidebarRightRef = useRef(null);
+  const [loading, setLoading] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
-    // Check system preference
+    // Check for saved theme preference or default to system preference
+    const savedTheme = localStorage.getItem('theme');
     const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    setIsDarkMode(prefersDarkMode);
-
-    // Update body class based on the theme
-    document.body.classList.toggle('dark', prefersDarkMode);
+    const initialDarkMode = savedTheme ? savedTheme === 'dark' : prefersDarkMode;
+    
+    setIsDarkMode(initialDarkMode);
+    
+    // Update document class instead of body
+    if (initialDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
 
     // Listener for theme change
     const handleThemeChange = (e) => {
-      setIsDarkMode(e.matches);
-      document.body.classList.toggle('dark', e.matches);
+      if (!localStorage.getItem('theme')) {
+        setIsDarkMode(e.matches);
+        document.documentElement.classList.toggle('dark', e.matches);
+      }
     };
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -45,12 +50,14 @@ const HomePage = () => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setCurrentUser(user);
-        const userRef = doc(db, 'users', user.uid);
-        const userDoc = await getDoc(userRef);
-        if (userDoc.exists()) {
-          setCurrentUser({ ...user, ...userDoc.data() });
-        } else {
-          console.log('No such document!');
+        try {
+          const userRef = doc(db, 'users', user.uid);
+          const userDoc = await getDoc(userRef);
+          if (userDoc.exists()) {
+            setCurrentUser({ ...user, ...userDoc.data() });
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
         }
       } else {
         setCurrentUser(null);
@@ -61,88 +68,55 @@ const HomePage = () => {
     return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    let timeout;
-    const handleActivity = () => {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => {
-        setIsSidebarRightVisible(false);
-      }, 10000); // 10 seconds of inactivity
-    };
-
-    const handleClickOutside = (event) => {
-      if (sidebarRightRef.current && !sidebarRightRef.current.contains(event.target)) {
-        setIsSidebarRightVisible(false);
-      }
-    };
-
-    if (isSidebarRightVisible) {
-      document.addEventListener('mousemove', handleActivity);
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      clearTimeout(timeout);
-      document.removeEventListener('mousemove', handleActivity);
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isSidebarRightVisible]);
-
   const handleBackToSidebar = () => {
     setSelectedChat(null);
   };
 
-  const toggleSidebarRight = () => {
-    setIsSidebarRightVisible(!isSidebarRightVisible);
-  };
-
-  // if (loading) {
-  //   return (
-  //     <div className="flex justify-center items-center min-h-screen">
-  //       <img src={loaderGif} alt="Loading..." />
-  //     </div>
-  //   );
-  // }
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-gray-50 dark:bg-black transition-colors duration-300">
+        <div className="text-center">
+          <img src={loaderGif} alt="Loading..." className="w-16 h-16 mx-auto mb-4 rounded-lg" />
+          <p className="text-gray-600 dark:text-gray-300 text-sm font-medium">Loading your feed...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className={`flex flex-col min-h-screen ${isDarkMode ? 'bg-black text-white' : 'bg-white text-gray-900'}`}>
-      <div className="flex flex-1 pt-24"> {/* Add padding-top to avoid being hidden by the header */}
+    <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-black transition-colors duration-300">
+      <div className="flex flex-1 pt-16 lg:pt-20">
         {/* SidebarLeft for main navigation */}
-        <div className="hidden lg:block w-[250px]">
-          <SidebarLeft currentUser={currentUser} /> {/* Pass currentUser to SidebarLeft */}
+        <div className="hidden lg:block w-64 xl:w-72 border-r border-gray-200 dark:border-gray-800">
+          <div className="fixed h-full w-64 xl:w-72 pt-4 bg-white dark:bg-black overflow-y-auto">
+            <SidebarLeft currentUser={currentUser} />
+          </div>
         </div>
         
         {/* Main content section with Feeds */}
         {!selectedChat && (
-          <main className="flex-1 p-4 overflow-auto">
-            <Feeds currentUser={currentUser} /> {/* Pass currentUser to Feeds */}
+          <main className="flex-1 min-h-0 overflow-auto">
+            <div className="max-w-2xl mx-auto px-4 py-6">
+              <Feeds currentUser={currentUser} />
+            </div>
           </main>
         )}
 
-        {/* Conditionally render SidebarRight or ChatInterface */}
-        <div className="hidden lg:flex flex-col w-96">
-          {/* If no chat is selected, show SidebarRight
-          {!selectedChat ? (
-            <SidebarRight currentUser={currentUser} setSelectedChat={setSelectedChat} /> 
-          ) : (
-            <ChatInterface currentUser={currentUser} chatRoomId={selectedChat} onBack={handleBackToSidebar} /> 
-          )} */}
-        </div>
-
-        {/* Show SidebarRight on mobile if isSidebarRightVisible is true */}
-        {/* {isSidebarRightVisible && (
-          <div ref={sidebarRightRef} className="lg:hidden fixed bottom-0 left-0 right-0 bg-white shadow-lg z-50 p-4">
-            <SidebarRight currentUser={currentUser} setSelectedChat={setSelectedChat} />
-          </div>
-        )} */}
+        {/* Chat Interface when chat is selected */}
+        {selectedChat && (
+          <main className="flex-1 min-h-0">
+            <ChatInterface 
+              currentUser={currentUser} 
+              chatRoomId={selectedChat} 
+              onBack={handleBackToSidebar} 
+            />
+          </main>
+        )}
       </div>
 
-      {/* Floating menu for additional options */}
-
-
-      {/* Bottom Bar for mobile, visible only if no chat is selected */}
+      {/* Bottom Bar for mobile */}
       {!selectedChat && (
-        <BottomBar toggleSidebarRight={toggleSidebarRight} /> 
+        <BottomBar />
       )}
     </div>
   );
