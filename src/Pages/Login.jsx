@@ -13,6 +13,7 @@ import "tailwindcss/tailwind.css";
 import logo from "../assets/logo.svg";
 import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
 import ReactAvatar from 'react-avatar';
+import { createOrJoinCollegeCommunity, addCommunityToUserProfile } from '../utils/communityManager';
 
 const colleges = [
   "Rajiv Academy For Technology and Management, Mathura",
@@ -158,6 +159,19 @@ const LoginPage = () => {
         avatarUrl = await getDownloadURL(avatarRef);
       }
 
+      // Prepare user data
+      const userData = {
+        fullName: formData.fullName,
+        email: formData.email,
+        age: formData.age,
+        avatar: avatarUrl,
+        username: formData.username,
+        bio: formData.bio,
+        college: formData.college,
+        createdAt: serverTimestamp(),
+      };
+
+      // Create user document
       await setDoc(doc(db, "users", userCredential.user.uid), {
         fullName: formData.fullName,
         email: formData.email,
@@ -168,6 +182,25 @@ const LoginPage = () => {
         college: formData.college,
         createdAt: serverTimestamp(),
       });
+
+      // Auto-create/join college community
+      if (formData.college) {
+        const communityId = await createOrJoinCollegeCommunity(
+          userCredential.user.uid, 
+          formData.college, 
+          {
+            username: formData.username,
+            fullName: formData.fullName,
+            avatar: avatarUrl,
+            email: formData.email
+          }
+        );
+
+        if (communityId) {
+          await addCommunityToUserProfile(userCredential.user.uid, communityId);
+          console.log(`User automatically joined college community: ${formData.college}`);
+        }
+      }
 
       await sendEmailVerification(userCredential.user);
       setError(
@@ -205,6 +238,20 @@ const LoginPage = () => {
       const userDoc = await getDoc(doc(db, "users", userCredential.user.uid));
       if (userDoc.exists()) {
         const userData = userDoc.data();
+        
+        // Check if user needs to join their college community
+        if (userData.college) {
+          const communityId = await createOrJoinCollegeCommunity(
+            userCredential.user.uid, 
+            userData.college, 
+            userData
+          );
+
+          if (communityId) {
+            await addCommunityToUserProfile(userCredential.user.uid, communityId);
+          }
+        }
+
         localStorage.setItem("isLoggedIn", "true");
         localStorage.setItem("user", JSON.stringify(userData));
         navigate("/");

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { HomeIcon, ChatBubbleLeftIcon, ArrowUpTrayIcon, MagnifyingGlassIcon, PlayIcon, UserIcon } from '@heroicons/react/24/outline';
 import { HomeIcon as HomeIconSolid, ChatBubbleLeftIcon as ChatIconSolid, ArrowUpTrayIcon as UploadIconSolid, MagnifyingGlassIcon as ExploreIconSolid, PlayIcon as PlayIconSolid, UserIcon as UserIconSolid } from '@heroicons/react/24/solid';
 
@@ -87,7 +87,7 @@ const BottomBar = ({ toggleSidebarRight, isStoryActive }) => {
         <div className="flex items-center justify-around px-4 py-3">
           {tabs.map((tab) => {
             const active = isActive(tab.path);
-            const IconComponent = active ? tab.iconSolid : tab.icon;
+            const IconComponent = tab.icon;
             
             if (tab.isSpecial) {
               // Special upload button - More compact

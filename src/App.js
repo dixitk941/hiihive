@@ -5,12 +5,15 @@ import {
   Route,
   Navigate,
   useLocation,
+  useParams,
+  useNavigate,
 } from "react-router-dom";
 import { auth } from "./Pages/firebaseConfig";
 import { AnimatePresence, motion } from "framer-motion";
 import Loading from "./components/Loading";
 import KnowledgeHub from "./components/KnowledgeHub/KnowledgeHub";
 import PopUp from "./components/PopUp"; // Import your PopUp component
+import Communities from './components/Communities';
 
 const HomePage = React.lazy(() => import("./Pages/HomePage"));
 const HiveePage = React.lazy(() => import("./components/Hivee"));
@@ -89,8 +92,12 @@ function AppContent({ user, showPopUp, setShowPopUp }) {
                 user ? <AnimatedPage><ChatInterface currentUser={user} /></AnimatedPage> : <Navigate to="/login" />
               }
             />
+            <Route 
+              path="/community/:communityId" 
+              element={<CommunityRedirect />} 
+            />
             <Route
-              path="/community/:communityId"
+              path="/community/:communityId/channel/:channelId"
               element={
                 user ? <AnimatedPage><ChatInterface currentUser={user} /></AnimatedPage> : <Navigate to="/login" />
               }
@@ -135,6 +142,7 @@ function AppContent({ user, showPopUp, setShowPopUp }) {
               path="/knowledgehub"
               element={user ? <AnimatedPage><KnowledgeHub /></AnimatedPage> : <Navigate to="/login" />}
             />
+            <Route path="/communities" element={<Communities />} />
           </Routes>
         </AnimatePresence>
       </Suspense>
@@ -214,6 +222,19 @@ const App = ({ children }) => {
       </motion.div>
     </div>
   );
+};
+
+// Create a redirect component to handle URLs without channel
+const CommunityRedirect = () => {
+  const { communityId } = useParams();
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    // Default to "general" channel
+    navigate(`/community/${communityId}/channel/general`);
+  }, [communityId, navigate]);
+  
+  return <div>Redirecting...</div>;
 };
 
 export default AppWrapper;

@@ -18,3 +18,56 @@
 .custom-video-controls::-webkit-media-controls-enclosure {
   overflow: hidden;
 }
+
+/* ...existing code... */
+
+/* OneUI 7 inspired animations and effects */
+@keyframes slideIn {
+  from {
+    transform: translateX(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.feed-toggle-enter {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Smooth backdrop blur transitions */
+.backdrop-blur-xl {
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.backdrop-blur-sm {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* Custom focus states for accessibility */
+.feed-toggle button:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Subtle hover animations */
+.feed-toggle button:hover {
+  transform: translateY(-1px);
+}
+
+.feed-toggle button:active {
+  transform: translateY(0);
+}
+
+/* Smooth color transitions */
+* {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* ...existing code... */

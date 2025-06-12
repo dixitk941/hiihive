@@ -10,7 +10,7 @@ import {
 } from 'firebase/database';
 import './Feed.css';
 import CustomVideoPlayer from './VideoPlayer';
-import { FiThumbsUp, FiMessageCircle, FiShare, FiMoreHorizontal, FiHeart, FiBookmark } from 'react-icons/fi';
+import { FiThumbsUp, FiMessageCircle, FiShare, FiMoreHorizontal, FiHeart, FiBookmark, FiGlobe, FiUsers } from 'react-icons/fi';
 import { auth } from './firebaseConfig';
 import { onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
@@ -26,6 +26,8 @@ const Feeds = () => {
   const [posts, setPosts] = useState([]);
   const [polls, setPolls] = useState([]);
   const [user, setUser] = useState(null);
+  const [userCollege, setUserCollege] = useState(null);
+  const [feedMode, setFeedMode] = useState('global'); // 'global' or 'college'
   const [commentText, setCommentText] = useState("");
   const [replyText, setReplyText] = useState("");
   const [comments, setComments] = useState({});
@@ -36,7 +38,7 @@ const Feeds = () => {
   const [shuffledContent, setShuffledContent] = useState([]);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [savedPosts, setSavedPosts] = useState(new Set());
-  const [isDarkMode, setIsDarkMode] = useState(false); // Added dark mode state
+  const [isDarkMode, setIsDarkMode] = useState(false);
   
   const db = getDatabase();
   const firestore = getFirestore();
@@ -58,15 +60,47 @@ const Feeds = () => {
     };
   }, []);
 
+  // Fetch user college information
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser || null);
+      if (currentUser) {
+        try {
+          const userDoc = doc(firestore, 'users', currentUser.uid);
+          const userSnap = await getDoc(userDoc);
+          if (userSnap.exists()) {
+            const userData = userSnap.data();
+            setUserCollege(userData.college || null);
+            // Default to college mode if user has a college set
+            if (userData.college && feedMode === 'global') {
+              setFeedMode('college');
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching user college:", error);
+        }
+      } else {
+        setUserCollege(null);
+        setFeedMode('global'); // Default to global for non-logged users
+      }
     });
     return () => unsubscribe();
   }, []);
 
-  // ...existing code...
+  // Filter content based on feed mode
+  const filterContentByMode = (content) => {
+    if (feedMode === 'global') {
+      return content;
+    } else if (feedMode === 'college' && userCollege) {
+      return content.filter(item => {
+        const itemCollege = item.userDetails?.college || item.college;
+        return itemCollege === userCollege;
+      });
+    }
+    return content;
+  };
 
+  // ...existing useEffect for posts...
   useEffect(() => {
     const fetchPosts = async () => {
       const postsRef = ref(db, 'feeds');
@@ -114,6 +148,8 @@ const Feeds = () => {
 
     fetchPolls();
   }, []);
+
+  // ...existing code for comments and user details...
 
   // Fetch comments for each post
   useEffect(() => {
@@ -191,7 +227,7 @@ const Feeds = () => {
       return userData;
     } else {
       console.log("User not found in Firestore");
-      const defaultUser = { fullName: "Unknown", username: "unknown", avatar: "" };
+      const defaultUser = { fullName: "Unknown", username: "unknown", avatar: "", college: null };
       setUserDetails(prev => ({
         ...prev,
         [uid]: defaultUser,
@@ -200,11 +236,14 @@ const Feeds = () => {
     }
   };
 
+  // Update content filtering when feed mode or content changes
   useEffect(() => {
     if (posts.length > 0 || polls.length > 0) {
+      const combinedContent = [...posts, ...polls.map(poll => ({ ...poll, isPoll: true }))];
+      const filteredContent = filterContentByMode(combinedContent);
+      
       if (!initialLoadComplete) {
-        const combinedContent = [...posts, ...polls.map(poll => ({ ...poll, isPoll: true }))];
-        setShuffledContent(shuffle(combinedContent));
+        setShuffledContent(shuffle(filteredContent));
         setInitialLoadComplete(true);
       } else {
         const updatedContent = shuffledContent.map(item => {
@@ -216,10 +255,140 @@ const Feeds = () => {
             return updatedPost || item;
           }
         });
-        setShuffledContent(updatedContent);
+        const filteredUpdatedContent = filterContentByMode(updatedContent);
+        setShuffledContent(filteredUpdatedContent);
       }
     }
-  }, [posts, polls]);
+  }, [posts, polls, feedMode, userCollege]);
+
+  // Feed Mode Toggle Component with Samsung OneUI 7 design - Horizontal Layout
+  const FeedModeToggle = () => {
+    return (
+      <div className="sticky top-0 z-10 bg-white/90 dark:bg-black/90 backdrop-blur-xl border-b border-gray-100/50 dark:border-gray-800/50 mb-6">
+        <div className="max-w-2xl mx-auto px-6 py-4">
+          {/* Main Content Container - Horizontal Layout */}
+          <div className="flex items-center justify-between mb-4">
+            {/* College Name on Left */}
+            {userCollege && (
+              <div className="flex-1 min-w-0 mr-6">
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 tracking-wider uppercase mb-1">
+                  College
+                </p>
+                <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 truncate" title={userCollege}>
+                  {userCollege}
+                </p>
+              </div>
+            )}
+
+            {/* Segmented Toggle on Right */}
+            <div className="flex-shrink-0">
+              <div className="relative bg-gray-100/80 dark:bg-gray-900/80 backdrop-blur-sm rounded-full p-1.5 shadow-sm border border-gray-200/30 dark:border-gray-800/30">
+                {/* Animated background pill */}
+                <div 
+                  className={`absolute top-1.5 h-[calc(100%-12px)] bg-white dark:bg-gray-800 rounded-full shadow-md transition-all duration-300 ease-out border border-gray-200/50 dark:border-gray-700/50 ${
+                    feedMode === 'global' 
+                      ? 'left-[calc(50%+3px)] w-[calc(50%-6px)]' 
+                      : 'left-1.5 w-[calc(50%-6px)]'
+                  }`}
+                />
+                
+                {/* Toggle Buttons */}
+                <div className="relative flex">
+                  <button
+                    onClick={() => setFeedMode('college')}
+                    disabled={!userCollege}
+                    className={`relative flex items-center justify-center space-x-2 px-4 py-2.5 rounded-full font-semibold transition-all duration-300 min-w-[100px] ${
+                      feedMode === 'college'
+                        ? 'text-gray-900 dark:text-white z-10'
+                        : userCollege 
+                          ? 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+                          : 'text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-60'
+                    }`}
+                  >
+                    <FiUsers className="w-3.5 h-3.5" />
+                    <span className="text-xs font-medium">College</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => setFeedMode('global')}
+                    className={`relative flex items-center justify-center space-x-2 px-4 py-2.5 rounded-full font-semibold transition-all duration-300 min-w-[100px] ${
+                      feedMode === 'global'
+                        ? 'text-gray-900 dark:text-white z-10'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+                    }`}
+                  >
+                    <FiGlobe className="w-3.5 h-3.5" />
+                    <span className="text-xs font-medium">Global</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Stats Indicator - Centered Below */}
+          <div className="text-center">
+            <div className="inline-flex items-center space-x-2 px-3 py-1.5 bg-gray-50/80 dark:bg-gray-900/80 backdrop-blur-sm rounded-full border border-gray-200/30 dark:border-gray-800/30">
+              <div className={`w-2 h-2 rounded-full transition-colors duration-300 ${
+                feedMode === 'global' ? 'bg-blue-500' : 'bg-purple-500'
+              }`} />
+              <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                {shuffledContent.length} {shuffledContent.length === 1 ? 'post' : 'posts'}
+              </span>
+            </div>
+          </div>
+
+          {/* No College Warning */}
+          {!userCollege && (
+            <div className="mt-3 p-3 bg-amber-50/80 dark:bg-amber-900/20 backdrop-blur-sm rounded-xl border border-amber-200/30 dark:border-amber-800/30">
+              <p className="text-xs text-amber-700 dark:text-amber-300 text-center font-medium">
+                Set your college in profile to access college-specific content
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // College Badge Component (SINGLE VERSION - REMOVE THE DUPLICATE)
+  const CollegeBadge = ({ college, isUserCollege = false }) => {
+    if (!college) return null;
+    
+    // Truncate long college names
+    const truncatedCollege = college.length > 15 ? `${college.substring(0, 15)}...` : college;
+    
+    return (
+      <div 
+        className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium max-w-[120px] ${
+          isUserCollege 
+            ? 'bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-800'
+            : 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800'
+        }`}
+        title={college} // Show full name on hover
+      >
+        <FiUsers className="w-2.5 h-2.5 mr-1 flex-shrink-0" />
+        <span className="truncate">{truncatedCollege}</span>
+      </div>
+    );
+  };
+
+  // REMOVE THIS DUPLICATE DECLARATION:
+  // const CollegeBadge = ({ college, isUserCollege = false }) => {
+  //   if (!college) return null;
+  //   
+  //   return (
+  //     <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+  //       isUserCollege 
+  //         ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
+  //         : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+  //     }`}>
+  //       <FiUsers className="w-3 h-3 mr-1" />
+  //       {college}
+  //     </div>
+  //   );
+  // };
+
+  // ...existing handlers remain the same...
 
   const handleLike = async (post) => {
     if (!user) return alert("You must be logged in to like posts.");
@@ -394,7 +563,7 @@ const Feeds = () => {
     const options = {
       responsive: true,
       plugins: {
-        legend: {
+        legend: {  // Fixed: Added colon after 'legend'
           display: false,
         },
         tooltip: {
@@ -425,7 +594,8 @@ const Feeds = () => {
       },
     };
 
-    const { userDetails = { fullName: "Unknown", username: "unknown", avatar: "" } } = poll;
+    const { userDetails = { fullName: "Unknown", username: "unknown", avatar: "", college: null } } = poll;
+    const isFromUserCollege = userDetails.college === userCollege;
 
     return (
       <div className="bg-white dark:bg-black rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden mb-6 hover:shadow-md dark:hover:shadow-xl transition-shadow duration-300">
@@ -442,7 +612,10 @@ const Feeds = () => {
             </div>
             <div>
               <h4 className="font-semibold text-gray-900 dark:text-white text-sm">{userDetails.fullName}</h4>
-              <p className="text-gray-500 dark:text-gray-400 text-xs">@{userDetails.username} • 2h ago</p>
+              <div className="flex items-center space-x-2">
+                <p className="text-gray-500 dark:text-gray-400 text-xs">@{userDetails.username} • 2h ago</p>
+                <CollegeBadge college={userDetails.college} isUserCollege={isFromUserCollege} />
+              </div>
             </div>
           </div>
           <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors duration-200">
@@ -575,207 +748,232 @@ const Feeds = () => {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 bg-gray-50 dark:bg-black min-h-screen transition-colors duration-300">
+      {/* Feed Mode Toggle */}
+      <FeedModeToggle />
+      
       <div className="space-y-6">
-        {shuffledContent.map((content, index) => (
-          content.isPoll ? (
-            <Poll key={`poll-${content.id}`} poll={content} onVote={handleVote} />
-          ) : (
-            <div
-              key={`post-${content.id}`}
-              className="bg-white dark:bg-black rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden hover:shadow-md dark:hover:shadow-xl transition-shadow duration-300"
-            >
-              {/* Post Header */}
-              <div className="flex items-center justify-between p-6 pb-4">
-                <div className="flex items-center space-x-3">
-                  <div className="relative">
-                    <img
-                      src={content.userDetails?.avatar || "/default-avatar.png"}
-                      alt="User Avatar"
-                      className="w-12 h-12 rounded-full object-cover cursor-pointer ring-2 ring-blue-100 dark:ring-blue-900 hover:ring-blue-200 dark:hover:ring-blue-800 transition-all duration-200"
-                      onClick={() => handleUserProfileClick(content.userId)}
-                    />
-                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white dark:border-black"></div>
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900 dark:text-white text-sm hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors duration-200"
-                       onClick={() => handleUserProfileClick(content.userId)}>
-                      {content.userDetails?.fullName || "Unknown User"}
-                    </p>
-                    <p className="text-gray-500 dark:text-gray-400 text-xs">
-                      @{content.userDetails?.username || "unknown"} • 2h ago
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <button 
-                    onClick={() => handleSavePost(content.id)}
-                    className={`p-2 rounded-full transition-colors duration-200 ${
-                      savedPosts.has(content.id) 
-                        ? 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400' 
-                        : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 dark:text-gray-500'
-                    }`}
-                  >
-                    <FiBookmark className="w-5 h-5" />
-                  </button>
-                  <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors duration-200">
-                    <FiMoreHorizontal className="w-5 h-5 text-gray-400 dark:text-gray-500" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Post Caption */}
-              {content.caption && (
-                <div className="px-6 pb-4">
-                  <p className="text-gray-800 dark:text-gray-200 leading-relaxed">
-                    {renderCaptionWithusernames(content.caption)}
-                  </p>
-                </div>
-              )}
-
-              {/* Post Media */}
-              <div className="relative">
-                {content.fileType === "image" && content.fileUrl && (
-                  <img
-                    src={content.fileUrl}
-                    alt="Post"
-                    className="w-full h-auto max-h-96 object-cover"
-                    onError={(e) => {
-                      console.error('Image failed to load:', content.fileUrl);
-                      e.target.style.display = 'none';
-                    }}
-                  />
-                )}
-                {content.fileType === "video" && content.fileUrl && (
-                  <div className="bg-black">
-                    <CustomVideoPlayer videoUrl={content.fileUrl} />
-                  </div>
-                )}
-                {content.fileType === "audio" && content.fileUrl && (
-                  <div className="p-6 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20">
-                    <div className="flex items-center space-x-4 mb-4">
-                      <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                          Audio Post
+        {shuffledContent.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 dark:bg-gray-800 rounded-full flex items-center justify-center">
+              {feedMode === 'college' ? <FiUsers className="w-8 h-8 text-gray-400" /> : <FiGlobe className="w-8 h-8 text-gray-400" />}
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+              {feedMode === 'college' ? 'No posts from your college yet' : 'No posts available'}
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400">
+              {feedMode === 'college' 
+                ? 'Be the first to share something with your college community!' 
+                : 'Check back later for new content.'}
+            </p>
+          </div>
+        ) : (
+          shuffledContent.map((content, index) => (
+            content.isPoll ? (
+              <Poll key={`poll-${content.id}`} poll={content} onVote={handleVote} />
+            ) : (
+              <div
+                key={`post-${content.id}`}
+                className="bg-white dark:bg-black rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden hover:shadow-md dark:hover:shadow-xl transition-shadow duration-300"
+              >
+                {/* Post Header */}
+                <div className="flex items-center justify-between p-6 pb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="relative">
+                      <img
+                        src={content.userDetails?.avatar || "/default-avatar.png"}
+                        alt="User Avatar"
+                        className="w-12 h-12 rounded-full object-cover cursor-pointer ring-2 ring-blue-100 dark:ring-blue-900 hover:ring-blue-200 dark:hover:ring-blue-800 transition-all duration-200"
+                        onClick={() => handleUserProfileClick(content.userId)}
+                      />
+                      <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white dark:border-black"></div>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900 dark:text-white text-sm hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors duration-200"
+                         onClick={() => handleUserProfileClick(content.userId)}>
+                        {content.userDetails?.fullName || "Unknown User"}
+                      </p>
+                      <div className="flex items-center space-x-2">
+                        <p className="text-gray-500 dark:text-gray-400 text-xs">
+                          @{content.userDetails?.username || "unknown"} • 2h ago
                         </p>
-                        <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                          Listen to this audio clip
-                        </p>
+                        <CollegeBadge 
+                          college={content.userDetails?.college} 
+                          isUserCollege={content.userDetails?.college === userCollege} 
+                        />
                       </div>
                     </div>
-                    <audio className="w-full rounded-lg" controls src={content.fileUrl} />
                   </div>
-                )}
-                {(content.fileType === "text" || (!content.fileUrl && content.caption)) && (
-                  <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
-                    <p className="text-gray-800 dark:text-gray-200 text-lg leading-relaxed">
+                  <div className="flex items-center space-x-2">
+                    <button 
+                      onClick={() => handleSavePost(content.id)}
+                      className={`p-2 rounded-full transition-colors duration-200 ${
+                        savedPosts.has(content.id) 
+                          ? 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400' 
+                          : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 dark:text-gray-500'
+                      }`}
+                    >
+                      <FiBookmark className="w-5 h-5" />
+                    </button>
+                    <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors duration-200">
+                      <FiMoreHorizontal className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Post Caption */}
+                {content.caption && (
+                  <div className="px-6 pb-4">
+                    <p className="text-gray-800 dark:text-gray-200 leading-relaxed">
                       {renderCaptionWithusernames(content.caption)}
                     </p>
                   </div>
                 )}
-              </div>
 
-              {/* Post Actions */}
-              <div className="p-6 pt-4">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-6">
-                    <button
-                      className={`flex items-center space-x-2 group transition-all duration-200 ${
-                        content.likes?.[user?.uid] 
-                          ? "text-red-500" 
-                          : "text-gray-600 dark:text-gray-400 hover:text-red-500"
-                      }`}
-                      onClick={() => handleLike(content)}
-                    >
-                      <div className={`p-2 rounded-full transition-colors duration-200 ${
-                        content.likes?.[user?.uid] 
-                          ? "bg-red-50 dark:bg-red-900/20" 
-                          : "group-hover:bg-red-50 dark:group-hover:bg-red-900/20"
-                      }`}>
-                        <FiHeart 
-                          className={`w-5 h-5 ${content.likes?.[user?.uid] ? 'fill-current' : ''}`} 
-                        />
-                      </div>
-                      <span className="text-sm font-medium">
-                        {Object.keys(content.likes || {}).length}
-                      </span>
-                    </button>
-                    
-                    <button
-                      className="flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 group transition-all duration-200"
-                      onClick={() => handleCommentButtonClick(content.id)}
-                    >
-                      <div className="p-2 rounded-full group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 transition-colors duration-200">
-                        <FiMessageCircle className="w-5 h-5" />
-                      </div>
-                      <span className="text-sm font-medium">
-                        {comments[content.id] ? comments[content.id].length : 0} Comments
-                      </span>
-                    </button>
-                    
-                    <button
-                      className="flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-green-500 dark:hover:text-green-400 group transition-all duration-200"
-                      onClick={() => handleShare(content.id)}
-                    >
-                      <div className="p-2 rounded-full group-hover:bg-green-50 dark:group-hover:bg-green-900/20 transition-colors duration-200">
-                        <FiShare className="w-5 h-5" />
-                      </div>
-                      <span className="text-sm font-medium">Share</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Comments Section */}
-                {activeCommentPostId === content.id && (
-                  <div className="border-t border-gray-100 dark:border-gray-800 pt-4 space-y-4">
-                    {/* Add Comment */}
-                    <div className="flex space-x-3">
-                      <img
-                        src={user?.photoURL || "/default-avatar.png"}
-                        alt="Your Avatar"
-                        className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-                      />
-                      <div className="flex-1 space-y-3">
-                        <textarea
-                          className="w-full p-3 border border-gray-200 dark:border-gray-800 bg-white dark:bg-black text-gray-900 dark:text-white rounded-xl resize-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all duration-200 placeholder-gray-500 dark:placeholder-gray-400"
-                          placeholder="Write a comment..."
-                          rows="3"
-                          value={commentText}
-                          onChange={(e) => setCommentText(e.target.value)}
-                        />
-                        <div className="flex justify-end">
-                          <button
-                            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white rounded-full font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                            onClick={() => handleAddComment(content.id)}
-                            disabled={!commentText.trim()}
-                          >
-                            Post Comment
-                          </button>
+                {/* Post Media */}
+                <div className="relative">
+                  {content.fileType === "image" && content.fileUrl && (
+                    <img
+                      src={content.fileUrl}
+                      alt="Post"
+                      className="w-full h-auto max-h-96 object-cover"
+                      onError={(e) => {
+                        console.error('Image failed to load:', content.fileUrl);
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                  )}
+                  {content.fileType === "video" && content.fileUrl && (
+                    <div className="bg-black">
+                      <CustomVideoPlayer videoUrl={content.fileUrl} />
+                    </div>
+                  )}
+                  {content.fileType === "audio" && content.fileUrl && (
+                    <div className="p-6 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20">
+                      <div className="flex items-center space-x-4 mb-4">
+                        <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center">
+                          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                            Audio Post
+                          </p>
+                          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                            Listen to this audio clip
+                          </p>
                         </div>
                       </div>
+                      <audio className="w-full rounded-lg" controls src={content.fileUrl} />
                     </div>
+                  )}
+                  {(content.fileType === "text" || (!content.fileUrl && content.caption)) && (
+                    <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
+                      <p className="text-gray-800 dark:text-gray-200 text-lg leading-relaxed">
+                        {renderCaptionWithusernames(content.caption)}
+                      </p>
+                    </div>
+                  )}
+                </div>
 
-                    {/* Display Comments with Threads */}
-                    <div className="space-y-4">
-                      {comments[content.id] && comments[content.id].map((comment) => (
-                        <CommentThread 
-                          key={comment.id} 
-                          comment={comment} 
-                          postId={content.id} 
-                          depth={0}
-                        />
-                      ))}
+                {/* Post Actions */}
+                <div className="p-6 pt-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-6">
+                      <button
+                        className={`flex items-center space-x-2 group transition-all duration-200 ${
+                          content.likes?.[user?.uid] 
+                            ? "text-red-500" 
+                            : "text-gray-600 dark:text-gray-400 hover:text-red-500"
+                        }`}
+                        onClick={() => handleLike(content)}
+                      >
+                        <div className={`p-2 rounded-full transition-colors duration-200 ${
+                          content.likes?.[user?.uid] 
+                            ? "bg-red-50 dark:bg-red-900/20" 
+                            : "group-hover:bg-red-50 dark:group-hover:bg-red-900/20"
+                        }`}>
+                          <FiHeart 
+                            className={`w-5 h-5 ${content.likes?.[user?.uid] ? 'fill-current' : ''}`} 
+                          />
+                        </div>
+                        <span className="text-sm font-medium">
+                          {Object.keys(content.likes || {}).length}
+                        </span>
+                      </button>
+                      
+                      <button
+                        className="flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 group transition-all duration-200"
+                        onClick={() => handleCommentButtonClick(content.id)}
+                      >
+                        <div className="p-2 rounded-full group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 transition-colors duration-200">
+                          <FiMessageCircle className="w-5 h-5" />
+                        </div>
+                        <span className="text-sm font-medium">
+                          {comments[content.id] ? comments[content.id].length : 0} Comments
+                        </span>
+                      </button>
+                      
+                      <button
+                        className="flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-green-500 dark:hover:text-green-400 group transition-all duration-200"
+                        onClick={() => handleShare(content.id)}
+                      >
+                        <div className="p-2 rounded-full group-hover:bg-green-50 dark:group-hover:bg-green-900/20 transition-colors duration-200">
+                          <FiShare className="w-5 h-5" />
+                        </div>
+                        <span className="text-sm font-medium">Share</span>
+                      </button>
                     </div>
                   </div>
-                )}
+
+                  {/* Comments Section */}
+                  {activeCommentPostId === content.id && (
+                    <div className="border-t border-gray-100 dark:border-gray-800 pt-4 space-y-4">
+                      {/* Add Comment */}
+                      <div className="flex space-x-3">
+                        <img
+                          src={user?.photoURL || "/default-avatar.png"}
+                          alt="Your Avatar"
+                          className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                        />
+                        <div className="flex-1 space-y-3">
+                          <textarea
+                            className="w-full p-3 border border-gray-200 dark:border-gray-800 bg-white dark:bg-black text-gray-900 dark:text-white rounded-xl resize-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all duration-200 placeholder-gray-500 dark:placeholder-gray-400"
+                            placeholder="Write a comment..."
+                            rows="3"
+                            value={commentText}
+                            onChange={(e) => setCommentText(e.target.value)}
+                          />
+                          <div className="flex justify-end">
+                            <button
+                              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white rounded-full font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                              onClick={() => handleAddComment(content.id)}
+                              disabled={!commentText.trim()}
+                            >
+                              Post Comment
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Display Comments with Threads */}
+                      <div className="space-y-4">
+                        {comments[content.id] && comments[content.id].map((comment) => (
+                          <CommentThread 
+                            key={comment.id} 
+                            comment={comment} 
+                            postId={content.id} 
+                            depth={0}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          )
-        ))}
+            )
+          ))
+        )}
       </div>
     </div>
   );
