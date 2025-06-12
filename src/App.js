@@ -143,22 +143,13 @@ function AppContent({ user, showPopUp, setShowPopUp }) {
 }
 
 const ConditionalHeader = ({ user, location }) => {
-  const hideHeaderPaths = [
-    "/chat/:chatRoomId", 
-    "/hivee",
-    "/user/:userId"  // Add this line to hide header on user profile pages
-  ];
+  // Only show header on homepage
+  const showHeaderPaths = ["/"];
 
-  const shouldHideHeader = hideHeaderPaths.some((path) => {
-    if (path.includes(":")) {
-      const basePath = path.split("/:")[0];
-      return location.pathname.startsWith(basePath);
-    }
-    return location.pathname === path;
-  });
+  const shouldShowHeader = showHeaderPaths.includes(location.pathname);
 
-  // Hide header on desktop (lg and above) but show on mobile/tablet
-  return !shouldHideHeader && (
+  // Show header only on homepage and only on mobile/tablet (lg:hidden)
+  return shouldShowHeader && (
     <div className="lg:hidden">
       <Suspense fallback={<div className="h-16 bg-white dark:bg-black"></div>}>
         <Header user={user} />

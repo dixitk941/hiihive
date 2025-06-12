@@ -31,7 +31,7 @@ const LoginPage = () => {
     age: "",
     bio: "",
     avatar: null,
-    college: "" // Add college field
+    college: ""
   });
   const [error, setError] = useState("");
   const [isDesktop, setIsDesktop] = useState(window.innerWidth > 768);
@@ -40,14 +40,10 @@ const LoginPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check system preference
     const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
     setIsDarkMode(prefersDarkMode);
-
-    // Update body class based on the theme
     document.body.classList.toggle('dark', prefersDarkMode);
 
-    // Listener for theme change
     const handleThemeChange = (e) => {
       setIsDarkMode(e.matches);
       document.body.classList.toggle('dark', e.matches);
@@ -67,20 +63,18 @@ const LoginPage = () => {
     "illegal", "torture", "pedophilia", "slut", "bitch", "asshole",
     "nigger", "faggot", "cunt", "motherfucker", "cock", "dick", 
     "whore", "rape", "incest", "pussy", "porn", "prostitution",
-    // Hindi offensive words
     "गंदी", "रंडी", "कुत्ता", "चूत", "लौंडा", "लुंगी", "मादरचोद", 
     "बहनचोद", "भोसड़ी", "साले", "सुसरा", "चूतिया", "हरामखोर", 
     "गांजा", "शराब", "बलात्कार", "मुत", "पागल", "बेशर्म", "गधें", 
     "साला", "कुत्ते", "गधा", "दुष्कर्म", "महिला तशदद", "लड़की की इज्जत",
     "जघन्य अपराध", "अश्लील", "अश्लीलता"
-    // Add more words as needed
   ];
   
   const containsProhibitedWords = () => {
     const inputValues = Object.values(formData);
     for (let value of inputValues) {
       if (typeof value === "string") {
-        const words = value.split(/\s+/); // Split by spaces or whitespace
+        const words = value.split(/\s+/);
         for (let word of words) {
           if (prohibitedWords.includes(word.toLowerCase())) {
             return true;
@@ -110,7 +104,6 @@ const LoginPage = () => {
       setFormData({ ...formData, avatar: file });
     }
   };
-  
 
   const handleSignUp = async () => {
     setLoading(true);
@@ -172,7 +165,7 @@ const LoginPage = () => {
         avatar: avatarUrl,
         username: formData.username,
         bio: formData.bio,
-        college: formData.college, // Store college in Firestore
+        college: formData.college,
         createdAt: serverTimestamp(),
       });
 
@@ -181,8 +174,8 @@ const LoginPage = () => {
         "Sign up successful! A verification email has been sent to your email. Please verify your email before logging in."
       );
 
-      await auth.signOut(); // Sign out the user immediately after signup
-      setIsSignUp(false); // Switch to login form after sign-up.
+      await auth.signOut();
+      setIsSignUp(false);
     } catch (error) {
       console.error("Error during sign-up:", error);
       setError("Sign-up failed. Please try again.");
@@ -205,7 +198,7 @@ const LoginPage = () => {
         setError(
           "Your email is not verified. Please check your inbox and verify your email before logging in."
         );
-        await auth.signOut(); // Ensure the user is signed out if email is not verified.
+        await auth.signOut();
         return;
       }
 
@@ -214,7 +207,7 @@ const LoginPage = () => {
         const userData = userDoc.data();
         localStorage.setItem("isLoggedIn", "true");
         localStorage.setItem("user", JSON.stringify(userData));
-        navigate("/"); // Redirect to homepage after successful login.
+        navigate("/");
       } else {
         setError("User data not found.");
       }
@@ -255,274 +248,373 @@ const LoginPage = () => {
   }, []);
 
   return (
-<div className={`flex flex-col min-h-screen ${isDarkMode ? 'bg-black text-white' : 'bg-gradient-to-r from-white via-blue-50 to-blue-200 text-gray-900'}`}>
-  <div className="flex-grow flex flex-col md:flex-row p-8 space-y-6 md:space-y-0 md:space-x-12">
-    <div className="w-full md:w-2/5 flex justify-center items-center p-8">
-      <div
-        className={`w-full max-w-md p-8 rounded-xl ${isDarkMode ? 'bg-black shadow-gray-800' : 'bg-white shadow-lg'} transition-shadow hover:shadow-2xl space-y-6 ${isDarkMode ? 'border-none' : 'border md:border-gray-300'}`}
-      >
-        <h2 className={`text-3xl font-bold text-center ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-4`}>
-          {isSignUp ? "Create an Account" : "Welcome Back to HiiHive"}
-        </h2>
-
-            {error && <p className="text-red-500 text-center">{error}</p>}
-
-            <form className="space-y-4">
-              {isSignUp && (
-                <>
-                  <input
-                    type="text"
-                    name="fullName"
-                    placeholder="Full Name"
-                    value={formData.fullName}
-                    onChange={handleInputChange}
-                    className={`w-full p-3 rounded-lg ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-900'} border focus:outline-none focus:ring-2 focus:ring-blue-300`}
-                  />
-                  <input
-                    type="text"
-                    name="username"
-                    placeholder="Username"
-                    value={formData.username}
-                    onChange={handleInputChange}
-                    className={`w-full p-3 rounded-lg ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-900'} border focus:outline-none focus:ring-2 focus:ring-blue-300`}
-                  />
-                  <input
-                    type="number"
-                    name="age"
-                    placeholder="Age"
-                    value={formData.age}
-                    onChange={handleInputChange}
-                    className={`w-full p-3 rounded-lg ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-900'} border focus:outline-none focus:ring-2 focus:ring-blue-300`}
-                  />
-                  <textarea
-                    name="bio"
-                    placeholder="Bio"
-                    value={formData.bio}
-                    onChange={handleInputChange}
-                    className={`w-full p-3 rounded-lg ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-900'} border focus:outline-none focus:ring-2 focus:ring-blue-300`}
-                  ></textarea>
-
-<div className="relative w-full">
-  <label htmlFor="avatar" className="block text-sm font-medium text-gray-700 mb-1">
-    Profile Picture
-  </label>
-  <div className="flex items-center space-x-4">
-    {/* Profile Preview */}
-    {formData.avatar ? (
-      <div className="w-16 h-16 rounded-full overflow-hidden border border-gray-300">
-        <img
-          src={URL.createObjectURL(formData.avatar)}
-          alt="Profile Preview"
-          className="w-full h-full object-cover"
-        />
+    <div className={`min-h-screen ${isDarkMode ? 'bg-black' : 'bg-gray-50'} transition-colors duration-300`}>
+      {/* Header */}
+      <div className={`w-full ${isDarkMode ? 'bg-black border-gray-900' : 'bg-white border-gray-200'} shadow-sm border-b`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <img src={logo} alt="HiiHive Logo" className="h-10 w-10 rounded-2xl" />
+              <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                HiiHive
+              </h1>
+            </div>
+          </div>
+        </div>
       </div>
-    ) : (
-      <ReactAvatar
-        name="User"  // Default name for avatar generation
-        size="50"     // Avatar size
-        round={true}  // Makes the avatar circular
-      />
-    )}
 
-    {/* Custom File Input */}
-    <label
-      htmlFor="avatar"
-      className="flex items-center justify-center px-4 py-2 bg-blue-500 text-white rounded-lg cursor-pointer hover:bg-blue-600 focus:outline-none transition-all duration-300"
-    >
-      Upload Picture
-      <input
-        type="file"
-        name="avatar"
-        id="avatar"
-        onChange={(e) => handleFileChange(e)}
-        className="hidden"
-      />
-    </label>
-  </div>
-</div>
-
-                  <select
-                    name="college"
-                    value={formData.college}
-                    onChange={handleInputChange}
-                    className={`w-full p-3 rounded-lg ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-900'} border focus:outline-none focus:ring-2 focus:ring-blue-300`}
-                  >
-                    <option value="">Select College</option>
-                    {colleges.map((college, index) => (
-                      <option key={index} value={college}>
-                        {college}
-                      </option>
-                    ))}
-                  </select>
-                </>
-              )}
-
-              <input
-                type="email"
-                name="email"
-                placeholder="Email"
-                value={formData.email}
-                onChange={handleInputChange}
-                className={`w-full p-3 rounded-lg ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-900'} border focus:outline-none focus:ring-2 focus:ring-blue-300`}
-              />
-             <div className="relative w-full">
-  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-    Password
-  </label>
-  <div className="relative">
-    <input
-      type={passwordVisible ? "text" : "password"}
-      name="password"
-      value={formData.password}
-      onChange={handleInputChange}
-      className={`w-full px-4 py-2 pr-10 text-gray-900 ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-900'} border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300`}
-      placeholder="Enter your password"
-    />
-    <button
-      type="button"
-      onClick={() => setPasswordVisible(!passwordVisible)}
-      className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-blue-500 focus:outline-none transition-all duration-300"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        className={`w-5 h-5 transform transition-transform duration-300 ${
-          passwordVisible ? "scale-110 opacity-100" : "scale-100 opacity-70"
-        }`}
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        {passwordVisible ? (
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M13.875 18.825A10.05 10.05 0 0112 19c-4.97 0-9-4.03-9-9 0-1.403.307-2.733.875-3.975m13.05 7.95a9.958 9.958 0 001.95-4.975c0-4.97-4.03-9-9-9a9.962 9.962 0 00-4.975 1.95M9.88 9.88a3 3 0 104.24 4.24m-4.24-4.24L5.12 5.12"
-          />
-        ) : (
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M15 12h.01M12 12h.01M9 12h.01M21 12c0-4.418-5.373-8-12-8S-3 7.582-3 12s5.373 8 12 8 12-3.582 12-8zm-9 0a3 3 0 11-6 0 3 3 0 016 0z"
-          />
-        )}
-      </svg>
-    </button>
-  </div>
-</div>
-
-              {isSignUp && (
-                <p className="text-sm text-gray-500 mt-2">
-                  Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a number, and a special character.
-                </p>
-              )}
-              <button
-                type="button"
-                onClick={isSignUp ? handleSignUp : handleLogin}
-                disabled={loading}
-                className="bg-blue-500 hover:bg-blue-600 text-white w-full py-3 rounded-lg transition-colors"
-              >
-                {loading
-                  ? isSignUp
-                    ? "Signing Up..."
-                    : "Logging In..."
-                  : isSignUp
-                  ? "Sign Up"
-                  : "Log In"}
-              </button>
-            </form>
-
-            {!isSignUp && (
-              <p className="text-center text-gray-600 mt-4">
-                <span
-                  className="text-blue-500 cursor-pointer"
-                  onClick={handlePasswordReset}
-                >
-                  Forgot Password?
-                </span>
+      <div className="flex min-h-screen">
+        {/* Left Panel - Form */}
+        <div className="w-full lg:w-1/2 flex flex-col justify-center px-4 sm:px-6 lg:px-8 py-12">
+          <div className="mx-auto w-full max-w-md">
+            {/* Welcome Section */}
+            <div className="text-center mb-8">
+              <h2 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
+                {isSignUp ? "Join HiiHive" : "Welcome back"}
+              </h2>
+              <p className={`text-base ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                {isSignUp 
+                  ? "Create your account to get started" 
+                  : "Sign in to your account"
+                }
               </p>
+            </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className={`mb-6 p-4 rounded-2xl ${
+                error.includes("successful") 
+                  ? isDarkMode 
+                    ? 'bg-green-900 border border-green-700 text-green-300' 
+                    : 'bg-green-50 border border-green-200 text-green-800'
+                  : isDarkMode 
+                    ? 'bg-red-900 border border-red-700 text-red-300' 
+                    : 'bg-red-50 border border-red-200 text-red-800'
+              }`}>
+                <p className="text-sm font-medium">{error}</p>
+              </div>
             )}
 
-            {/* {isDesktop && (
-              <div className="text-center mt-4">
-                <a
-                  href="https://expo.dev/artifacts/eas/n9249p3RDhDhzurJQkwxYe.apk"
-                  className="text-blue-500 cursor-pointer"
-                >
-                  Download Android App
-                </a>
-              </div>
-            )} */}
+            {/* Form Card */}
+            <div className={`${isDarkMode ? 'bg-gray-950 border-gray-800' : 'bg-white border-gray-200'} rounded-3xl shadow-lg border p-8`}>
+              <form className="space-y-6">
+                {isSignUp && (
+                  <>
+                    {/* Profile Picture Section */}
+                    <div className="flex flex-col items-center mb-6">
+                      <div className="relative">
+                        {formData.avatar ? (
+                          <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-blue-500">
+                            <img
+                              src={URL.createObjectURL(formData.avatar)}
+                              alt="Profile Preview"
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className={`w-20 h-20 rounded-full border-4 border-dashed ${isDarkMode ? 'border-gray-600' : 'border-gray-300'} flex items-center justify-center`}>
+                            <ReactAvatar name="User" size="60" round={true} />
+                          </div>
+                        )}
+                        <label
+                          htmlFor="avatar"
+                          className="absolute -bottom-2 -right-2 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-600 transition-colors"
+                        >
+                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                          </svg>
+                          <input
+                            type="file"
+                            name="avatar"
+                            id="avatar"
+                            onChange={handleFileChange}
+                            className="hidden"
+                            accept="image/*"
+                          />
+                        </label>
+                      </div>
+                      <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mt-2`}>
+                        Tap to add photo
+                      </p>
+                    </div>
 
-            <p className="text-center text-gray-600 mt-4">
-              {isSignUp ? (
-                <>
-                  Already have an account?{" "}
-                  <span
-                    className="text-blue-500 cursor-pointer"
-                    onClick={() => setIsSignUp(false)}
-                  >
-                    Log In
-                  </span>
-                </>
-              ) : (
-                <>
-                  Don’t have an account?{" "}
-                  <span
-                    className="text-blue-500 cursor-pointer"
-                    onClick={() => setIsSignUp(true)}
-                  >
-                    Sign Up
-                  </span>
-                </>
-              )}
-            </p>
+                    {/* Name and Username Row */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-700'} mb-2`}>
+                          Full Name
+                        </label>
+                        <input
+                          type="text"
+                          name="fullName"
+                          value={formData.fullName}
+                          onChange={handleInputChange}
+                          className={`w-full px-4 py-3 rounded-2xl ${isDarkMode ? 'bg-gray-900 text-white border-gray-700' : 'bg-gray-50 text-gray-900 border-gray-200'} border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
+                          placeholder="Enter your full name"
+                        />
+                      </div>
+                      <div>
+                        <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-700'} mb-2`}>
+                          Username
+                        </label>
+                        <input
+                          type="text"
+                          name="username"
+                          value={formData.username}
+                          onChange={handleInputChange}
+                          className={`w-full px-4 py-3 rounded-2xl ${isDarkMode ? 'bg-gray-900 text-white border-gray-700' : 'bg-gray-50 text-gray-900 border-gray-200'} border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
+                          placeholder="Choose username"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Age Input */}
+                    <div>
+                      <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-700'} mb-2`}>
+                        Age
+                      </label>
+                      <input
+                        type="number"
+                        name="age"
+                        value={formData.age}
+                        onChange={handleInputChange}
+                        className={`w-full px-4 py-3 rounded-2xl ${isDarkMode ? 'bg-gray-900 text-white border-gray-700' : 'bg-gray-50 text-gray-900 border-gray-200'} border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
+                        placeholder="Enter your age"
+                      />
+                    </div>
+
+                    {/* College Selection */}
+                    <div>
+                      <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-700'} mb-2`}>
+                        College
+                      </label>
+                      <select
+                        name="college"
+                        value={formData.college}
+                        onChange={handleInputChange}
+                        className={`w-full px-4 py-3 rounded-2xl ${isDarkMode ? 'bg-gray-900 text-white border-gray-700' : 'bg-gray-50 text-gray-900 border-gray-200'} border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
+                      >
+                        <option value="">Select your college</option>
+                        {colleges.map((college, index) => (
+                          <option key={index} value={college}>
+                            {college}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Bio */}
+                    <div>
+                      <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-700'} mb-2`}>
+                        Bio (Optional)
+                      </label>
+                      <textarea
+                        name="bio"
+                        value={formData.bio}
+                        onChange={handleInputChange}
+                        rows="3"
+                        className={`w-full px-4 py-3 rounded-2xl ${isDarkMode ? 'bg-gray-900 text-white border-gray-700' : 'bg-gray-50 text-gray-900 border-gray-200'} border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none`}
+                        placeholder="Tell us about yourself..."
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* Email */}
+                <div>
+                  <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-700'} mb-2`}>
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className={`w-full px-4 py-3 rounded-2xl ${isDarkMode ? 'bg-gray-900 text-white border-gray-700' : 'bg-gray-50 text-gray-900 border-gray-200'} border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
+                    placeholder="Enter your email"
+                  />
+                </div>
+
+                {/* Password */}
+                <div>
+                  <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-700'} mb-2`}>
+                    Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={passwordVisible ? "text" : "password"}
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      className={`w-full px-4 py-3 pr-12 rounded-2xl ${isDarkMode ? 'bg-gray-900 text-white border-gray-700' : 'bg-gray-50 text-gray-900 border-gray-200'} border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
+                      placeholder="Enter your password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setPasswordVisible(!passwordVisible)}
+                      className="absolute inset-y-0 right-0 flex items-center pr-4"
+                    >
+                      <svg
+                        className={`w-5 h-5 ${isDarkMode ? 'text-gray-300' : 'text-gray-500'} hover:text-blue-500 transition-colors`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        {passwordVisible ? (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.97 0-9-4.03-9-9s4.03-9 9-9 9 4.03 9 9a9.958 9.958 0 01-1.95 5.975m-2.55-2.55A3 3 0 0015 12a3 3 0 11-6 0 3 3 0 003-3z" />
+                        ) : (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        )}
+                      </svg>
+                    </button>
+                  </div>
+                  {isSignUp && (
+                    <p className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-500'} mt-2`}>
+                      Must be at least 8 characters with uppercase, lowercase, number and special character.
+                    </p>
+                  )}
+                </div>
+
+                {/* Action Button */}
+                <button
+                  type="button"
+                  onClick={isSignUp ? handleSignUp : handleLogin}
+                  disabled={loading}
+                  className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white font-semibold py-4 rounded-2xl transition-colors duration-200 shadow-lg"
+                >
+                  {loading
+                    ? (
+                      <div className="flex items-center justify-center">
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        {isSignUp ? "Creating account..." : "Signing in..."}
+                      </div>
+                    )
+                    : isSignUp
+                    ? "Create account"
+                    : "Sign in"
+                  }
+                </button>
+
+                {/* Additional Actions */}
+                {!isSignUp && (
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      onClick={handlePasswordReset}
+                      className={`text-sm ${isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-500'} font-medium transition-colors`}
+                    >
+                      Forgot your password?
+                    </button>
+                  </div>
+                )}
+
+                {/* Toggle Sign Up/Login */}
+                <div className="text-center">
+                  <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                    {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
+                    <button
+                      type="button"
+                      onClick={() => setIsSignUp(!isSignUp)}
+                      className={`font-medium ${isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-500'} transition-colors`}
+                    >
+                      {isSignUp ? "Sign in" : "Sign up"}
+                    </button>
+                  </p>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
 
-        <div className="w-full md:w-3/5 flex flex-col justify-center items-start p-8 space-y-8 hidden md:block">          <h2 className="text-3xl font-semibold text-gray-900">What is HiiHive?</h2>
-          <p className="text-lg text-gray-600">
-            HiiHive is your all-in-one community platform for learning,
-            connecting, and growing together. Stay updated, join dynamic
-            communities, and explore knowledge-rich content in an elegant,
-            seamless environment.
-          </p>
+        {/* Right Panel - Info (Desktop Only) */}
+        <div className={`hidden lg:flex lg:w-1/2 ${isDarkMode ? 'bg-black' : 'bg-gradient-to-br from-blue-50 to-blue-100'} relative overflow-hidden`}>
+          <div className="flex flex-col justify-center px-12 py-24 relative z-10">
+            <div className="max-w-lg">
+              <h3 className={`text-4xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-6`}>
+                Connect, Learn, Grow
+              </h3>
+              <p className={`text-lg ${isDarkMode ? 'text-gray-200' : 'text-gray-700'} mb-8 leading-relaxed`}>
+                Join thousands of students in building meaningful connections, sharing knowledge, and growing together in our vibrant college community.
+              </p>
+              
+              <div className="space-y-6">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-blue-500 rounded-2xl flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                      Join Communities
+                    </h4>
+                    <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                      Connect with like-minded peers
+                    </p>
+                  </div>
+                </div>
 
-          <div className="flex justify-start space-x-8 mt-8">
-            <div className="flex flex-col items-center space-y-2">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-12 w-12 text-blue-600"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 2v20m10-10H2" />
-              </svg>
-              <p className="mt-2 text-lg font-medium text-gray-900">Communities</p>
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-green-500 rounded-2xl flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                      Share Knowledge
+                    </h4>
+                    <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                      Learn and teach together
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-purple-500 rounded-2xl flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                      Stay Updated
+                    </h4>
+                    <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                      Never miss important updates
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="flex flex-col items-center space-y-2">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-12 w-12 text-green-600"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-              </svg>
-              <p className="mt-2 text-lg font-medium text-gray-900">College Hive</p>
-            </div>
+          </div>
+          
+          {/* Background Pattern */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-1/4 right-1/4 w-72 h-72 bg-blue-500 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-1/4 left-1/4 w-72 h-72 bg-purple-500 rounded-full blur-3xl"></div>
           </div>
         </div>
       </div>
 
-      <footer className={`w-full bg-transparent py-6 mt-8 ${isDarkMode ? 'text-white' : 'text-black'}`}>
-        <div className="flex justify-center md:justify-end items-center space-x-6">
-          <p className={`text-sm ${isDarkMode ? 'text-white' : 'text-black'}`}>Created by <strong>DixitK941</strong></p>
-          <img src={logo} alt="Logo" className="h-12 w-12 rounded-full" />
-          <p className={`text-sm ${isDarkMode ? 'text-white' : 'text-black'}`}>Powered by <strong>AINOR</strong></p>
+      {/* Footer */}
+      <footer className={`${isDarkMode ? 'bg-black border-gray-900' : 'bg-white border-gray-200'} border-t`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center justify-center space-x-6">
+            <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              Created by <span className="font-semibold">DixitK941</span>
+            </p>
+            <div className={`w-px h-4 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-300'}`}></div>
+            <div className="flex items-center space-x-2">
+              <img src={logo} alt="Logo" className="h-6 w-6 rounded-lg" />
+              <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                Powered by <span className="font-semibold">AINOR</span>
+              </p>
+            </div>
+          </div>
         </div>
       </footer>
     </div>
