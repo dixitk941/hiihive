@@ -77,17 +77,18 @@ const BottomBar = ({ toggleSidebarRight, isStoryActive }) => {
   return (
     <>
       {/* Main Bottom Bar - Compact Design */}
-      <aside className={`sm:hidden fixed bottom-0 left-0 right-0 z-50 transition-all duration-300 ${
+      <aside className={`sm:hidden fixed bottom-0 left-0 right-0 z-50 transition-all duration-300 border-t backdrop-blur-lg ${
         isDarkMode 
-          ? 'bg-black border-gray-800' 
-          : 'bg-white border-gray-200'
-      } border-t`}>
+          ? 'bg-black/90 border-gray-800' 
+          : 'bg-white/90 border-gray-200'
+      }`}>
         
         {/* Tab Container - Reduced padding */}
         <div className="flex items-center justify-around px-4 py-3">
           {tabs.map((tab) => {
             const active = isActive(tab.path);
-            const IconComponent = tab.icon;
+            // Use solid icon for active state, outline for inactive
+            const IconComponent = active ? tab.iconSolid : tab.icon;
             
             if (tab.isSpecial) {
               // Special upload button - More compact
@@ -112,32 +113,29 @@ const BottomBar = ({ toggleSidebarRight, isStoryActive }) => {
               <button
                 key={tab.id}
                 onClick={tab.action}
-                className={`relative flex items-center justify-center p-2 rounded-full transition-all duration-200 group ${
+                className={`relative flex items-center justify-center p-2.5 rounded-xl transition-all duration-200 group ${
                   active 
-                    ? 'text-blue-500' 
+                    ? isDarkMode
+                      ? 'text-blue-400 bg-blue-500/20' 
+                      : 'text-blue-600 bg-blue-50'
                     : isDarkMode 
-                      ? 'text-gray-400 hover:text-white' 
-                      : 'text-gray-500 hover:text-gray-900'
+                      ? 'text-gray-400 hover:text-white hover:bg-gray-800/50' 
+                      : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
                 }`}
               >
                 {/* Active indicator - top dot */}
                 {active && (
-                  <div className="absolute -top-1 w-1 h-1 rounded-full bg-blue-500" />
+                  <div className={`absolute -top-0.5 w-1 h-1 rounded-full ${
+                    isDarkMode ? 'bg-blue-400' : 'bg-blue-600'
+                  }`} />
                 )}
                 
                 {/* Icon */}
                 <IconComponent className={`w-6 h-6 transition-all duration-200 ${
-                  active ? 'scale-110' : 'group-hover:scale-105'
+                  active 
+                    ? 'scale-110' 
+                    : 'group-hover:scale-105'
                 }`} />
-                
-                {/* Active background circle */}
-                {active && (
-                  <div className={`absolute inset-0 rounded-full transition-all duration-300 ${
-                    isDarkMode 
-                      ? 'bg-blue-500/15' 
-                      : 'bg-blue-50'
-                  }`} />
-                )}
               </button>
             );
           })}
