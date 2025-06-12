@@ -71,8 +71,8 @@ const Feeds = () => {
           if (userSnap.exists()) {
             const userData = userSnap.data();
             setUserCollege(userData.college || null);
-            // Default to college mode if user has a college set
-            if (userData.college && feedMode === 'global') {
+            // Only default to college mode if user has a college AND we're still on default
+            if (userData.college && feedMode === 'global' && !initialLoadComplete) {
               setFeedMode('college');
             }
           }
@@ -85,18 +85,21 @@ const Feeds = () => {
       }
     });
     return () => unsubscribe();
-  }, []);
+  }, [initialLoadComplete]); // Added initialLoadComplete as dependency
 
   // Filter content based on feed mode
   const filterContentByMode = (content) => {
     if (feedMode === 'global') {
+      // Global mode should show ALL content regardless of college
       return content;
     } else if (feedMode === 'college' && userCollege) {
+      // College mode should only show content from user's college
       return content.filter(item => {
         const itemCollege = item.userDetails?.college || item.college;
         return itemCollege === userCollege;
       });
     }
+    // If no college is set, default to showing all content
     return content;
   };
 
@@ -109,6 +112,16 @@ const Feeds = () => {
         if (data) {
           const postsArray = await Promise.all(
             Object.entries(data).map(async ([id, post]) => {
+              // Validate post has userId
+              if (!post.userId) {
+                console.warn('Post missing userId:', id, post);
+                return {
+                  id,
+                  ...post,
+                  userDetails: { fullName: "Unknown User", username: "unknown", avatar: "", college: null },
+                };
+              }
+              
               const userDetails = await fetchUserDetails(post.userId);
               return {
                 id,
@@ -117,7 +130,9 @@ const Feeds = () => {
               };
             })
           );
-          setPosts(postsArray);
+          setPosts(postsArray.filter(post => post !== null)); // Filter out any null posts
+        } else {
+          setPosts([]);
         }
       });
     };
@@ -133,6 +148,16 @@ const Feeds = () => {
         if (data) {
           const pollsArray = await Promise.all(
             Object.entries(data).map(async ([id, poll]) => {
+              // Validate poll has createdBy
+              if (!poll.createdBy) {
+                console.warn('Poll missing createdBy:', id, poll);
+                return {
+                  id,
+                  ...poll,
+                  userDetails: { fullName: "Unknown User", username: "unknown", avatar: "", college: null },
+                };
+              }
+              
               const userDetails = await fetchUserDetails(poll.createdBy);
               return {
                 id,
@@ -141,7 +166,9 @@ const Feeds = () => {
               };
             })
           );
-          setPolls(pollsArray);
+          setPolls(pollsArray.filter(poll => poll !== null)); // Filter out any null polls
+        } else {
+          setPolls([]);
         }
       });
     };
@@ -161,6 +188,17 @@ const Feeds = () => {
           if (data) {
             const commentsArray = await Promise.all(
               Object.entries(data).map(async ([commentId, comment]) => {
+                // Validate comment has userId
+                if (!comment.userId) {
+                  console.warn('Comment missing userId:', commentId, comment);
+                  return {
+                    id: commentId,
+                    ...comment,
+                    userDetails: { fullName: "Unknown User", username: "unknown", avatar: "", college: null },
+                    replies: [],
+                  };
+                }
+
                 const userDetails = await fetchUserDetails(comment.userId);
                 
                 // Fetch replies for this comment
@@ -172,6 +210,16 @@ const Feeds = () => {
                 if (repliesData) {
                   replies = await Promise.all(
                     Object.entries(repliesData).map(async ([replyId, reply]) => {
+                      // Validate reply has userId
+                      if (!reply.userId) {
+                        console.warn('Reply missing userId:', replyId, reply);
+                        return {
+                          id: replyId,
+                          ...reply,
+                          userDetails: { fullName: "Unknown User", username: "unknown", avatar: "", college: null },
+                        };
+                      }
+
                       const replyUserDetails = await fetchUserDetails(reply.userId);
                       return {
                         id: replyId,
@@ -186,14 +234,14 @@ const Feeds = () => {
                   id: commentId,
                   ...comment,
                   userDetails,
-                  replies: replies.sort((a, b) => a.timestamp - b.timestamp),
+                  replies: replies.filter(reply => reply !== null).sort((a, b) => a.timestamp - b.timestamp),
                 };
               })
             );
             
             setComments(prev => ({
               ...prev,
-              [post.id]: commentsArray.sort((a, b) => a.timestamp - b.timestamp),
+              [post.id]: commentsArray.filter(comment => comment !== null).sort((a, b) => a.timestamp - b.timestamp),
             }));
           } else {
             setComments(prev => ({
@@ -211,23 +259,40 @@ const Feeds = () => {
   }, [posts]);
 
   const fetchUserDetails = async (uid) => {
+    // Add validation for uid
+    if (!uid || typeof uid !== 'string') {
+      console.warn('Invalid uid provided to fetchUserDetails:', uid);
+      const defaultUser = { fullName: "Unknown User", username: "unknown", avatar: "", college: null };
+      return defaultUser;
+    }
+
     // Check if we already have the user details cached
     if (userDetails[uid]) {
       return userDetails[uid];
     }
 
-    const userDoc = doc(firestore, 'users', uid);
-    const userSnap = await getDoc(userDoc);
-    if (userSnap.exists()) {
-      const userData = userSnap.data();
-      setUserDetails(prev => ({
-        ...prev,
-        [uid]: userData,
-      }));
-      return userData;
-    } else {
-      console.log("User not found in Firestore");
-      const defaultUser = { fullName: "Unknown", username: "unknown", avatar: "", college: null };
+    try {
+      const userDoc = doc(firestore, 'users', uid);
+      const userSnap = await getDoc(userDoc);
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        setUserDetails(prev => ({
+          ...prev,
+          [uid]: userData,
+        }));
+        return userData;
+      } else {
+        console.log("User not found in Firestore for uid:", uid);
+        const defaultUser = { fullName: "Unknown User", username: "unknown", avatar: "", college: null };
+        setUserDetails(prev => ({
+          ...prev,
+          [uid]: defaultUser,
+        }));
+        return defaultUser;
+      }
+    } catch (error) {
+      console.error("Error fetching user details for uid:", uid, error);
+      const defaultUser = { fullName: "Unknown User", username: "unknown", avatar: "", college: null };
       setUserDetails(prev => ({
         ...prev,
         [uid]: defaultUser,
@@ -240,12 +305,15 @@ const Feeds = () => {
   useEffect(() => {
     if (posts.length > 0 || polls.length > 0) {
       const combinedContent = [...posts, ...polls.map(poll => ({ ...poll, isPoll: true }))];
+      
+      // Apply filtering based on current feed mode
       const filteredContent = filterContentByMode(combinedContent);
       
       if (!initialLoadComplete) {
         setShuffledContent(shuffle(filteredContent));
         setInitialLoadComplete(true);
       } else {
+        // When feed mode changes, re-filter and update content
         const updatedContent = shuffledContent.map(item => {
           if (item.isPoll) {
             const updatedPoll = polls.find(poll => poll.id === item.id);
@@ -255,14 +323,31 @@ const Feeds = () => {
             return updatedPost || item;
           }
         });
-        const filteredUpdatedContent = filterContentByMode(updatedContent);
+        
+        // Re-filter based on current mode
+        const filteredUpdatedContent = filterContentByMode([...posts, ...polls.map(poll => ({ ...poll, isPoll: true }))]);
         setShuffledContent(filteredUpdatedContent);
       }
     }
-  }, [posts, polls, feedMode, userCollege]);
+  }, [posts, polls, feedMode, userCollege, initialLoadComplete]);
+
+  // Add a separate useEffect to handle feed mode changes
+  useEffect(() => {
+    // When feed mode changes, immediately re-filter content
+    if (initialLoadComplete && (posts.length > 0 || polls.length > 0)) {
+      const combinedContent = [...posts, ...polls.map(poll => ({ ...poll, isPoll: true }))];
+      const filteredContent = filterContentByMode(combinedContent);
+      setShuffledContent(filteredContent);
+    }
+  }, [feedMode]); // Only trigger when feedMode changes
 
   // Feed Mode Toggle Component with Samsung OneUI 7 design - Horizontal Layout
   const FeedModeToggle = () => {
+    const handleModeChange = (newMode) => {
+      console.log('Switching feed mode to:', newMode); // Debug log
+      setFeedMode(newMode);
+    };
+
     return (
       <div className="sticky top-0 z-10 bg-white/90 dark:bg-black/90 backdrop-blur-xl border-b border-gray-100/50 dark:border-gray-800/50 mb-6">
         <div className="max-w-2xl mx-auto px-6 py-4">
@@ -295,7 +380,7 @@ const Feeds = () => {
                 {/* Toggle Buttons */}
                 <div className="relative flex">
                   <button
-                    onClick={() => setFeedMode('college')}
+                    onClick={() => handleModeChange('college')}
                     disabled={!userCollege}
                     className={`relative flex items-center justify-center space-x-2 px-4 py-2.5 rounded-full font-semibold transition-all duration-300 min-w-[100px] ${
                       feedMode === 'college'
@@ -310,7 +395,7 @@ const Feeds = () => {
                   </button>
                   
                   <button
-                    onClick={() => setFeedMode('global')}
+                    onClick={() => handleModeChange('global')}
                     className={`relative flex items-center justify-center space-x-2 px-4 py-2.5 rounded-full font-semibold transition-all duration-300 min-w-[100px] ${
                       feedMode === 'global'
                         ? 'text-gray-900 dark:text-white z-10'
@@ -325,14 +410,14 @@ const Feeds = () => {
             </div>
           </div>
 
-          {/* Stats Indicator - Centered Below */}
+          {/* Stats Indicator - Show correct count */}
           <div className="text-center">
             <div className="inline-flex items-center space-x-2 px-3 py-1.5 bg-gray-50/80 dark:bg-gray-900/80 backdrop-blur-sm rounded-full border border-gray-200/30 dark:border-gray-800/30">
               <div className={`w-2 h-2 rounded-full transition-colors duration-300 ${
                 feedMode === 'global' ? 'bg-blue-500' : 'bg-purple-500'
               }`} />
               <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                {shuffledContent.length} {shuffledContent.length === 1 ? 'post' : 'posts'}
+                {shuffledContent.length} {shuffledContent.length === 1 ? 'post' : 'posts'} • {feedMode === 'global' ? 'Global' : 'College'} feed
               </span>
             </div>
           </div>
@@ -595,14 +680,13 @@ const Feeds = () => {
     };
 
     const { userDetails = { fullName: "Unknown", username: "unknown", avatar: "", college: null } } = poll;
-    const isFromUserCollege = userDetails.college === userCollege;
 
     return (
       <div className="bg-white dark:bg-black rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden mb-6 hover:shadow-md dark:hover:shadow-xl transition-shadow duration-300">
-        {/* Poll Header */}
+        {/* Poll Header - Simplified */}
         <div className="flex items-center justify-between p-6 pb-4">
-          <div className="flex items-center space-x-3">
-            <div className="relative">
+          <div className="flex items-center space-x-3 flex-1 min-w-0">
+            <div className="relative flex-shrink-0">
               <img
                 src={userDetails.avatar || "/default-avatar.png"}
                 alt="Avatar"
@@ -610,15 +694,15 @@ const Feeds = () => {
               />
               <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white dark:border-black"></div>
             </div>
-            <div>
-              <h4 className="font-semibold text-gray-900 dark:text-white text-sm">{userDetails.fullName}</h4>
+            <div className="flex-1 min-w-0">
+              <h4 className="font-semibold text-gray-900 dark:text-white text-sm truncate">{userDetails.fullName}</h4>
               <div className="flex items-center space-x-2">
-                <p className="text-gray-500 dark:text-gray-400 text-xs">@{userDetails.username} • 2h ago</p>
-                <CollegeBadge college={userDetails.college} isUserCollege={isFromUserCollege} />
+                <p className="text-gray-500 dark:text-gray-400 text-xs truncate">@{userDetails.username} • 2h ago</p>
+                {/* Removed CollegeBadge component */}
               </div>
             </div>
           </div>
-          <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors duration-200">
+          <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors duration-200 flex-shrink-0">
             <FiMoreHorizontal className="w-5 h-5 text-gray-400 dark:text-gray-500" />
           </button>
         </div>
@@ -775,10 +859,10 @@ const Feeds = () => {
                 key={`post-${content.id}`}
                 className="bg-white dark:bg-black rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden hover:shadow-md dark:hover:shadow-xl transition-shadow duration-300"
               >
-                {/* Post Header */}
+                {/* Post Header - Simplified */}
                 <div className="flex items-center justify-between p-6 pb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="relative">
+                  <div className="flex items-center space-x-3 flex-1 min-w-0">
+                    <div className="relative flex-shrink-0">
                       <img
                         src={content.userDetails?.avatar || "/default-avatar.png"}
                         alt="User Avatar"
@@ -787,23 +871,20 @@ const Feeds = () => {
                       />
                       <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white dark:border-black"></div>
                     </div>
-                    <div>
-                      <p className="font-semibold text-gray-900 dark:text-white text-sm hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors duration-200"
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-gray-900 dark:text-white text-sm hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors duration-200 truncate"
                          onClick={() => handleUserProfileClick(content.userId)}>
                         {content.userDetails?.fullName || "Unknown User"}
                       </p>
                       <div className="flex items-center space-x-2">
-                        <p className="text-gray-500 dark:text-gray-400 text-xs">
+                        <p className="text-gray-500 dark:text-gray-400 text-xs truncate">
                           @{content.userDetails?.username || "unknown"} • 2h ago
                         </p>
-                        <CollegeBadge 
-                          college={content.userDetails?.college} 
-                          isUserCollege={content.userDetails?.college === userCollege} 
-                        />
+                        {/* Removed CollegeBadge component */}
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 flex-shrink-0">
                     <button 
                       onClick={() => handleSavePost(content.id)}
                       className={`p-2 rounded-full transition-colors duration-200 ${
