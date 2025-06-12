@@ -1,32 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { FaCamera, FaFileVideo, FaFileAudio } from 'react-icons/fa';
-import { AiOutlineClose, AiOutlineCloudUpload } from 'react-icons/ai';
-import { getFirestore, collection, addDoc } from 'firebase/firestore';
+import React, { useState, useEffect, useRef } from 'react';
+import { getFirestore, collection, addDoc, getDocs } from 'firebase/firestore';
 import { getDatabase, ref, set } from 'firebase/database';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getAuth } from 'firebase/auth';
-import styled from 'styled-components';
-
-const Button = styled.button`
-  background-color: #4e8bff;
-  color: white;
-  border: none;
-  border-radius: 30px;
-  padding: 12px 24px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-
-  &:hover {
-    background-color: #3871cc;
-    transform: scale(1.05);
-  }
-
-  &:disabled {
-    background-color: #b0c4de;
-    cursor: not-allowed;
-  }
-`;
 
 const UploadPost = () => {
   const [file, setFile] = useState(null);
@@ -37,52 +13,56 @@ const UploadPost = () => {
   const [hashtags, setHashtags] = useState([]);
   const [filteredHashtags, setFilteredHashtags] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  
+  // States for mentions functionality
+  const [users, setUsers] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState([]);
+  const [showUserSuggestions, setShowUserSuggestions] = useState(false);
+  const [cursorPosition, setCursorPosition] = useState(0);
+  
+  const fileInputRefs = useRef([]);
+  const textareaRef = useRef(null);
+
+  // Dark mode detection
+  useEffect(() => {
+    const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    setIsDarkMode(prefersDarkMode);
+
+    const handleThemeChange = (e) => {
+      setIsDarkMode(e.matches);
+    };
+
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    mediaQuery.addEventListener('change', handleThemeChange);
+
+    return () => {
+      mediaQuery.removeEventListener('change', handleThemeChange);
+    };
+  }, []);
+
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+    }
+  }, [caption]);
 
   // Fetch trending hashtags
   useEffect(() => {
     const fetchTrendingHashtags = async () => {
-      // Replace this with your actual API logic
       const trendingHashtags = [
-'ReactJS',
-        'WebDevelopment',
-        'AI',
-        'HiiHiveLaunch',
-        'JavaScript',
-        'TailwindCSS',
-        'OpenSource',
-        'CloudComputing',
-        'MVP',
-        'TrendingNow',
-        'StartupLife',
-        'Innovation',
-        'DataScience',
-        'Coding',
-        'TechNews',
-        'Design',
-        'Productivity',
-        'Crypto',
-        'Blockchain',
-        'MachineLearning',
-        'UIUX',
-        'FullStack',
-        'FrontEnd',
-        'BackEnd',
-        'DevOps',
-        'MobileDevelopment',
-        'CloudNative',
-        'OpenAI',
-        'ReactNative',
-        'VueJS',
-        'Angular',
-        'NextJS',
-        'NodeJS',
-        'CyberSecurity',
-        'Agile',
-        'Scrum',
-        'StartupIdeas',
-        'Entrepreneurship',
-        'TechTrends',
-
+        'ReactJS', 'WebDevelopment', 'AI', 'HiiHiveLaunch', 'JavaScript',
+        'TailwindCSS', 'OpenSource', 'CloudComputing', 'MVP', 'TrendingNow',
+        'StartupLife', 'Innovation', 'DataScience', 'Coding', 'TechNews',
+        'Design', 'Productivity', 'Crypto', 'Blockchain', 'MachineLearning',
+        'UIUX', 'FullStack', 'FrontEnd', 'BackEnd', 'DevOps',
+        'MobileDevelopment', 'CloudNative', 'OpenAI', 'ReactNative',
+        'VueJS', 'Angular', 'NextJS', 'NodeJS', 'CyberSecurity',
+        'Agile', 'Scrum', 'StartupIdeas', 'Entrepreneurship', 'TechTrends'
       ];
       setHashtags(trendingHashtags);
     };
@@ -90,38 +70,142 @@ const UploadPost = () => {
     fetchTrendingHashtags();
   }, []);
 
+  // Fetch users for mentions
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const firestore = getFirestore();
+        const usersRef = collection(firestore, 'users');
+        const usersSnapshot = await getDocs(usersRef);
+        const usersData = usersSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        console.log('Fetched users:', usersData); // Debug log
+        setUsers(usersData);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
   const handleCaptionChange = (e) => {
     const value = e.target.value;
+    const position = e.target.selectionStart;
     setCaption(value);
+    setCursorPosition(position);
 
-    // Detect if `#` is typed
-    const lastWord = value.split(' ').pop();
-    if (lastWord.startsWith('#')) {
-      const query = lastWord.slice(1).toLowerCase();
+    // Find the word at the cursor position
+    const textBeforeCursor = value.substring(0, position);
+    const words = textBeforeCursor.split(/\s/);
+    const currentWord = words[words.length - 1];
+
+    console.log('Current word:', currentWord); // Debug log
+
+    // Check for hashtag suggestions
+    if (currentWord.startsWith('#') && currentWord.length > 1) {
+      const query = currentWord.slice(1).toLowerCase();
       const matches = hashtags.filter((hashtag) =>
         hashtag.toLowerCase().includes(query)
       );
-      setFilteredHashtags(matches);
+      console.log('Hashtag matches:', matches); // Debug log
+      setFilteredHashtags(matches.slice(0, 5));
       setShowSuggestions(true);
-    } else {
+      setShowUserSuggestions(false);
+    } 
+    // Check for mention suggestions
+    else if (currentWord.startsWith('@') && currentWord.length > 1) {
+      const query = currentWord.slice(1).toLowerCase();
+      const matches = users.filter(user => {
+        const username = user.username?.toLowerCase() || '';
+        const displayName = user.displayName?.toLowerCase() || '';
+        const email = user.email?.toLowerCase() || '';
+        return username.includes(query) || displayName.includes(query) || email.includes(query);
+      });
+      console.log('User matches:', matches); // Debug log
+      setFilteredUsers(matches.slice(0, 5));
+      setShowUserSuggestions(true);
       setShowSuggestions(false);
+    } 
+    // Hide all suggestions
+    else {
+      setShowSuggestions(false);
+      setShowUserSuggestions(false);
     }
   };
 
   const handleHashtagClick = (hashtag) => {
-    const words = caption.split(' ');
-    words.pop(); // Remove the last word (the one being typed)
-    setCaption([...words, `#${hashtag}`].join(' ') + ' ');
+    const textBeforeCursor = caption.substring(0, cursorPosition);
+    const textAfterCursor = caption.substring(cursorPosition);
+    const words = textBeforeCursor.split(/\s/);
+    words[words.length - 1] = `#${hashtag}`;
+    const newText = words.join(' ') + ' ' + textAfterCursor;
+    
+    setCaption(newText);
     setShowSuggestions(false);
+    
+    setTimeout(() => {
+      textareaRef.current?.focus();
+      const newPosition = words.join(' ').length + 1;
+      textareaRef.current?.setSelectionRange(newPosition, newPosition);
+    }, 0);
   };
 
-  const handleFileChange = (e) => {
+  const handleUserClick = (user) => {
+    const textBeforeCursor = caption.substring(0, cursorPosition);
+    const textAfterCursor = caption.substring(cursorPosition);
+    const words = textBeforeCursor.split(/\s/);
+    const username = user.username || user.displayName || user.email.split('@')[0];
+    words[words.length - 1] = `@${username}`;
+    const newText = words.join(' ') + ' ' + textAfterCursor;
+    
+    setCaption(newText);
+    setShowUserSuggestions(false);
+    
+    setTimeout(() => {
+      textareaRef.current?.focus();
+      const newPosition = words.join(' ').length + 1;
+      textareaRef.current?.setSelectionRange(newPosition, newPosition);
+    }, 0);
+  };
+
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true);
+    } else if (e.type === 'dragleave') {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFileSelection(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleFileSelection = (selectedFile) => {
+    if (selectedFile) {
+      setFile(selectedFile);
+      setFileType(selectedFile.type);
+      
+      if (selectedFile.type.startsWith('image/') || selectedFile.type.startsWith('video/') || selectedFile.type.startsWith('audio/')) {
+        setPreviewUrl(URL.createObjectURL(selectedFile));
+      }
+    }
+  };
+
+  const handleFileChange = (e, index) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
-      const type = selectedFile.type.split('/')[0];
-      setFile(selectedFile);
-      setFileType(type);
-      setPreviewUrl(type === 'text' ? null : URL.createObjectURL(selectedFile)); // No preview for text files
+      handleFileSelection(selectedFile);
     }
   };
 
@@ -133,6 +217,8 @@ const UploadPost = () => {
     }
 
     setIsUploading(true);
+    setUploadProgress(0);
+    
     const auth = getAuth();
     const user = auth.currentUser;
     const firestore = getFirestore();
@@ -147,23 +233,37 @@ const UploadPost = () => {
 
     try {
       let fileUrl = '';
+      let normalizedFileType = 'text'; // Default to text
+      
       if (file) {
-        const fileRef = storageRef(storage, `posts/${user.uid}/${file.name}`);
+        setUploadProgress(30);
+        const fileRef = storageRef(storage, `posts/${user.uid}/${Date.now()}_${file.name}`);
         await uploadBytes(fileRef, file);
         fileUrl = await getDownloadURL(fileRef);
+        setUploadProgress(70);
+        
+        // Normalize file type to match what Feeds expects
+        if (file.type.startsWith('image/')) {
+          normalizedFileType = 'image';
+        } else if (file.type.startsWith('video/')) {
+          normalizedFileType = 'video';
+        } else if (file.type.startsWith('audio/')) {
+          normalizedFileType = 'audio';
+        }
       }
 
       const newPost = {
         userId: user.uid,
         caption,
         fileUrl,
-        fileType: file ? fileType : 'text',
+        fileType: normalizedFileType, // Use normalized file type
         timestamp: new Date().toISOString(),
-        likes: 0,
-        comments: [],
+        likes: {},
+        comments: {},
         shareCount: 0,
       };
 
+      setUploadProgress(90);
       const docRef = await addDoc(collection(firestore, `users/${user.uid}/posts`), newPost);
       const postId = docRef.id;
 
@@ -173,13 +273,53 @@ const UploadPost = () => {
         id: postId,
       });
 
+      // Handle mentions - create notifications for mentioned users
+      const mentionMatches = caption.match(/@(\w+)/g);
+      if (mentionMatches) {
+        for (const mention of mentionMatches) {
+          const username = mention.slice(1); // Remove @
+          const mentionedUser = users.find(u => 
+            u.username === username || 
+            u.displayName === username || 
+            u.email.split('@')[0] === username
+          );
+          
+          if (mentionedUser && mentionedUser.id !== user.uid) {
+            const notificationMessage = `${user.displayName || user.email} mentioned you in a post: "${caption.slice(0, 50)}${caption.length > 50 ? '...' : ''}"`; 
+          
+            await addDoc(collection(firestore, `users/${mentionedUser.id}/notifications`), {
+              type: 'mention',
+              postId,
+              mentionedBy: user.displayName || user.email,
+              mentionedById: user.uid,
+              timestamp: new Date().toISOString(),
+              message: notificationMessage,
+              seen: false,
+              postCaption: caption,
+              postFileUrl: fileUrl,
+            });
+          }
+        }
+      }
+
+      setUploadProgress(100);
+      
+      // Reset form
       setFile(null);
       setCaption('');
       setPreviewUrl(null);
-      alert('Post uploaded successfully!');
+      setFileType('');
+      
+      // Success feedback
+      setTimeout(() => {
+        alert('Post uploaded successfully!');
+        setUploadProgress(0);
+        setIsUploading(false);
+      }, 500);
+      
     } catch (error) {
+      console.error('Upload error:', error);
       alert('Failed to upload post.');
-    } finally {
       setIsUploading(false);
     }
   };
@@ -188,105 +328,322 @@ const UploadPost = () => {
     setFile(null);
     setPreviewUrl(null);
     setFileType('');
+    // Clear all file inputs
+    fileInputRefs.current.forEach(ref => {
+      if (ref) ref.value = '';
+    });
   };
 
+  const mediaTypes = [
+    {
+      type: 'image/*',
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      ),
+      label: 'Photo',
+      color: 'text-green-500'
+    },
+    {
+      type: 'video/*',
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+        </svg>
+      ),
+      label: 'Video',
+      color: 'text-purple-500'
+    },
+    {
+      type: 'audio/*',
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+        </svg>
+      ),
+      label: 'Audio',
+      color: 'text-orange-500'
+    }
+  ];
+
   return (
-    <div className="w-full max-w-md mx-auto p-4 bg-white rounded-2xl shadow-lg">
-      <div className="flex justify-center mb-6">
-        <AiOutlineCloudUpload size={32} color="#4e8bff" />
-      </div>
-      <div className="flex items-start space-x-3 mb-4">
-        <div className="w-full">
-          <textarea
-            value={caption}
-            onChange={handleCaptionChange}
-            placeholder="Write a caption..."
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm text-gray-700 resize-none"
-            rows={3}
-          />
-          {showSuggestions && (
-            <ul className="bg-white border border-gray-300 rounded-lg shadow-md mt-2 max-h-32 overflow-y-auto">
-              {filteredHashtags.map((hashtag, index) => (
-                <li
-                  key={index}
-                  className="p-2 hover:bg-blue-100 cursor-pointer"
-                  onClick={() => handleHashtagClick(hashtag)}
-                >
-                  #{hashtag}
-                </li>
-              ))}
-            </ul>
-          )}
+    <div className={`min-h-screen transition-colors duration-300 ${
+      isDarkMode ? 'bg-black' : 'bg-gray-50'
+    }`}>
+      <div className="max-w-lg mx-auto px-4 py-6">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className={`text-2xl font-bold mb-2 ${
+            isDarkMode ? 'text-white' : 'text-gray-900'
+          }`}>
+            Create Post
+          </h1>
+          <p className={`text-sm ${
+            isDarkMode ? 'text-gray-400' : 'text-gray-500'
+          }`}>
+            Share your thoughts with the community
+          </p>
         </div>
-      </div>
 
-      {/* Preview */}
-      {previewUrl && (
-        <div className="relative mb-4">
-          {fileType === 'image' && (
-            <img
-              src={previewUrl}
-              alt="Preview"
-              className="w-full h-56 object-cover rounded-lg shadow-md"
+        {/* Main Form */}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Caption Input */}
+          <div className={`relative rounded-3xl transition-all duration-200 border ${
+            isDarkMode 
+              ? 'bg-gray-900 border-gray-700' 
+              : 'bg-white border-gray-200'
+          }`}>
+            <textarea
+              ref={textareaRef}
+              value={caption}
+              onChange={handleCaptionChange}
+              onKeyUp={handleCaptionChange}
+              onMouseUp={handleCaptionChange}
+              placeholder="What's on your mind? Use # for hashtags and @ to mention users..."
+              className={`w-full p-6 rounded-3xl resize-none transition-all duration-200 ${
+                isDarkMode 
+                  ? 'bg-transparent text-white placeholder-gray-500' 
+                  : 'bg-transparent text-gray-900 placeholder-gray-500'
+              } focus:outline-none`}
+              rows={3}
+              style={{ minHeight: '120px' }}
             />
-          )}
-          {fileType === 'video' && (
-            <video src={previewUrl} controls className="w-full h-56 rounded-lg shadow-md" />
-          )}
-          {fileType === 'audio' && (
-            <audio src={previewUrl} controls className="w-full rounded-lg shadow-md" />
-          )}
-          <button
-            onClick={removeFile}
-            className="absolute top-2 right-2 bg-gray-800 text-white p-2 rounded-full hover:bg-gray-900"
+
+            {/* Hashtag Suggestions */}
+            {showSuggestions && filteredHashtags.length > 0 && (
+              <div className={`absolute top-full left-0 right-0 mt-2 rounded-2xl shadow-lg border z-10 ${
+                isDarkMode 
+                  ? 'bg-gray-900 border-gray-700' 
+                  : 'bg-white border-gray-200'
+              }`}>
+                {filteredHashtags.map((hashtag, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => handleHashtagClick(hashtag)}
+                    className={`w-full text-left px-4 py-3 transition-colors first:rounded-t-2xl last:rounded-b-2xl ${
+                      isDarkMode 
+                        ? 'hover:bg-gray-800 text-gray-300' 
+                        : 'hover:bg-gray-50 text-gray-700'
+                    }`}
+                  >
+                    <span className="text-blue-500">#</span>{hashtag}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* User Mention Suggestions */}
+            {showUserSuggestions && filteredUsers.length > 0 && (
+              <div className={`absolute top-full left-0 right-0 mt-2 rounded-2xl shadow-lg border z-10 ${
+                isDarkMode 
+                  ? 'bg-gray-900 border-gray-700' 
+                  : 'bg-white border-gray-200'
+              }`}>
+                {filteredUsers.map((user, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => handleUserClick(user)}
+                    className={`w-full text-left px-4 py-3 transition-colors first:rounded-t-2xl last:rounded-b-2xl flex items-center gap-3 ${
+                      isDarkMode 
+                        ? 'hover:bg-gray-800 text-gray-300' 
+                        : 'hover:bg-gray-50 text-gray-700'
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${
+                      isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-600'
+                    }`}>
+                      {(user.displayName || user.username || user.email)[0].toUpperCase()}
+                    </div>
+                    <div>
+                      <span className="text-blue-500">@</span>
+                      <span>{user.username || user.displayName || user.email.split('@')[0]}</span>
+                      {user.displayName && user.username && (
+                        <span className={`text-xs ml-2 ${
+                          isDarkMode ? 'text-gray-500' : 'text-gray-400'
+                        }`}>
+                          {user.displayName}
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* File Upload Area */}
+          <div
+            className={`relative rounded-3xl border-2 border-dashed transition-all duration-300 ${
+              dragActive 
+                ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/10' 
+                : isDarkMode 
+                  ? 'border-gray-700 bg-gray-900' 
+                  : 'border-gray-300 bg-white'
+            }`}
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
           >
-            <AiOutlineClose size={18} />
+            {!previewUrl ? (
+              <div className="p-8 text-center">
+                <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
+                  isDarkMode ? 'bg-gray-800' : 'bg-gray-100'
+                }`}>
+                  <svg className={`w-8 h-8 ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                  }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                </div>
+                <p className={`text-lg font-medium mb-2 ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>
+                  Drop files here or click to browse
+                </p>
+                <p className={`text-sm ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                }`}>
+                  Support for images, videos, and audio files
+                </p>
+              </div>
+            ) : (
+              <div className="relative p-4">
+                {/* Preview Content */}
+                <div className="relative rounded-2xl overflow-hidden">
+                  {fileType?.startsWith('image/') && (
+                    <img
+                      src={previewUrl}
+                      alt="Preview"
+                      className="w-full h-64 object-cover"
+                    />
+                  )}
+                  {fileType?.startsWith('video/') && (
+                    <video
+                      src={previewUrl}
+                      controls
+                      className="w-full h-64 object-cover"
+                    />
+                  )}
+                  {fileType?.startsWith('audio/') && (
+                    <div className={`p-8 text-center ${
+                      isDarkMode ? 'bg-gray-800' : 'bg-gray-100'
+                    }`}>
+                      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-orange-500 flex items-center justify-center">
+                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                        </svg>
+                      </div>
+                      <p className={`font-medium ${
+                        isDarkMode ? 'text-white' : 'text-gray-900'
+                      }`}>
+                        {file?.name}
+                      </p>
+                      <audio src={previewUrl} controls className="w-full mt-4" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Remove button */}
+                <button
+                  type="button"
+                  onClick={removeFile}
+                  className="absolute top-6 right-6 w-8 h-8 bg-black bg-opacity-60 text-white rounded-full flex items-center justify-center hover:bg-opacity-80 transition-all duration-200"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Media Type Buttons */}
+          <div className="grid grid-cols-3 gap-3">
+            {mediaTypes.map((media, index) => (
+              <label
+                key={index}
+                className={`relative flex flex-col items-center p-4 rounded-2xl cursor-pointer transition-all duration-200 border group ${
+                  isDarkMode 
+                    ? 'bg-gray-900 border-gray-700 hover:bg-gray-800' 
+                    : 'bg-white border-gray-200 hover:bg-gray-50'
+                }`}
+              >
+                <div className={`${media.color} mb-2 group-hover:scale-110 transition-transform duration-200`}>
+                  {media.icon}
+                </div>
+                <span className={`text-sm font-medium ${
+                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                }`}>
+                  {media.label}
+                </span>
+                <input
+                  ref={el => fileInputRefs.current[index] = el}
+                  type="file"
+                  accept={media.type}
+                  onChange={(e) => handleFileChange(e, index)}
+                  className="hidden"
+                />
+              </label>
+            ))}
+          </div>
+
+          {/* Upload Progress */}
+          {isUploading && (
+            <div className={`rounded-2xl p-4 border ${
+              isDarkMode 
+                ? 'bg-gray-900 border-gray-700' 
+                : 'bg-white border-gray-200'
+            }`}>
+              <div className="flex items-center justify-between mb-2">
+                <span className={`text-sm font-medium ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>
+                  Uploading...
+                </span>
+                <span className={`text-sm ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                }`}>
+                  {uploadProgress}%
+                </span>
+              </div>
+              <div className={`w-full rounded-full h-2 ${
+                isDarkMode ? 'bg-gray-800' : 'bg-gray-200'
+              }`}>
+                <div
+                  className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={isUploading || (!caption.trim() && !file)}
+            className={`w-full py-4 px-6 rounded-2xl font-semibold text-lg transition-all duration-200 ${
+              isUploading || (!caption.trim() && !file)
+                ? isDarkMode 
+                  ? 'bg-gray-800 text-gray-500 cursor-not-allowed' 
+                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                : 'bg-blue-500 text-white hover:bg-blue-600 active:scale-95 shadow-lg shadow-blue-500/25'
+            }`}
+          >
+            {isUploading ? (
+              <div className="flex items-center justify-center space-x-2">
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Posting...</span>
+              </div>
+            ) : (
+              'Share Post'
+            )}
           </button>
-        </div>
-      )}
-
-      {/* File Type Selection */}
-      <div className="flex justify-between mb-6">
-        <label className="flex items-center space-x-2 cursor-pointer text-blue-500 hover:text-blue-700">
-          <FaCamera size={20} />
-          <span className="text-sm">Photo</span>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            className="hidden"
-          />
-        </label>
-        <label className="flex items-center space-x-2 cursor-pointer text-blue-500 hover:text-blue-700">
-          <FaFileVideo size={20} />
-          <span className="text-sm">Video</span>
-          <input
-            type="file"
-            accept="video/*"
-            onChange={handleFileChange}
-            className="hidden"
-          />
-        </label>
-        <label className="flex items-center space-x-2 cursor-pointer text-blue-500 hover:text-blue-700">
-          <FaFileAudio size={20} />
-          <span className="text-sm">Audio</span>
-          <input
-            type="file"
-            accept="audio/*"
-            onChange={handleFileChange}
-            className="hidden"
-          />
-        </label>
+        </form>
       </div>
-
-      {/* Post Button */}
-      <Button
-        onClick={handleSubmit}
-        disabled={isUploading}
-        className="w-full"
-      >
-        {isUploading ? 'Posting...' : 'Post'}
-      </Button>
     </div>
   );
 };

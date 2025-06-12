@@ -36,8 +36,27 @@ const Feeds = () => {
   const [shuffledContent, setShuffledContent] = useState([]);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [savedPosts, setSavedPosts] = useState(new Set());
+  const [isDarkMode, setIsDarkMode] = useState(false); // Added dark mode state
+  
   const db = getDatabase();
   const firestore = getFirestore();
+
+  // Dark mode detection
+  useEffect(() => {
+    const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    setIsDarkMode(prefersDarkMode);
+
+    const handleThemeChange = (e) => {
+      setIsDarkMode(e.matches);
+    };
+
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    mediaQuery.addEventListener('change', handleThemeChange);
+
+    return () => {
+      mediaQuery.removeEventListener('change', handleThemeChange);
+    };
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -45,6 +64,8 @@ const Feeds = () => {
     });
     return () => unsubscribe();
   }, []);
+
+  // ...existing code...
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -387,10 +408,10 @@ const Feeds = () => {
         y: {
           beginAtZero: true,
           grid: {
-            color: document.documentElement.classList.contains('dark') ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+            color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
           },
           ticks: {
-            color: document.documentElement.classList.contains('dark') ? '#9CA3AF' : '#374151',
+            color: isDarkMode ? '#9CA3AF' : '#374151',
           },
         },
         x: {
@@ -398,7 +419,7 @@ const Feeds = () => {
             display: false,
           },
           ticks: {
-            color: document.documentElement.classList.contains('dark') ? '#9CA3AF' : '#374151',
+            color: isDarkMode ? '#9CA3AF' : '#374151',
           },
         },
       },
@@ -618,6 +639,10 @@ const Feeds = () => {
                     src={content.fileUrl}
                     alt="Post"
                     className="w-full h-auto max-h-96 object-cover"
+                    onError={(e) => {
+                      console.error('Image failed to load:', content.fileUrl);
+                      e.target.style.display = 'none';
+                    }}
                   />
                 )}
                 {content.fileType === "video" && content.fileUrl && (
@@ -627,10 +652,25 @@ const Feeds = () => {
                 )}
                 {content.fileType === "audio" && content.fileUrl && (
                   <div className="p-6 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20">
+                    <div className="flex items-center space-x-4 mb-4">
+                      <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center">
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                          Audio Post
+                        </p>
+                        <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          Listen to this audio clip
+                        </p>
+                      </div>
+                    </div>
                     <audio className="w-full rounded-lg" controls src={content.fileUrl} />
                   </div>
                 )}
-                {content.fileType === "text" && !content.fileUrl && (
+                {(content.fileType === "text" || (!content.fileUrl && content.caption)) && (
                   <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
                     <p className="text-gray-800 dark:text-gray-200 text-lg leading-relaxed">
                       {renderCaptionWithusernames(content.caption)}

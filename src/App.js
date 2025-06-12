@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, Suspense, startTransition } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -35,12 +35,14 @@ function AppWrapper() {
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (user && user.emailVerified) {
-        setUser(user);
-      } else {
-        setUser(null);
-      }
-      setAuthLoading(false);
+      startTransition(() => {
+        if (user && user.emailVerified) {
+          setUser(user);
+        } else {
+          setUser(null);
+        }
+        setAuthLoading(false);
+      });
     });
     return () => unsubscribe();
   }, []);
@@ -158,7 +160,9 @@ const ConditionalHeader = ({ user, location }) => {
   // Hide header on desktop (lg and above) but show on mobile/tablet
   return !shouldHideHeader && (
     <div className="lg:hidden">
-      <Header user={user} />
+      <Suspense fallback={<div className="h-16 bg-white dark:bg-black"></div>}>
+        <Header user={user} />
+      </Suspense>
     </div>
   );
 };
@@ -171,7 +175,9 @@ const AnimatedPage = ({ children }) => {
       exit={{ opacity: 0, y: 50 }}
       transition={{ duration: 0.5 }}
     >
-      {children}
+      <Suspense fallback={<Loading />}>
+        {children}
+      </Suspense>
     </motion.div>
   );
 };
@@ -180,17 +186,21 @@ const App = ({ children }) => {
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
-    // Check system preference
-    const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    setIsDarkMode(prefersDarkMode);
+    startTransition(() => {
+      // Check system preference
+      const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      setIsDarkMode(prefersDarkMode);
 
-    // Update body class based on the theme
-    document.body.classList.toggle('dark', prefersDarkMode);
+      // Update body class based on the theme
+      document.body.classList.toggle('dark', prefersDarkMode);
+    });
 
     // Listener for theme change
     const handleThemeChange = (e) => {
-      setIsDarkMode(e.matches);
-      document.body.classList.toggle('dark', e.matches);
+      startTransition(() => {
+        setIsDarkMode(e.matches);
+        document.body.classList.toggle('dark', e.matches);
+      });
     };
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
