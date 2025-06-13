@@ -11,7 +11,7 @@ import {
 } from 'firebase/database';
 import './Feed.css';
 import CustomVideoPlayer from './CustomVideoPlayer';
-import { FiThumbsUp, FiMessageCircle, FiShare, FiMoreHorizontal, FiHeart, FiCpu,FiBookmark, FiGlobe, FiUsers, FiClock, FiTarget, FiBook, FiShoppingBag, FiTrendingUp, FiZap, FiStar, FiAward, FiCalendar, FiDollarSign, FiMapPin, FiTag, FiImage, FiEdit, FiTrash2, FiEye } from 'react-icons/fi';
+import { FiThumbsUp, FiMessageCircle, FiShare, FiMoreHorizontal, FiHeart, FiCpu, FiBookmark, FiGlobe, FiUsers, FiClock, FiTarget, FiBook, FiTrendingUp, FiZap, FiStar, FiAward, FiCalendar, FiDollarSign, FiMapPin, FiTag, FiImage, FiEdit, FiTrash2, FiEye } from 'react-icons/fi';
 import { auth } from './firebaseConfig';
 import { onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
@@ -40,48 +40,11 @@ const Feeds = () => {
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [savedPosts, setSavedPosts] = useState(new Set());
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [studyMood, setStudyMood] = useState('focused');
-const [learningStreak, setLearningStreak] = useState(7);
-
-const marketplaceCategories = [
-  { value: 'all', label: 'All Items', icon: FiShoppingBag },
-  { value: 'books', label: 'Books & Study Material', icon: FiBook },
-  { value: 'electronics', label: 'Electronics & Gadgets', icon: FiZap },
-  { value: 'furniture', label: 'Furniture & Decor', icon: FiTarget },
-  { value: 'clothing', label: 'Clothing & Fashion', icon: FiTag },
-  { value: 'sports', label: 'Sports & Fitness', icon: FiAward },
-  { value: 'other', label: 'Other Items', icon: FiMoreHorizontal }
-];
-
-// Product conditions
-const productConditions = [
-  { value: 'new', label: 'Brand New', color: 'green' },
-  { value: 'excellent', label: 'Excellent', color: 'blue' },
-  { value: 'good', label: 'Good', color: 'yellow' },
-  { value: 'fair', label: 'Fair', color: 'orange' },
-  { value: 'poor', label: 'Poor', color: 'red' }
-];
-
-  
-  // Marketplace state
-  const [marketplaceItems, setMarketplaceItems] = useState([]);
-  const [showAddItemModal, setShowAddItemModal] = useState(false);
-  const [newItem, setNewItem] = useState({
-    title: '',
-    description: '',
-    price: '',
-    category: 'books',
-    condition: 'good',
-    images: [],
-    contactInfo: ''
-  });
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [priceRange, setPriceRange] = useState({ min: 0, max: 10000 });
   
   // Other existing state variables
   const [academicEvents, setAcademicEvents] = useState([]);
   const [knowledgeExchange, setKnowledgeExchange] = useState([]);
-  const [contextualFeed, setContextualFeed] = useState('marketplace'); // Changed default to marketplace
+  const [contextualFeed, setContextualFeed] = useState('social'); // Changed default to social
   
   const db = getDatabase();
   const firestore = getFirestore();
@@ -478,7 +441,7 @@ const productConditions = [
     );
   };
 
-  // College Badge Component (SINGLE VERSION - REMOVE THE DUPLICATE)
+  // College Badge Component
   const CollegeBadge = ({ college, isUserCollege = false }) => {
     if (!college) return null;
     
@@ -499,22 +462,6 @@ const productConditions = [
       </div>
     );
   };
-
-  // REMOVE THIS DUPLICATE DECLARATION:
-  // const CollegeBadge = ({ college, isUserCollege = false }) => {
-  //   if (!college) return null;
-  //   
-  //   return (
-  //     <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-  //       isUserCollege 
-  //         ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
-  //         : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-  //     }`}>
-  //       <FiUsers className="w-3 h-3 mr-1" />
-  //       {college}
-  //     </div>
-  //   );
-  // };
 
   // ...existing handlers remain the same...
 
@@ -691,7 +638,7 @@ const productConditions = [
     const options = {
       responsive: true,
       plugins: {
-        legend: {  // Fixed: Added colon after 'legend'
+        legend: {
           display: false,
         },
         tooltip: {
@@ -939,7 +886,7 @@ const productConditions = [
       
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div className="text-center p-3 bg-white dark:bg-black rounded-lg border border-emerald-200 dark:border-emerald-800">
-          <FiCpu  className="w-6 h-6 mx-auto mb-2 text-emerald-600" />
+          <FiCpu className="w-6 h-6 mx-auto mb-2 text-emerald-600" />
           <p className="font-medium text-gray-900 dark:text-white">Teaching</p>
           <p className="text-sm text-gray-600 dark:text-gray-400">{exchange.teaching}</p>
         </div>
@@ -976,81 +923,7 @@ const productConditions = [
   };
 
   // INNOVATIVE FEATURE 4: Study Mood & Learning Analytics
-  const StudyMoodSelector = () => {
-    const moods = [
-      { emoji: "🎯", label: "Focused", value: "focused" },
-      { emoji: "⚡", label: "Energetic", value: "energetic" },
-      { emoji: "🤝", label: "Collaborative", value: "collaborative" },
-      { emoji: "💡", label: "Creative", value: "creative" },
-      { emoji: "😴", label: "Tired", value: "tired" },
-    ];
-
-    return (
-      <div className="bg-white dark:bg-black rounded-2xl p-6 border border-gray-200 dark:border-gray-800 mb-6">
-        <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center space-x-2">
-          <FiZap className="w-5 h-5" />
-          <span>How are you feeling today?</span>
-        </h3>
-        <div className="flex space-x-3">
-          {moods.map((mood) => (
-            <button
-              key={mood.value}
-              onClick={() => setStudyMood(mood.value)}
-              className={`flex flex-col items-center p-3 rounded-lg transition-all ${
-                studyMood === mood.value
-                  ? 'bg-blue-100 dark:bg-blue-900/30 border-2 border-blue-500'
-                  : 'bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700'
-              }`}
-            >
-              <span className="text-2xl mb-1">{mood.emoji}</span>
-              <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{mood.label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
   // INNOVATIVE FEATURE 5: Learning Streak & Gamification
-  const LearningStreakCard = () => (
-    <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-2xl p-6 border border-yellow-200 dark:border-yellow-800 mb-6">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
-            <FiAward className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h3 className="font-bold text-gray-900 dark:text-white">Learning Streak</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Keep the momentum going!</p>
-          </div>
-        </div>
-        <div className="text-right">
-          <div className="text-3xl font-bold text-orange-600 dark:text-orange-400">{learningStreak}</div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">
-            days
-          </div>
-        </div>
-      </div>
-      
-      <div className="mb-4">
-        <div className="flex justify-between text-sm mb-2">
-          <span className="text-gray-600 dark:text-gray-400">Weekly Progress</span>
-          <span className="font-medium text-gray-900 dark:text-white">6/7 days</span>
-        </div>
-        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-          <div className="bg-gradient-to-r from-yellow-400 to-orange-500 h-2 rounded-full" style={{ width: '86%' }}></div>
-        </div>
-      </div>
-      
-      <div className="flex items-center justify-between text-sm">
-        <span className="text-gray-600 dark:text-gray-400">Next milestone: 10 days</span>
-        <span className="px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 rounded-full text-xs">
-          🎯 Almost there!
-        </span>
-      </div>
-    </div>
-  );
-
   // INNOVATIVE FEATURE 6: Smart Academic Events
   const AcademicEventCard = ({ event }) => (
     <div className="bg-gradient-to-r from-rose-50 to-pink-50 dark:from-rose-900/20 dark:to-pink-900/20 rounded-2xl p-6 border border-rose-200 dark:border-rose-800 mb-6">
@@ -1098,10 +971,10 @@ const productConditions = [
   // INNOVATIVE FEATURE 7: Contextual Feed Tabs
   const ContextualFeedTabs = () => {
     const tabs = [
-      { id: 'marketplace', label: 'Marketplace', icon: FiShoppingBag, color: 'blue' },
       { id: 'social', label: 'Social', icon: FiUsers, color: 'green' },
       { id: 'career', label: 'Career', icon: FiTrendingUp, color: 'purple' },
       { id: 'events', label: 'Events', icon: FiCalendar, color: 'rose' },
+      // Study tab removed
     ];
 
     return (
@@ -1127,9 +1000,9 @@ const productConditions = [
     );
   };
 
-  // Enhanced render method with marketplace content
+  // Enhanced render method with contextual content
   const renderContextualContent = () => {
-    // Helper function to render a single post (existing code)
+    // Helper function to render a single post
     const renderPost = (post) => (
       <div key={post.id} className="bg-white dark:bg-black rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden mb-6 hover:shadow-md dark:hover:shadow-xl transition-shadow duration-300">
         {/* Post Header */}
@@ -1286,23 +1159,8 @@ const productConditions = [
       </div>
     );
 
-    const filteredMarketplaceItems = marketplaceItems.filter(item => {
-      if (selectedCategory === 'all') return true;
-      return item.category === selectedCategory;
-    }).filter(item => {
-      if (feedMode === 'college' && userCollege) {
-        return item.sellerDetails?.college === userCollege;
-      }
-      return true;
-    });
-
     const contextualContent = {
-      marketplace: [
-        <MarketplaceFilters key="marketplace-filters" />,
-        ...filteredMarketplaceItems.map(item => (
-          <MarketplaceItemCard key={`marketplace-${item.id}`} item={item} />
-        ))
-      ],
+      // Remove the 'study' entry
       social: [
         // Render social posts (non-academic, non-poll content)
         ...shuffledContent
@@ -1334,6 +1192,11 @@ const productConditions = [
       ],
     };
 
+    // If study is the active feed, redirect to social
+    if (contextualFeed === 'study') {
+      setContextualFeed('social');
+    }
+
     // If no specific content for the current tab, show all content
     const currentContent = contextualContent[contextualFeed];
     if (!currentContent || currentContent.length === 0) {
@@ -1348,474 +1211,12 @@ const productConditions = [
     return currentContent;
   };
 
-  // Fetch marketplace items from Firebase
-  useEffect(() => {
-    const fetchMarketplaceItems = () => {
-      const itemsRef = ref(db, 'marketplace');
-      onValue(itemsRef, async (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-          const itemsArray = await Promise.all(
-            Object.entries(data).map(async ([id, item]) => {
-              if (!item.sellerId) {
-                console.warn('Marketplace item missing sellerId:', id, item);
-                return null;
-              }
-              
-              const sellerDetails = await fetchUserDetails(item.sellerId);
-              return {
-                id,
-                ...item,
-                sellerDetails,
-              };
-            })
-          );
-          setMarketplaceItems(itemsArray.filter(item => item !== null));
-        } else {
-          setMarketplaceItems([]);
-        }
-      });
-    };
-
-    fetchMarketplaceItems();
-  }, []);
-
-  // Add new marketplace item
-  const handleAddMarketplaceItem = async () => {
-    if (!user) {
-      alert("You must be logged in to sell items.");
-      return;
-    }
-
-    if (!newItem.title || !newItem.price || !newItem.description) {
-      alert("Please fill in all required fields.");
-      return;
-    }
-
-    const itemsRef = ref(db, 'marketplace');
-    const itemData = {
-      ...newItem,
-      sellerId: user.uid,
-      createdAt: serverTimestamp(),
-      status: 'available', // available, sold, reserved
-      views: 0,
-      favorites: {}
-    };
-
-    try {
-      await push(itemsRef, itemData);
-      setNewItem({
-        title: '',
-        description: '',
-        price: '',
-        category: 'books',
-        condition: 'good',
-        images: [],
-        contactInfo: ''
-      });
-      setShowAddItemModal(false);
-      alert("Item added successfully!");
-    } catch (error) {
-      console.error("Failed to add item:", error);
-      alert("Failed to add item. Please try again.");
-    }
-  };
-
-  // Mark item as sold
-  const handleMarkAsSold = async (itemId) => {
-    if (!user) return;
-    
-    const itemRef = ref(db, `marketplace/${itemId}`);
-    try {
-      await update(itemRef, { status: 'sold' });
-    } catch (error) {
-      console.error("Failed to mark as sold:", error);
-    }
-  };
-
-  // Delete marketplace item
-  const handleDeleteItem = async (itemId, sellerId) => {
-    if (!user || user.uid !== sellerId) {
-      alert("You can only delete your own items.");
-      return;
-    }
-
-    if (window.confirm("Are you sure you want to delete this item?")) {
-      const itemRef = ref(db, `marketplace/${itemId}`);
-      try {
-        await remove(itemRef);
-      } catch (error) {
-        console.error("Failed to delete item:", error);
-      }
-    }
-  };
-
-  // Add to favorites
-  const handleToggleFavorite = async (itemId) => {
-    if (!user) {
-      alert("You must be logged in to favorite items.");
-      return;
-    }
-
-    const favRef = ref(db, `marketplace/${itemId}/favorites/${user.uid}`);
-    const snapshot = await get(favRef);
-    
-    try {
-      if (snapshot.exists()) {
-        await update(ref(db, `marketplace/${itemId}/favorites`), { [user.uid]: null });
-      } else {
-        await update(ref(db, `marketplace/${itemId}/favorites`), { [user.uid]: true });
-      }
-    } catch (error) {
-      console.error("Failed to update favorites:", error);
-    }
-  };
-
-  // Increment view count
-  const handleViewItem = async (itemId) => {
-    const viewRef = ref(db, `marketplace/${itemId}/views`);
-    const snapshot = await get(viewRef);
-    const currentViews = snapshot.val() || 0;
-    
-    try {
-      await update(ref(db, `marketplace/${itemId}`), { views: currentViews + 1 });
-    } catch (error) {
-      console.error("Failed to update views:", error);
-    }
-  };
-
-  // Marketplace Item Card Component
-  const MarketplaceItemCard = ({ item }) => {
-    const condition = productConditions.find(c => c.value === item.condition);
-    const isOwner = user?.uid === item.sellerId;
-    const isFavorited = item.favorites?.[user?.uid];
-
-    return (
-      <div className="bg-white dark:bg-black rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden mb-6 hover:shadow-lg dark:hover:shadow-xl transition-all duration-300">
-        {/* Item Header */}
-        <div className="flex items-center justify-between p-6 pb-4">
-          <div className="flex items-center space-x-3 flex-1 min-w-0">
-            <img
-              src={item.sellerDetails?.avatar || "/default-avatar.png"}
-              alt="Seller Avatar"
-              className="w-10 h-10 rounded-full object-cover ring-2 ring-blue-100 dark:ring-blue-900"
-            />
-            <div className="flex-1 min-w-0">
-              <h4 className="font-semibold text-gray-900 dark:text-white text-sm truncate">
-                {item.sellerDetails?.fullName || "Unknown Seller"}
-              </h4>
-              <div className="flex items-center space-x-2">
-                <p className="text-gray-500 dark:text-gray-400 text-xs truncate">
-                  @{item.sellerDetails?.username || "unknown"} • 
-                  {item.sellerDetails?.college && (
-                    <span className="ml-1">{item.sellerDetails.college}</span>
-                  )}
-                </p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <span className={`px-2 py-1 rounded-full text-xs font-medium bg-${condition?.color}-100 dark:bg-${condition?.color}-900/30 text-${condition?.color}-700 dark:text-${condition?.color}-300`}>
-              {condition?.label}
-            </span>
-            {isOwner && (
-              <div className="flex space-x-1">
-                <button
-                  onClick={() => handleDeleteItem(item.id, item.sellerId)}
-                  className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-colors"
-                >
-                  <FiTrash2 className="w-4 h-4" />
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Item Content */}
-        <div className="px-6">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex-1">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{item.title}</h3>
-              <p className="text-gray-700 dark:text-gray-300 text-sm mb-3">{item.description}</p>
-              
-              <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400 mb-4">
-                <span className="flex items-center space-x-1">
-                  <FiTag className="w-4 h-4" />
-                  <span className="capitalize">{item.category}</span>
-                </span>
-                <span className="flex items-center space-x-1">
-                  <FiEye className="w-4 h-4" />
-                  <span>{item.views || 0} views</span>
-                </span>
-                {item.status === 'sold' && (
-                  <span className="px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-full text-xs font-medium">
-                    SOLD
-                  </span>
-                )}
-              </div>
-            </div>
-            
-            <div className="text-right ml-4">
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                ₹{parseFloat(item.price).toLocaleString()}
-              </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">
-                {new Date(item.createdAt).toLocaleDateString()}
-              </div>
-            </div>
-          </div>
-
-          {/* Item Images */}
-          {item.images && item.images.length > 0 && (
-            <div className="mb-4 rounded-xl overflow-hidden">
-              <img 
-                src={item.images[0]} 
-                alt={item.title}
-                className="w-full h-48 object-cover cursor-pointer"
-                onClick={() => handleViewItem(item.id)}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Item Actions */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 dark:border-gray-800">
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={() => handleToggleFavorite(item.id)}
-              className={`flex items-center space-x-2 transition-colors duration-200 ${
-                isFavorited
-                  ? 'text-red-600 dark:text-red-400'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400'
-              }`}
-            >
-              <FiHeart className={`w-5 h-5 ${isFavorited ? 'fill-current' : ''}`} />
-              <span className="text-sm font-medium">
-                {Object.keys(item.favorites || {}).length}
-              </span>
-            </button>
-            
-            <button className="flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200">
-              <FiMessageCircle className="w-5 h-5" />
-              <span className="text-sm font-medium">Contact</span>
-            </button>
-            
-            <button className="flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors duration-200">
-              <FiShare className="w-5 h-5" />
-              <span className="text-sm font-medium">Share</span>
-            </button>
-          </div
-          >
-          {isOwner && item.status === 'available' && (
-            <button
-              onClick={() => handleMarkAsSold(item.id)}
-              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
-            >
-              Mark as Sold
-            </button>
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  // Add Item Modal Component
-  const AddItemModal = () => {
-    if (!showAddItemModal) return null;
-
-    return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white dark:bg-black rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Sell Your Item</h2>
-              <button
-                onClick={() => setShowAddItemModal(false)}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
-              >
-                <FiMoreHorizontal className="w-5 h-5 text-gray-500" />
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              {/* Title */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Item Title *
-                </label>
-                <input
-                  type="text"
-                  value={newItem.title}
-                  onChange={(e) => setNewItem({ ...newItem, title: e.target.value })}
-                  className="w-full p-3 border border-gray-200 dark:border-gray-800 bg-white dark:bg-black text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter item title..."
-                />
-              </div>
-
-              {/* Description */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Description *
-                </label>
-                <textarea
-                  value={newItem.description}
-                  onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
-                  rows="4"
-                  className="w-full p-3 border border-gray-200 dark:border-gray-800 bg-white dark:bg-black text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                  placeholder="Describe your item..."
-                />
-              </div>
-
-              {/* Price and Category */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Price (₹) *
-                  </label>
-                  <input
-                    type="number"
-                    value={newItem.price}
-                    onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
-                    className="w-full p-3 border border-gray-200 dark:border-gray-800 bg-white dark:bg-black text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="0"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Category
-                  </label>
-                  <select
-                    value={newItem.category}
-                    onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}
-                    className="w-full p-3 border border-gray-200 dark:border-gray-800 bg-white dark:bg-black text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    {marketplaceCategories.slice(1).map(category => (
-                      <option key={category.value} value={category.value}>
-                        {category.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Condition */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Condition
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {productConditions.map(condition => (
-                    <button
-                      key={condition.value}
-                      onClick={() => setNewItem({ ...newItem, condition: condition.value })}
-                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                        newItem.condition === condition.value
-                          ? `bg-${condition.color}-100 dark:bg-${condition.color}-900/30 text-${condition.color}-700 dark:text-${condition.color}-300 border-2 border-${condition.color}-500`
-                          : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700'
-                      }`}
-                    >
-                      {condition.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Contact Info */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Contact Information
-                </label>
-                <input
-                  type="text"
-                  value={newItem.contactInfo}
-                  onChange={(e) => setNewItem({ ...newItem, contactInfo: e.target.value })}
-                  className="w-full p-3 border border-gray-200 dark:border-gray-800 bg-white dark:bg-black text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Phone number, email, or other contact details..."
-                />
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex justify-end space-x-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-800">
-              <button
-                onClick={() => setShowAddItemModal(false)}
-                className="px-6 py-3 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-medium transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAddMarketplaceItem}
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-colors"
-              >
-                List Item
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // Marketplace Filters Component
-  const MarketplaceFilters = () => (
-    <div className="bg-white dark:bg-black rounded-2xl p-6 border border-gray-200 dark:border-gray-800 mb-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-gray-900 dark:text-white flex items-center space-x-2">
-          <FiShoppingBag className="w-5 h-5" />
-          <span>Marketplace</span>
-        </h3>
-        <button
-          onClick={() => setShowAddItemModal(true)}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center space-x-2"
-        >
-          <FiShoppingBag className="w-4 h-4" />
-          <span>Sell Item</span>
-        </button>
-      </div>
-
-      {/* Category Filter */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        {marketplaceCategories.map(category => {
-          const Icon = category.icon;
-          return (
-            <button
-              key={category.value}
-              onClick={() => setSelectedCategory(category.value)}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                selectedCategory === category.value
-                  ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-2 border-blue-500'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              <span>{category.label}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Stats */}
-      <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
-        <span>
-          {marketplaceItems.filter(item => 
-            selectedCategory === 'all' || item.category === selectedCategory
-          ).length} items available
-        </span>
-        <span>
-          {marketplaceItems.filter(item => item.status === 'available').length} active listings
-        </span>
-      </div>
-    </div>
-  );
-
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 bg-gray-50 dark:bg-black min-h-screen transition-colors duration-300">
       {/* Time-based greeting */}
       <div className={`bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-2xl p-4 mb-6 border border-blue-200 dark:border-blue-800`}>
         <p className="text-center font-medium text-gray-900 dark:text-white">
-          🛒 Welcome to the Student Marketplace! Buy and sell with your peers.
+          {getTimeBasedGreeting().greeting}
         </p>
       </div>
 
@@ -1828,9 +1229,6 @@ const productConditions = [
       <div className="space-y-6">
         {renderContextualContent()}
       </div>
-
-      {/* Add Item Modal */}
-      <AddItemModal />
     </div>
   );
 };

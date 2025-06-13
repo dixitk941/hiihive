@@ -28,6 +28,7 @@ const UserProfile = React.lazy(() => import("./Pages/UserProfile"));
 const Settings = React.lazy(() => import("./Pages/SettingPage"));
 const Notification = React.lazy(() => import("./Pages/NotificationPage"));
 const Stories = React.lazy(() => import("./components/Stories"));
+const MarketPlacePage = React.lazy(() => import("./Pages/MarketPlacePage"));
 
 function AppWrapper() {
   const [user, setUser] = useState(null);
@@ -143,6 +144,10 @@ function AppContent({ user, showPopUp, setShowPopUp }) {
               element={user ? <AnimatedPage><KnowledgeHub /></AnimatedPage> : <Navigate to="/login" />}
             />
             <Route path="/communities" element={<Communities />} />
+            <Route
+              path="/marketplace"
+              element={user ? <AnimatedPage><MarketPlacePage /></AnimatedPage> : <Navigate to="/login" />}
+            />
           </Routes>
         </AnimatePresence>
       </Suspense>

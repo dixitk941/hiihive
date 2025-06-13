@@ -8,7 +8,8 @@ import {
   FiMessageSquare, 
   FiUpload, 
   FiCompass, 
-  FiUser
+  FiUser,
+  FiShoppingBag  // Import shopping bag icon for marketplace
 } from 'react-icons/fi';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
@@ -54,10 +55,10 @@ const SidebarLeft = ({ currentUser }) => {
       hoverColor: 'hover:bg-pink-50 dark:hover:bg-pink-900/20'
     },
     { 
-      id: 'profile', 
-      icon: FiUser, 
-      label: 'Profile', 
-      path: '/profile',
+      id: 'marketplace', 
+      icon: FiShoppingBag, 
+      label: 'Marketplace', 
+      path: '/marketplace',
       hoverColor: 'hover:bg-purple-50 dark:hover:bg-purple-900/20'
     }
   ];

@@ -1,7 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { HomeIcon, ChatBubbleLeftIcon, ArrowUpTrayIcon, MagnifyingGlassIcon, PlayIcon, UserIcon } from '@heroicons/react/24/outline';
-import { HomeIcon as HomeIconSolid, ChatBubbleLeftIcon as ChatIconSolid, ArrowUpTrayIcon as UploadIconSolid, MagnifyingGlassIcon as ExploreIconSolid, PlayIcon as PlayIconSolid, UserIcon as UserIconSolid } from '@heroicons/react/24/solid';
+import { 
+  HomeIcon, 
+  ChatBubbleLeftIcon, 
+  ArrowUpTrayIcon, 
+  MagnifyingGlassIcon, 
+  ShoppingBagIcon, 
+  UserIcon 
+} from '@heroicons/react/24/outline';
+import { 
+  HomeIcon as HomeIconSolid, 
+  ChatBubbleLeftIcon as ChatIconSolid, 
+  ArrowUpTrayIcon as UploadIconSolid, 
+  MagnifyingGlassIcon as ExploreIconSolid, 
+  ShoppingBagIcon as ShoppingBagIconSolid, 
+  UserIcon as UserIconSolid 
+} from '@heroicons/react/24/solid';
 
 const BottomBar = ({ toggleSidebarRight, isStoryActive }) => {
   const navigate = useNavigate();
@@ -55,11 +69,11 @@ const BottomBar = ({ toggleSidebarRight, isStoryActive }) => {
       isSpecial: true
     },
     {
-      id: 'hivee',
-      path: '/hivee',
-      icon: PlayIcon,
-      iconSolid: PlayIconSolid,
-      action: () => navigate('/hivee')
+      id: 'marketplace',
+      path: '/marketplace',
+      icon: ShoppingBagIcon,
+      iconSolid: ShoppingBagIconSolid,
+      action: () => navigate('/marketplace')
     },
     {
       id: 'chat',
