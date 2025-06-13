@@ -7,7 +7,7 @@ import {
   FiHome, 
   FiMessageSquare, 
   FiUpload, 
-  FiCompass, 
+  FiUsers, // Changed from FiCompass to FiUsers for Social Connect
   FiUser,
   FiShoppingBag  // Import shopping bag icon for marketplace
 } from 'react-icons/fi';
@@ -31,7 +31,7 @@ const SidebarLeft = ({ currentUser }) => {
   const location = useLocation();
   const firestore = getFirestore();
 
-  // Clean navigation items
+  // Updated navigation items - replaced explore with social-connect
   const navigationItems = [
     { 
       id: 'home', 
@@ -41,11 +41,11 @@ const SidebarLeft = ({ currentUser }) => {
       hoverColor: 'hover:bg-blue-50 dark:hover:bg-blue-900/20'
     },
     { 
-      id: 'explore', 
-      icon: FiCompass, 
-      label: 'Explore', 
-      path: '/explore',
-      hoverColor: 'hover:bg-green-50 dark:hover:bg-green-900/20'
+      id: 'social-connect', 
+      icon: FiUsers, 
+      label: 'Social Connect', 
+      path: '/social-connect',
+      hoverColor: 'hover:bg-purple-50 dark:hover:bg-purple-900/20'
     },
     { 
       id: 'messages', 
@@ -59,7 +59,7 @@ const SidebarLeft = ({ currentUser }) => {
       icon: FiShoppingBag, 
       label: 'Marketplace', 
       path: '/marketplace',
-      hoverColor: 'hover:bg-purple-50 dark:hover:bg-purple-900/20'
+      hoverColor: 'hover:bg-orange-50 dark:hover:bg-orange-900/20'
     }
   ];
 

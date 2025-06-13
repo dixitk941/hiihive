@@ -4,7 +4,7 @@ import {
   HomeIcon, 
   ChatBubbleLeftIcon, 
   ArrowUpTrayIcon, 
-  MagnifyingGlassIcon, 
+  UserGroupIcon, // Changed from MagnifyingGlassIcon to UserGroupIcon for Social Connect
   ShoppingBagIcon, 
   UserIcon 
 } from '@heroicons/react/24/outline';
@@ -12,7 +12,7 @@ import {
   HomeIcon as HomeIconSolid, 
   ChatBubbleLeftIcon as ChatIconSolid, 
   ArrowUpTrayIcon as UploadIconSolid, 
-  MagnifyingGlassIcon as ExploreIconSolid, 
+  UserGroupIcon as SocialConnectIconSolid, // Changed from ExploreIconSolid to SocialConnectIconSolid
   ShoppingBagIcon as ShoppingBagIconSolid, 
   UserIcon as UserIconSolid 
 } from '@heroicons/react/24/solid';
@@ -42,6 +42,10 @@ const BottomBar = ({ toggleSidebarRight, isStoryActive }) => {
     if (path === '/') {
       return location.pathname === '/';
     }
+    // Handle both social-connect and explore paths for active state
+    if (path === '/social-connect') {
+      return location.pathname === '/social-connect' || location.pathname === '/explore';
+    }
     return location.pathname.startsWith(path);
   };
 
@@ -51,14 +55,16 @@ const BottomBar = ({ toggleSidebarRight, isStoryActive }) => {
       path: '/',
       icon: HomeIcon,
       iconSolid: HomeIconSolid,
-      action: () => navigate('/')
+      action: () => navigate('/'),
+      label: 'Home'
     },
     {
-      id: 'explore',
-      path: '/explore',
-      icon: MagnifyingGlassIcon,
-      iconSolid: ExploreIconSolid,
-      action: () => navigate('/explore')
+      id: 'social-connect', // Changed from 'explore' to 'social-connect'
+      path: '/social-connect',
+      icon: UserGroupIcon, // Changed icon
+      iconSolid: SocialConnectIconSolid, // Changed icon
+      action: () => navigate('/social-connect'),
+      label: 'Connect' // Added label for accessibility
     },
     {
       id: 'upload',
@@ -66,21 +72,24 @@ const BottomBar = ({ toggleSidebarRight, isStoryActive }) => {
       icon: ArrowUpTrayIcon,
       iconSolid: UploadIconSolid,
       action: () => navigate('/upload'),
-      isSpecial: true
+      isSpecial: true,
+      label: 'Upload'
     },
     {
       id: 'marketplace',
       path: '/marketplace',
       icon: ShoppingBagIcon,
       iconSolid: ShoppingBagIconSolid,
-      action: () => navigate('/marketplace')
+      action: () => navigate('/marketplace'),
+      label: 'Market'
     },
     {
       id: 'chat',
       path: '/chatlist',
       icon: ChatBubbleLeftIcon,
       iconSolid: ChatIconSolid,
-      action: () => navigate('/chatlist')
+      action: () => navigate('/chatlist'),
+      label: 'Chat'
     }
   ];
 
@@ -111,6 +120,7 @@ const BottomBar = ({ toggleSidebarRight, isStoryActive }) => {
                   key={tab.id}
                   onClick={tab.action}
                   className="relative group"
+                  aria-label={tab.label}
                 >
                   {/* Glow effect - smaller */}
                   <div className="absolute inset-0 bg-blue-500 rounded-full blur-md opacity-25 group-active:opacity-40 transition-opacity duration-200" />
@@ -130,17 +140,20 @@ const BottomBar = ({ toggleSidebarRight, isStoryActive }) => {
                 className={`relative flex items-center justify-center p-2.5 rounded-xl transition-all duration-200 group ${
                   active 
                     ? isDarkMode
-                      ? 'text-blue-400 bg-blue-500/20' 
-                      : 'text-blue-600 bg-blue-50'
+                      ? 'text-purple-400 bg-purple-500/20' // Changed to purple for social connect theme
+                      : 'text-purple-600 bg-purple-50'
                     : isDarkMode 
                       ? 'text-gray-400 hover:text-white hover:bg-gray-800/50' 
                       : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
                 }`}
+                aria-label={tab.label}
               >
                 {/* Active indicator - top dot */}
                 {active && (
                   <div className={`absolute -top-0.5 w-1 h-1 rounded-full ${
-                    isDarkMode ? 'bg-blue-400' : 'bg-blue-600'
+                    tab.id === 'social-connect' 
+                      ? isDarkMode ? 'bg-purple-400' : 'bg-purple-600' // Purple for social connect
+                      : isDarkMode ? 'bg-blue-400' : 'bg-blue-600'
                   }`} />
                 )}
                 
@@ -150,6 +163,17 @@ const BottomBar = ({ toggleSidebarRight, isStoryActive }) => {
                     ? 'scale-110' 
                     : 'group-hover:scale-105'
                 }`} />
+                
+                {/* Optional: Add subtle label below icon for better UX */}
+                {active && (
+                  <span className={`absolute -bottom-1 text-xs font-medium ${
+                    tab.id === 'social-connect'
+                      ? isDarkMode ? 'text-purple-400' : 'text-purple-600'
+                      : isDarkMode ? 'text-blue-400' : 'text-blue-600'
+                  }`}>
+                    {tab.id === 'social-connect' ? '•' : '•'}
+                  </span>
+                )}
               </button>
             );
           })}

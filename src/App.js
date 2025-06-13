@@ -14,6 +14,7 @@ import Loading from "./components/Loading";
 import KnowledgeHub from "./components/KnowledgeHub/KnowledgeHub";
 import PopUp from "./components/PopUp"; // Import your PopUp component
 import Communities from './components/Communities';
+import SocialConnect from './Pages/SocialConnect';
 
 const HomePage = React.lazy(() => import("./Pages/HomePage"));
 const HiveePage = React.lazy(() => import("./components/Hivee"));
@@ -110,6 +111,10 @@ function AppContent({ user, showPopUp, setShowPopUp }) {
             <Route
               path="/settings"
               element={user ? <AnimatedPage><Settings /></AnimatedPage> : <Navigate to="/login" />}
+            />
+            <Route
+            path="/social-connect"
+            element={user ? <AnimatedPage><SocialConnect currentUser={user} /></AnimatedPage> : <Navigate to="/login" />}
             />
             <Route
               path="/user/:userId"
