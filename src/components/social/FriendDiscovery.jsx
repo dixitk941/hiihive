@@ -10,14 +10,17 @@ import {
   doc, 
   addDoc,
   deleteDoc,
-  updateDoc, 
+  updateDoc,
+  getDoc, 
   arrayUnion, 
-  arrayRemove 
+  arrayRemove,
+  Timestamp
 } from 'firebase/firestore';
-import { db } from '../firebaseConfig';
+import { auth, db } from '../firebaseConfig'; // Updated path
 import { useNavigate } from 'react-router-dom';
+import { onAuthStateChanged } from 'firebase/auth';
 
-const FriendDiscovery = ({ currentUser }) => {
+const FriendDiscovery = ({ currentUser: passedUser }) => {
   const [discoveryMode, setDiscoveryMode] = useState('all');
   const [suggestedUsers, setSuggestedUsers] = useState([]);
   const [connectingUsers, setConnectingUsers] = useState(new Set());
@@ -27,113 +30,148 @@ const FriendDiscovery = ({ currentUser }) => {
   const [searchLoading, setSearchLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentUser, setCurrentUser] = useState(passedUser);
   const navigate = useNavigate();
+
+  // Get current user directly from auth if not passed as prop
+  useEffect(() => {
+    console.log("FriendDiscovery initialized with passedUser:", passedUser?.uid);
+    
+    // If we already have a user from props, use it
+    if (passedUser?.uid) {
+      console.log("Using passed user:", passedUser.uid);
+      setCurrentUser(passedUser);
+      return;
+    }
+    
+    console.log("No passed user, checking auth directly");
+    
+    // Otherwise, listen for auth state changes
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        console.log("Auth user found:", user.uid);
+        try {
+          // Get full user data from Firestore
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          if (userDoc.exists()) {
+            const userData = { id: user.uid, ...userDoc.data() };
+            console.log("User data fetched from Firestore:", userData.id);
+            setCurrentUser(userData);
+          } else {
+            console.log("User document not found in Firestore");
+            // Fallback to basic auth user
+            setCurrentUser({
+              id: user.uid,
+              fullName: user.displayName || 'User',
+              email: user.email,
+            });
+          }
+        } catch (err) {
+          console.error("Error fetching user data:", err);
+          setError("Failed to load user data: " + err.message);
+          // Fallback to basic auth user
+          setCurrentUser({
+            id: user.uid,
+            fullName: user.displayName || 'User',
+            email: user.email,
+          });
+        }
+      } else {
+        console.log("No authenticated user");
+        setCurrentUser(null);
+      }
+    });
+    
+    return () => unsubscribe();
+  }, [passedUser]);
+
+  // Watch for changes to currentUser
+  useEffect(() => {
+    console.log("Current user updated:", currentUser?.uid);
+  }, [currentUser]);
 
   // Fetch suggested users from Firestore based on discovery mode
   const fetchSuggestedUsers = async () => {
-    if (!currentUser?.uid) return;
+    if (!currentUser?.id && !currentUser?.uid) {
+      console.log("No current user ID for fetching users");
+      setLoading(false);
+      setSuggestedUsers([]); // Clear any existing data
+      return;
+    }
+    
+    const userId = currentUser.id || currentUser.uid;
+    console.log("Fetching suggested users for:", userId);
     
     setLoading(true);
     setError(null);
     
     try {
+      console.log("Starting Firestore query");
       const usersRef = collection(db, 'users');
       let usersQuery;
       
-      // Determine query based on discovery mode
-      switch(discoveryMode) {
-        case 'college':
-          // Users from same college
-          usersQuery = query(
-            usersRef,
-            where('college', '==', currentUser.college || ''),
-            where('__name__', '!=', currentUser.uid),
-            limit(10)
-          );
-          break;
-          
-        case 'interests':
-          // Basic query - we'll filter for interests client-side
-          usersQuery = query(
-            usersRef,
-            where('__name__', '!=', currentUser.uid),
-            limit(20)
-          );
-          break;
-          
-        case 'nearby':
-          // Could implement with geolocation in the future
-          usersQuery = query(
-            usersRef,
-            where('__name__', '!=', currentUser.uid),
-            limit(10)
-          );
-          break;
-          
-        case 'mutual':
-          // Basic query - we'll filter for mutual connections client-side
-          usersQuery = query(
-            usersRef,
-            where('__name__', '!=', currentUser.uid),
-            limit(20)
-          );
-          break;
-          
-        case 'all':
-        default:
-          usersQuery = query(
-            usersRef,
-            where('__name__', '!=', currentUser.uid),
-            orderBy('createdAt', 'desc'),
-            limit(10)
-          );
-          break;
-      }
+      // Use a simpler query to debug initial loading issues
+      usersQuery = query(
+        usersRef,
+        where('__name__', '!=', userId),
+        limit(10)
+      );
       
+      console.log("Executing query...");
       const querySnapshot = await getDocs(usersQuery);
+      console.log(`Query returned ${querySnapshot.size} users`);
       
-      // Transform the data and check follow status
-      const usersPromises = querySnapshot.docs.map(async (userDoc) => {
-        const userData = { id: userDoc.id, ...userDoc.data() };
-        
-        // Check if current user is following this user
-        const followStatus = await checkFollowStatus(userData.id);
-        
+      // Simple transformation - avoid complex async operations for now
+      const users = querySnapshot.docs.map(doc => {
         return {
-          ...userData,
-          isFollowing: followStatus
+          id: doc.id,
+          ...doc.data(),
+          // Default isFollowing for now to avoid additional queries
+          isFollowing: false 
         };
       });
       
-      let users = await Promise.all(usersPromises);
-      
-      // Additional client-side filtering based on mode
-      if (discoveryMode === 'interests' && currentUser.interests?.length > 0) {
-        users = users.filter(user => 
-          user.interests?.some(interest => 
-            currentUser.interests.includes(interest)
-          )
-        );
-      }
-      
-      if (discoveryMode === 'mutual' && currentUser.following?.length > 0) {
-        users = users.filter(user => 
-          user.following?.some(followedId => 
-            currentUser.following.includes(followedId)
-          )
-        );
-      }
-      
+      console.log(`Processed ${users.length} users`);
       setSuggestedUsers(users);
     } catch (error) {
       console.error('Error fetching suggested users:', error);
-      setError(error.message);
+      setError(`Failed to load users: ${error.message}`);
+      setSuggestedUsers([]); // Clear on error
     } finally {
       setLoading(false);
     }
   };
 
-  // Check if current user is following this user
+  // Fix dependency array and add cleanup
+  useEffect(() => {
+    let isMounted = true;
+    
+    if (!isSearching && (currentUser?.id || currentUser?.uid)) {
+      console.log("Triggering user fetch");
+      fetchSuggestedUsers()
+        .then(() => {
+          if (isMounted) {
+            console.log("Fetch completed successfully");
+          }
+        })
+        .catch(err => {
+          if (isMounted) {
+            console.error("Fetch failed:", err);
+            setLoading(false);
+          }
+        });
+    } else if (!currentUser?.id && !currentUser?.uid) {
+      // Reset loading state if no user
+      console.log("No user ID, resetting loading state");
+      setLoading(false);
+    }
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [discoveryMode, currentUser?.id, currentUser?.uid, isSearching]);
+
+  // Simplified follow status check that won't block rendering
   const checkFollowStatus = async (userId) => {
     if (!currentUser?.uid) return false;
     
@@ -151,13 +189,7 @@ const FriendDiscovery = ({ currentUser }) => {
     }
   };
 
-  useEffect(() => {
-    if (!isSearching && currentUser?.uid) {
-      fetchSuggestedUsers();
-    }
-  }, [discoveryMode, currentUser, isSearching]);
-
-  // Search functionality
+  // Simplified search that won't get stuck
   const searchUsers = async (searchQuery) => {
     if (!searchQuery.trim()) {
       setSearchResults([]);
@@ -169,79 +201,64 @@ const FriendDiscovery = ({ currentUser }) => {
     setIsSearching(true);
 
     try {
-      const usersRef = collection(db, 'users');
-      const querySnapshot = await getDocs(usersRef);
-      const results = [];
+      const searchLower = searchQuery.toLowerCase();
       
-      querySnapshot.forEach(doc => {
-        const userData = { id: doc.id, ...doc.data() };
-        const searchLower = searchQuery.toLowerCase();
-        
-        if (
-          (userData.fullName && userData.fullName.toLowerCase().includes(searchLower)) ||
-          (userData.username && userData.username.toLowerCase().includes(searchLower))
-        ) {
-          if (userData.id !== currentUser?.uid) {
-            results.push(userData);
-          }
-        }
-      });
+      // Simple query without complex filtering
+      const usersRef = collection(db, 'users');
+      const querySnapshot = await getDocs(query(usersRef, limit(20)));
+      
+      // Filter client-side for simple search
+      const results = querySnapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .filter(user => 
+          user.id !== (currentUser?.id || currentUser?.uid) && 
+          ((user.fullName && user.fullName.toLowerCase().includes(searchLower)) ||
+           (user.username && user.username.toLowerCase().includes(searchLower)))
+        )
+        .map(user => ({
+          ...user,
+          isFollowing: false // Default value to avoid loading delays
+        }));
 
-      // Check follow status for each search result
-      const resultsWithFollowStatus = await Promise.all(
-        results.map(async (user) => {
-          const isFollowing = await checkFollowStatus(user.id);
-          return { ...user, isFollowing };
-        })
-      );
-
-      setSearchResults(resultsWithFollowStatus);
+      setSearchResults(results);
     } catch (error) {
       console.error('Error searching users:', error);
-      setError(error.message);
+      setError(`Search failed: ${error.message}`);
+      setSearchResults([]);
     } finally {
       setSearchLoading(false);
     }
   };
 
-  // Debounced search
+  // Debounced search with cleanup
   useEffect(() => {
+    if (!searchTerm.trim()) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+    
     const timeoutId = setTimeout(() => {
-      if (searchTerm) {
-        searchUsers(searchTerm);
-      }
-    }, 300);
+      searchUsers(searchTerm);
+    }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [searchTerm, currentUser]);
+  }, [searchTerm]);
 
-  // Connect (follow) user functionality
+  // Simplified connect function
   const handleConnect = async (userId, isFollowing) => {
-    if (!currentUser?.uid) return;
+    const currentUserId = currentUser?.id || currentUser?.uid;
+    if (!currentUserId) return;
     
     setConnectingUsers(prev => new Set([...prev, userId]));
     
     try {
-      const followRef = collection(db, 'follows');
-      
       if (!isFollowing) {
         // Follow user
-        await addDoc(followRef, {
-          followerId: currentUser.uid,
+        await addDoc(collection(db, 'follows'), {
+          followerId: currentUserId,
           followingId: userId,
-          createdAt: new Date()
-        });
-        
-        // Update following array in current user document
-        const currentUserRef = doc(db, 'users', currentUser.uid);
-        await updateDoc(currentUserRef, {
-          following: arrayUnion(userId)
-        });
-        
-        // Update followers array in target user document
-        const targetUserRef = doc(db, 'users', userId);
-        await updateDoc(targetUserRef, {
-          followers: arrayUnion(currentUser.uid)
+          createdAt: Timestamp.now()
         });
         
         // Update UI
@@ -259,10 +276,10 @@ const FriendDiscovery = ({ currentUser }) => {
           );
         }
       } else {
-        // Unfollow logic
+        // Unfollow user
         const followQuery = query(
-          followRef,
-          where('followerId', '==', currentUser.uid),
+          collection(db, 'follows'),
+          where('followerId', '==', currentUserId),
           where('followingId', '==', userId)
         );
         
@@ -270,18 +287,6 @@ const FriendDiscovery = ({ currentUser }) => {
         
         if (!followSnapshot.empty) {
           await deleteDoc(followSnapshot.docs[0].ref);
-          
-          // Update following array in current user document
-          const currentUserRef = doc(db, 'users', currentUser.uid);
-          await updateDoc(currentUserRef, {
-            following: arrayRemove(userId)
-          });
-          
-          // Update followers array in target user document
-          const targetUserRef = doc(db, 'users', userId);
-          await updateDoc(targetUserRef, {
-            followers: arrayRemove(currentUser.uid)
-          });
           
           // Update UI
           if (isSearching) {
@@ -299,13 +304,9 @@ const FriendDiscovery = ({ currentUser }) => {
           }
         }
       }
-      
-      // Add haptic feedback
-      if (navigator.vibrate) {
-        navigator.vibrate(50);
-      }
     } catch (error) {
       console.error('Error connecting with user:', error);
+      setError(`Connection failed: ${error.message}`);
     } finally {
       setConnectingUsers(prev => {
         const newSet = new Set(prev);
@@ -315,16 +316,17 @@ const FriendDiscovery = ({ currentUser }) => {
     }
   };
 
-  // Message user functionality (similar to UserList)
+  // Message functionality
   const handleMessage = async (userId) => {
-    if (!currentUser?.uid) return;
+    const currentUserId = currentUser?.id || currentUser?.uid;
+    if (!currentUserId) return;
     
     try {
       // Check if chat room already exists
       const chatRoomsRef = collection(db, 'chatRooms');
       const q = query(
         chatRoomsRef,
-        where('users', 'array-contains', currentUser.uid)
+        where('users', 'array-contains', currentUserId)
       );
       
       const querySnapshot = await getDocs(q);
@@ -332,45 +334,42 @@ const FriendDiscovery = ({ currentUser }) => {
       
       querySnapshot.forEach(doc => {
         const data = doc.data();
-        if (data.users.includes(userId)) {
+        if (data.users && data.users.includes(userId)) {
           existingChatRoom = { id: doc.id, ...data };
         }
       });
       
       if (existingChatRoom) {
-        // Navigate to existing chat
+        console.log("Navigating to existing chat:", existingChatRoom.id);
         navigate(`/chat/${existingChatRoom.id}`);
       } else {
-        // Create a new chat room
+        // Create a new chat room with users array (not participants)
         const newChatRoomRef = await addDoc(chatRoomsRef, {
-          users: [currentUser.uid, userId],
-          messages: [],
-          createdAt: new Date()
+          users: [currentUserId, userId],
+          createdAt: Timestamp.now(),
+          lastMessage: null,
+          lastMessageTimestamp: null
         });
         
-        // Navigate to the new chat room
+        console.log("Created new chat room:", newChatRoomRef.id);
         navigate(`/chat/${newChatRoomRef.id}`);
       }
       
-      // Add haptic feedback
+      // Add haptic feedback if supported
       if (navigator.vibrate) {
         navigator.vibrate(50);
       }
     } catch (error) {
       console.error('Error starting chat:', error);
+      setError(`Failed to start chat: ${error.message}`);
     }
   };
 
-  // Handle wave - simplified for now, could implement notification later
+  // Simplified wave function
   const handleWave = (userId) => {
-    if (!currentUser?.uid) return;
-    
-    // Could implement a notification to the user
     console.log(`Waved to user: ${userId}`);
-    
-    // Add haptic feedback
     if (navigator.vibrate) {
-      navigator.vibrate([50, 50, 50]);
+      navigator.vibrate(50);
     }
   };
 
@@ -481,6 +480,15 @@ const FriendDiscovery = ({ currentUser }) => {
 
       {/* User List */}
       <div className="p-5">
+        {/* Auth status */}
+        {!currentUser?.id && !currentUser?.uid && (
+          <div className="mb-4 p-3 bg-yellow-100 dark:bg-yellow-900/40 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+            <p className="text-yellow-800 dark:text-yellow-300 text-sm">
+              You need to log in to see personalized suggestions
+            </p>
+          </div>
+        )}
+        
         {error && (
           <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/40 border border-red-200 dark:border-red-800 rounded-lg">
             <p className="text-red-800 dark:text-red-300 text-sm">
@@ -526,7 +534,7 @@ const FriendDiscovery = ({ currentUser }) => {
             {/* View All Button */}
             {displayUsers.length > 4 && (
               <button 
-                onClick={() => navigate('/users')}
+                onClick={() => navigate('/explore')}
                 className="w-full mt-5 py-3 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-all duration-200 border border-blue-200 dark:border-blue-800 hover:border-blue-300 dark:hover:border-blue-700"
               >
                 {isSearching ? `View All ${searchResults.length} Results` : 'View All People'}
@@ -549,7 +557,9 @@ const FriendDiscovery = ({ currentUser }) => {
             <p className="text-gray-500 dark:text-gray-400 text-sm">
               {isSearching 
                 ? `Try searching for a different name or username`
-                : 'Check back later for new connection suggestions'
+                : (currentUser?.id || currentUser?.uid)
+                  ? 'Check back later for new connection suggestions'
+                  : 'Log in to discover people'
               }
             </p>
           </div>
@@ -560,36 +570,41 @@ const FriendDiscovery = ({ currentUser }) => {
 };
 
 const UserCard = ({ user, mode, onConnect, onMessage, onWave, isConnecting, currentUser }) => {
-  // Calculate if users have mutual interests
+  // Calculate if users have mutual interests - with safeguards
   const getMutualInterests = () => {
-    if (!user.interests || !currentUser?.interests) return [];
+    if (!user?.interests?.length || !currentUser?.interests?.length) return [];
     
-    return user.interests?.filter(interest => 
-      currentUser.interests?.includes(interest)
-    ) || [];
+    return user.interests.filter(interest => 
+      currentUser.interests.includes(interest)
+    );
   };
 
   const mutualInterests = getMutualInterests();
-  const hasMutualCollege = user.college && currentUser?.college && user.college === currentUser.college;
+  const hasMutualCollege = user?.college && currentUser?.college && user.college === currentUser.college;
+  
+  // Safely access user properties
+  const photoURL = user?.photoURL || user?.avatar;
+  const fullName = user?.fullName || user?.displayName || 'Unknown User';
+  const username = user?.username || 'user';
+  
+  // State to track if image failed to load
+  const [imageError, setImageError] = useState(false);
 
   return (
     <div className="flex items-start space-x-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200">
       {/* Avatar */}
       <div className="relative flex-shrink-0">
         <div className="w-14 h-14 rounded-xl overflow-hidden ring-2 ring-gray-200 dark:ring-gray-700">
-          {user.avatar ? (
+          {photoURL && !imageError ? (
             <img
-              src={user.avatar}
-              alt={user.fullName || 'User'}
+              src={photoURL}
+              alt={fullName}
               className="w-full h-full object-cover"
-              onError={(e) => {
-                e.target.style.display = 'none';
-                e.target.nextSibling.style.display = 'flex';
-              }}
+              onError={() => setImageError(true)}
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-lg">
-              {(user.fullName || 'U')[0].toUpperCase()}
+              {fullName[0].toUpperCase()}
             </div>
           )}
         </div>
@@ -613,10 +628,10 @@ const UserCard = ({ user, mode, onConnect, onMessage, onWave, isConnecting, curr
         <div className="flex items-start justify-between mb-2">
           <div className="flex-1 min-w-0">
             <h4 className="font-semibold text-gray-900 dark:text-white text-base truncate">
-              {user.fullName || 'Unknown User'}
+              {fullName}
             </h4>
             <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-              @{user.username || 'username'}
+              @{username}
             </p>
           </div>
         </div>
@@ -647,13 +662,13 @@ const UserCard = ({ user, mode, onConnect, onMessage, onWave, isConnecting, curr
             </div>
           )}
 
-          {user.bio && (
+          {user?.bio && (
             <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
               {user.bio}
             </p>
           )}
 
-          {user.course && (
+          {user?.course && (
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               {user.course} • {user.year || 'Student'}
             </p>
