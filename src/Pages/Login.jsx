@@ -14,6 +14,7 @@ import logo from "../assets/logo.svg";
 import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
 import ReactAvatar from 'react-avatar';
 import { createOrJoinCollegeCommunity, addCommunityToUserProfile } from '../utils/communityManager';
+import { useTheme } from '../context/ThemeContext'; // Import the theme context
 
 const colleges = [
   "Rajiv Academy For Technology and Management, Mathura",
@@ -37,26 +38,9 @@ const LoginPage = () => {
   const [error, setError] = useState("");
   const [isDesktop, setIsDesktop] = useState(window.innerWidth > 768);
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  // Use theme context instead of local state and system preference
+  const { isDarkMode } = useTheme();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    setIsDarkMode(prefersDarkMode);
-    document.body.classList.toggle('dark', prefersDarkMode);
-
-    const handleThemeChange = (e) => {
-      setIsDarkMode(e.matches);
-      document.body.classList.toggle('dark', e.matches);
-    };
-
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    mediaQuery.addEventListener('change', handleThemeChange);
-
-    return () => {
-      mediaQuery.removeEventListener('change', handleThemeChange);
-    };
-  }, []);
 
   const prohibitedWords = [
     "sex", "sexual", "explicit", "violence", "hate", "abuse", 
@@ -295,14 +279,14 @@ const LoginPage = () => {
   }, []);
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'bg-black' : 'bg-gray-50'} transition-colors duration-300`}>
+    <div className="min-h-screen bg-gray-50 dark:bg-black transition-colors duration-300">
       {/* Header */}
-      <div className={`w-full ${isDarkMode ? 'bg-black border-gray-900' : 'bg-white border-gray-200'} shadow-sm border-b`}>
+      <div className="w-full bg-white dark:bg-black border-gray-200 dark:border-gray-900 shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <img src={logo} alt="HiiHive Logo" className="h-10 w-10 rounded-2xl" />
-              <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                 HiiHive
               </h1>
             </div>
@@ -316,10 +300,10 @@ const LoginPage = () => {
           <div className="mx-auto w-full max-w-md">
             {/* Welcome Section */}
             <div className="text-center mb-8">
-              <h2 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
                 {isSignUp ? "Join HiiHive" : "Welcome back"}
               </h2>
-              <p className={`text-base ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              <p className="text-base text-gray-600 dark:text-gray-300">
                 {isSignUp 
                   ? "Create your account to get started" 
                   : "Sign in to your account"

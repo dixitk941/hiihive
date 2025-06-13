@@ -5,31 +5,13 @@ import { db } from './firebaseConfig';
 import Settings from '../components/Settings';
 import BottomBar from '../components/BottomBar';
 import SidebarLeft from '../components/SidebarLeft';
+import { useTheme } from '../context/ThemeContext'; // Import the theme context
 
 const SettingPage = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isDarkMode, setIsDarkMode] = useState(false);
-
-  useEffect(() => {
-    // Check system preference and set dark mode
-    const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    setIsDarkMode(prefersDarkMode);
-    document.body.classList.toggle('dark', prefersDarkMode);
-
-    // Listen for theme changes
-    const handleThemeChange = (e) => {
-      setIsDarkMode(e.matches);
-      document.body.classList.toggle('dark', e.matches);
-    };
-
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    mediaQuery.addEventListener('change', handleThemeChange);
-
-    return () => {
-      mediaQuery.removeEventListener('change', handleThemeChange);
-    };
-  }, []);
+  // Use theme context instead of local state and system preference
+  const { isDarkMode } = useTheme();
 
   useEffect(() => {
     const auth = getAuth();
@@ -66,7 +48,7 @@ const SettingPage = () => {
   }
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-black text-white' : 'bg-gray-50 text-gray-900'}`}>
+    <div className="min-h-screen bg-gray-50 dark:bg-black text-gray-900 dark:text-white transition-colors duration-300">
       {/* Sidebar Component - Will be positioned fixed internally */}
       <SidebarLeft currentUser={currentUser} />
 

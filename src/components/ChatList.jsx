@@ -13,13 +13,17 @@ import {
   FiMoreVertical,
   FiPhone,
   FiVideo,
-  FiSend
+  FiSend,
+  FiMoon,
+  FiSun
 } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getUserCommunities, debugListAllCommunities, findAvailableCollegeCommunity, joinCollegeCommunity } from '../utils/communityManager';
 import { FaGraduationCap, FaUsers, FaHashtag, FaBullhorn, FaBook, FaCalendarAlt } from 'react-icons/fa';
+import { useTheme } from '../context/ThemeContext'; // Import the theme context
 
 const ChatListPage = ({ currentUser, isSidebar = false }) => {
+  // Existing state variables
   const [searchTerm, setSearchTerm] = useState('');
   const [chatRooms, setChatRooms] = useState([]);
   const [users, setUsers] = useState([]);
@@ -33,6 +37,9 @@ const ChatListPage = ({ currentUser, isSidebar = false }) => {
   const [availableCollegeCommunity, setAvailableCollegeCommunity] = useState(null);
   const [showCommunityJoinOption, setShowCommunityJoinOption] = useState(false);
   const navigate = useNavigate();
+  
+  // Add the theme context
+  const { isDarkMode, toggleDarkMode } = useTheme();
 
   // Helper function to generate initials from name
   const getInitials = (name) => {
@@ -559,6 +566,16 @@ const ChatListPage = ({ currentUser, isSidebar = false }) => {
                 )}
               </div>
             </div>
+
+            {/* Add theme toggle button */}
+            {!isSidebar && (
+              <button
+                onClick={toggleDarkMode}
+                className="p-3 rounded-2xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              >
+                {isDarkMode ? <FiSun className="w-5 h-5" /> : <FiMoon className="w-5 h-5" />}
+              </button>
+            )}
 
             {/* Toggle buttons */}
             <div className={`flex bg-gray-100 dark:bg-gray-800 rounded-lg ${isSidebar ? 'p-0.5' : 'p-1'}`}>

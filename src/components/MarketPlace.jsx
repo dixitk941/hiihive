@@ -24,11 +24,11 @@ const Modal = memo(({ isOpen, onClose, children }) => {
   
   return createPortal(
     <div 
-      className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center z-50"
+      className="fixed inset-0 bg-black/80 dark:bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center z-50"
       onClick={onClose}
     >
       <div 
-        className="bg-black text-white rounded-t-3xl sm:rounded-3xl w-full sm:w-auto sm:max-w-md max-h-[95vh] overflow-y-auto"
+        className="bg-white dark:bg-black text-gray-900 dark:text-white rounded-t-3xl sm:rounded-3xl w-full sm:w-auto sm:max-w-md max-h-[95vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
         {children}
@@ -40,7 +40,7 @@ const Modal = memo(({ isOpen, onClose, children }) => {
 
 // Item Card Component - Mobile First Design
 const ItemCard = memo(({ item, onViewDetails, onContact }) => (
-  <div className="bg-gray-900 rounded-3xl overflow-hidden active:scale-95 transition-all duration-200 border border-gray-800">
+  <div className="bg-white dark:bg-gray-900 rounded-3xl overflow-hidden active:scale-95 transition-all duration-200 border border-gray-200 dark:border-gray-800">
     <div className="relative">
       {item.imageUrl ? (
         <img 
@@ -49,8 +49,8 @@ const ItemCard = memo(({ item, onViewDetails, onContact }) => (
           className="w-full h-48 object-cover"
         />
       ) : (
-        <div className="w-full h-48 bg-gray-800 flex items-center justify-center">
-          <div className="text-gray-500 text-center">
+        <div className="w-full h-48 bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+          <div className="text-gray-500 dark:text-gray-400 text-center">
             <ShoppingBag size={48} />
             <p className="text-sm mt-2">No image</p>
           </div>
@@ -66,35 +66,35 @@ const ItemCard = memo(({ item, onViewDetails, onContact }) => (
         </span>
       </div>
       <div className="absolute top-3 right-3">
-        <span className="bg-black/70 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-medium text-white">
+        <span className="bg-black/70 dark:bg-black/70 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-medium text-white">
           {item.categoryIcon}
         </span>
       </div>
     </div>
     
     <div className="p-4">
-      <h3 className="font-semibold text-white mb-2 line-clamp-2 text-lg">{item.title}</h3>
-      <p className="text-gray-400 text-sm mb-3 line-clamp-2">{item.description}</p>
+      <h3 className="font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2 text-lg">{item.title}</h3>
+      <p className="text-gray-600 dark:text-gray-400 text-sm mb-3 line-clamp-2">{item.description}</p>
       
       <div className="flex items-center justify-between mb-4">
-        <span className="text-2xl font-bold text-blue-400">₹{item.price?.toLocaleString()}</span>
+        <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">₹{item.price?.toLocaleString()}</span>
         <button 
           onClick={() => onViewDetails(item)}
-          className="text-blue-400 hover:text-blue-300 text-sm font-medium flex items-center gap-1 active:scale-95 transition-all"
+          className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium flex items-center gap-1 active:scale-95 transition-all"
         >
           <Eye size={16} />
           View
         </button>
       </div>
       
-      <div className="flex items-center justify-between pt-3 border-t border-gray-800">
+      <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-800">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
             <span className="text-white font-semibold text-sm">
               {item.sellerName?.charAt(0)?.toUpperCase()}
             </span>
           </div>
-          <span className="text-sm text-gray-400">@{item.sellerUsername}</span>
+          <span className="text-sm text-gray-600 dark:text-gray-400">@{item.sellerUsername}</span>
         </div>
         <button 
           onClick={() => onContact(item)}
@@ -148,12 +148,12 @@ const DemandCard = memo(({ demand, onRespond }) => (
 const ItemDetailsContent = memo(({ item, onClose, onContact }) => (
   <div className="p-6">
     <div className="flex items-center justify-between mb-6">
-      <h2 className="text-2xl font-bold text-white">Item Details</h2>
+      <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Item Details</h2>
       <button 
         onClick={onClose}
-        className="p-2 hover:bg-gray-800 rounded-full transition-colors active:scale-95"
+        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors active:scale-95"
       >
-        <X size={20} className="text-white" />
+        <X size={20} className="text-gray-900 dark:text-white" />
       </button>
     </div>
     
@@ -169,12 +169,12 @@ const ItemDetailsContent = memo(({ item, onClose, onContact }) => (
     
     <div className="space-y-4">
       <div>
-        <h3 className="text-xl font-semibold text-white">{item.title}</h3>
-        <p className="text-gray-400 mt-2">{item.description}</p>
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{item.title}</h3>
+        <p className="text-gray-600 dark:text-gray-400 mt-2">{item.description}</p>
       </div>
       
       <div className="flex flex-wrap items-center gap-3">
-        <span className="text-3xl font-bold text-blue-400">₹{item.price?.toLocaleString()}</span>
+        <span className="text-3xl font-bold text-blue-600 dark:text-blue-400">₹{item.price?.toLocaleString()}</span>
         <span className={`px-3 py-1 rounded-full text-sm font-medium ${
           item.condition === 'new' 
             ? 'bg-green-600 text-white' 
@@ -182,20 +182,20 @@ const ItemDetailsContent = memo(({ item, onClose, onContact }) => (
         }`}>
           {item.condition.toUpperCase()}
         </span>
-        <span className="bg-gray-800 text-gray-300 px-3 py-1 rounded-full text-sm">
+        <span className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-3 py-1 rounded-full text-sm">
           {item.categoryIcon} {item.categoryName}
         </span>
       </div>
       
-      <div className="flex items-center gap-3 pt-4 border-t border-gray-800">
+      <div className="flex items-center gap-3 pt-4 border-t border-gray-200 dark:border-gray-800">
         <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
           <span className="text-white font-semibold">
             {item.sellerName?.charAt(0)?.toUpperCase()}
           </span>
         </div>
         <div>
-          <p className="font-medium text-white">{item.sellerName}</p>
-          <p className="text-sm text-gray-400">@{item.sellerUsername}</p>
+          <p className="font-medium text-gray-900 dark:text-white">{item.sellerName}</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">@{item.sellerUsername}</p>
         </div>
       </div>
       
@@ -214,36 +214,36 @@ const ItemDetailsContent = memo(({ item, onClose, onContact }) => (
 const AddItemFormContent = memo(({ onClose, onSubmit, form, onChange, loading }) => (
   <div className="p-6">
     <div className="flex items-center justify-between mb-6">
-      <h2 className="text-2xl font-bold text-white">Sell an Item</h2>
+      <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Sell an Item</h2>
       <button 
         onClick={onClose}
-        className="p-2 hover:bg-gray-800 rounded-full transition-colors active:scale-95"
+        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors active:scale-95"
       >
-        <X size={20} className="text-white" />
+        <X size={20} className="text-gray-900 dark:text-white" />
       </button>
     </div>
     
     <form onSubmit={onSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">Title</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Title</label>
         <input
           type="text"
           name="title"
           value={form.title}
           onChange={onChange}
-          className="w-full px-4 py-4 bg-gray-800 border border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400"
+          className="w-full px-4 py-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
           placeholder="Enter item title"
           required
         />
       </div>
       
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
         <textarea
           name="description"
           value={form.description}
           onChange={onChange}
-          className="w-full px-4 py-4 bg-gray-800 border border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400 resize-none"
+          className="w-full px-4 py-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 resize-none"
           rows="3"
           placeholder="Describe your item"
           required
@@ -252,13 +252,13 @@ const AddItemFormContent = memo(({ onClose, onSubmit, form, onChange, loading })
       
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">Price (₹)</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Price (₹)</label>
           <input
             type="number"
             name="price"
             value={form.price}
             onChange={onChange}
-            className="w-full px-4 py-4 bg-gray-800 border border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400"
+            className="w-full px-4 py-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
             placeholder="0"
             required
             min="0"
@@ -266,12 +266,12 @@ const AddItemFormContent = memo(({ onClose, onSubmit, form, onChange, loading })
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">Category</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category</label>
           <select
             name="category"
             value={form.category}
             onChange={onChange}
-            className="w-full px-4 py-4 bg-gray-800 border border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+            className="w-full px-4 py-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
           >
             <option value="books">📚 Books</option>
             <option value="electronics">📱 Electronics</option>
@@ -281,7 +281,7 @@ const AddItemFormContent = memo(({ onClose, onSubmit, form, onChange, loading })
       </div>
       
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">Condition</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Condition</label>
         <div className="flex gap-4">
           <label className="flex items-center">
             <input
@@ -292,7 +292,7 @@ const AddItemFormContent = memo(({ onClose, onSubmit, form, onChange, loading })
               onChange={onChange}
               className="mr-2 accent-blue-600"
             />
-            <span className="text-white">New</span>
+            <span className="text-gray-900 dark:text-white">New</span>
           </label>
           <label className="flex items-center">
             <input
@@ -303,14 +303,14 @@ const AddItemFormContent = memo(({ onClose, onSubmit, form, onChange, loading })
               onChange={onChange}
               className="mr-2 accent-blue-600"
             />
-            <span className="text-white">Used</span>
+            <span className="text-gray-900 dark:text-white">Used</span>
           </label>
         </div>
       </div>
       
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">Image (Optional)</label>
-        <div className="border-2 border-dashed border-gray-700 rounded-2xl p-6 text-center bg-gray-800">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Image (Optional)</label>
+        <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-6 text-center bg-gray-50 dark:bg-gray-800">
           <input
             type="file"
             name="image"
@@ -320,11 +320,11 @@ const AddItemFormContent = memo(({ onClose, onSubmit, form, onChange, loading })
             id="image-upload"
           />
           <label htmlFor="image-upload" className="cursor-pointer">
-            <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-            <p className="text-sm text-gray-400">Click to upload image</p>
+            <Upload className="mx-auto h-8 w-8 text-gray-500 dark:text-gray-400 mb-2" />
+            <p className="text-sm text-gray-500 dark:text-gray-400">Click to upload image</p>
           </label>
           {form.image && (
-            <p className="text-sm text-green-400 mt-2">✓ {form.image.name}</p>
+            <p className="text-sm text-green-600 dark:text-green-400 mt-2">✓ {form.image.name}</p>
           )}
         </div>
       </div>
@@ -344,36 +344,36 @@ const AddItemFormContent = memo(({ onClose, onSubmit, form, onChange, loading })
 const AddDemandFormContent = memo(({ onClose, onSubmit, form, onChange, loading }) => (
   <div className="p-6">
     <div className="flex items-center justify-between mb-6">
-      <h2 className="text-2xl font-bold text-white">Create Demand</h2>
+      <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Create Demand</h2>
       <button 
         onClick={onClose}
-        className="p-2 hover:bg-gray-800 rounded-full transition-colors active:scale-95"
+        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors active:scale-95"
       >
-        <X size={20} className="text-white" />
+        <X size={20} className="text-gray-900 dark:text-white" />
       </button>
     </div>
     
     <form onSubmit={onSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">What are you looking for?</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">What are you looking for?</label>
         <input
           type="text"
           name="title"
           value={form.title}
           onChange={onChange}
-          className="w-full px-4 py-4 bg-gray-800 border border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-white placeholder-gray-400"
+          className="w-full px-4 py-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
           placeholder="e.g., Looking for a table fan"
           required
         />
       </div>
       
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
         <textarea
           name="description"
           value={form.description}
           onChange={onChange}
-          className="w-full px-4 py-4 bg-gray-800 border border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-white placeholder-gray-400 resize-none"
+          className="w-full px-4 py-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 resize-none"
           rows="3"
           placeholder="Describe what you need in detail"
           required
@@ -382,13 +382,13 @@ const AddDemandFormContent = memo(({ onClose, onSubmit, form, onChange, loading 
       
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">Budget (₹)</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Budget (₹)</label>
           <input
             type="number"
             name="budget"
             value={form.budget}
             onChange={onChange}
-            className="w-full px-4 py-4 bg-gray-800 border border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-white placeholder-gray-400"
+            className="w-full px-4 py-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
             placeholder="Max budget"
             required
             min="0"
@@ -396,12 +396,12 @@ const AddDemandFormContent = memo(({ onClose, onSubmit, form, onChange, loading 
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">Category</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category</label>
           <select
             name="category"
             value={form.category}
             onChange={onChange}
-            className="w-full px-4 py-4 bg-gray-800 border border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-white"
+            className="w-full px-4 py-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900 dark:text-white"
           >
             <option value="books">📚 Books</option>
             <option value="electronics">📱 Electronics</option>
@@ -831,18 +831,19 @@ const MarketPlace = () => {
     );
   }
 
+  // Main container section
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-gray-50 dark:bg-black text-gray-900 dark:text-white">
       {/* Mobile Header */}
-      <div className="bg-black border-b border-gray-800 sticky top-0 z-40">
+      <div className="bg-white dark:bg-black border-b border-gray-200 dark:border-gray-800 sticky top-0 z-40">
         <div className="px-4 py-4">
           {/* Top Row */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
-              <ShoppingBag className="text-blue-400" size={28} />
+              <ShoppingBag className="text-blue-600 dark:text-blue-400" size={28} />
               <div>
-                <h1 className="text-xl font-bold text-white">Marketplace</h1>
-                <span className="text-xs text-gray-400 flex items-center gap-1">
+                <h1 className="text-xl font-bold text-gray-900 dark:text-white">Marketplace</h1>
+                <span className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1">
                   <MapPin size={12} />
                   {user?.college}
                 </span>
@@ -851,21 +852,21 @@ const MarketPlace = () => {
             
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="p-3 hover:bg-gray-800 rounded-full transition-colors active:scale-95"
+              className="p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors active:scale-95"
             >
-              <Filter className="text-white" size={20} />
+              <Filter className="text-gray-900 dark:text-white" size={20} />
             </button>
           </div>
 
           {/* Search Bar */}
           <div className="relative mb-4">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400" size={20} />
             <input
               type="text"
               placeholder="Search items or demands..."
               value={searchQuery}
               onChange={handleSearchChange}
-              className="w-full pl-12 pr-4 py-4 bg-gray-900 border border-gray-700 rounded-3xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400"
+              className="w-full pl-12 pr-4 py-4 bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-3xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
             />
           </div>
 
@@ -875,7 +876,7 @@ const MarketPlace = () => {
               <select
                 value={selectedCategory}
                 onChange={handleCategoryChange}
-                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+                className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
               >
                 {categories.map(category => (
                   <option key={category.id} value={category.id}>
@@ -888,7 +889,7 @@ const MarketPlace = () => {
                 <select
                   value={selectedCondition}
                   onChange={handleConditionChange}
-                  className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+                  className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
                 >
                   {conditions.map(condition => (
                     <option key={condition.id} value={condition.id}>
@@ -901,13 +902,13 @@ const MarketPlace = () => {
           )}
 
           {/* Tab Navigation */}
-          <div className="flex bg-gray-900 rounded-2xl p-1">
+          <div className="flex bg-gray-100 dark:bg-gray-900 rounded-2xl p-1">
             <button
               onClick={() => handleSetActiveTab('marketplace')}
               className={`flex-1 py-3 px-4 rounded-2xl font-medium text-sm transition-all active:scale-95 ${
                 activeTab === 'marketplace'
                   ? 'bg-blue-600 text-white'
-                  : 'text-gray-400'
+                  : 'text-gray-600 dark:text-gray-400'
               }`}
             >
               🛍️ Items ({filteredItems.length})
@@ -917,7 +918,7 @@ const MarketPlace = () => {
               className={`flex-1 py-3 px-4 rounded-2xl font-medium text-sm transition-all active:scale-95 ${
                 activeTab === 'demands'
                   ? 'bg-orange-600 text-white'
-                  : 'text-gray-400'
+                  : 'text-gray-600 dark:text-gray-400'
               }`}
             >
               📦 Demands ({filteredDemands.length})

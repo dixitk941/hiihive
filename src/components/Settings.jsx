@@ -29,6 +29,7 @@ import {
   FiLock,
   FiHelpCircle
 } from "react-icons/fi";
+import { useTheme } from '../context/ThemeContext';
 
 const colleges = [
   "Rajiv Academy For Technology and Management, Mathura",
@@ -98,12 +99,7 @@ const Settings = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [popupVisible, setPopupVisible] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
-
-  useEffect(() => {
-    const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    setIsDarkMode(prefersDarkMode);
-  }, []);
+  const { isDarkMode, toggleDarkMode } = useTheme();
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -259,7 +255,7 @@ const Settings = () => {
             </div>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setIsDarkMode(!isDarkMode)}
+                onClick={toggleDarkMode}
                 className="p-3 rounded-2xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
               >
                 {isDarkMode ? <FiSun className="w-5 h-5" /> : <FiMoon className="w-5 h-5" />}

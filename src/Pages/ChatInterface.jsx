@@ -5,30 +5,13 @@ import { db } from './firebaseConfig';
 import ChatListPage from '../components/ChatList';
 import ChatInterface from '../components/ChatInterface';
 import loaderGif from '../assets/normload.gif';
+import { useTheme } from '../context/ThemeContext'; // Import the theme context
 
 const ChatPage = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isDarkMode, setIsDarkMode] = useState(false);
-
-  // Theme detection and management
-  useEffect(() => {
-    const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    setIsDarkMode(prefersDarkMode);
-    document.documentElement.classList.toggle('dark', prefersDarkMode);
-
-    const handleThemeChange = (e) => {
-      setIsDarkMode(e.matches);
-      document.documentElement.classList.toggle('dark', e.matches);
-    };
-
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    mediaQuery.addEventListener('change', handleThemeChange);
-
-    return () => {
-      mediaQuery.removeEventListener('change', handleThemeChange);
-    };
-  }, []);
+  // Use the theme context instead of local state
+  const { isDarkMode } = useTheme();
 
   // User authentication and data fetching
   useEffect(() => {

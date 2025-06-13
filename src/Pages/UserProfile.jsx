@@ -6,27 +6,13 @@ import SidebarLeft from '../components/SidebarLeft';
 import UserProfileComponent from '../components/UserProfile';
 import BottomBar from '../components/BottomBar';
 import loaderGif from '../assets/normload.gif';
+import { useTheme } from '../context/ThemeContext'; // Import the theme context
 
 const UserProfilePage = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isDarkMode, setIsDarkMode] = useState(false);
-
-  useEffect(() => {
-    // Detect system theme and apply dark mode
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    setIsDarkMode(mediaQuery.matches);
-
-    const handleThemeChange = (e) => {
-      setIsDarkMode(e.matches);
-    };
-
-    mediaQuery.addEventListener('change', handleThemeChange);
-
-    return () => {
-      mediaQuery.removeEventListener('change', handleThemeChange);
-    };
-  }, []);
+  // Use theme context instead of local state and system preference
+  const { isDarkMode } = useTheme();
 
   useEffect(() => {
     const auth = getAuth();
@@ -54,20 +40,20 @@ const UserProfilePage = () => {
     return () => unsubscribe();
   }, []);
 
-  // Apply dark or light theme classes
-  const themeClass = isDarkMode ? 'bg-black text-white' : 'bg-gray-50 text-black';
+  // Replace themeClass with Tailwind dark mode classes
+  // const themeClass = isDarkMode ? 'bg-black text-white' : 'bg-gray-50 text-black';
 
   if (loading) {
     return (
-      <div className={`flex justify-center items-center min-h-screen ${themeClass}`}>
+      <div className="flex justify-center items-center min-h-screen bg-gray-50 dark:bg-black">
         <div className="relative flex flex-col items-center">
           <div className="relative">
             <img src={loaderGif} alt="Loading..." className="w-16 h-16 opacity-80" />
             <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-blue-600 rounded-full opacity-20 animate-pulse" />
           </div>
           <div className="mt-6 text-center">
-            <p className="text-lg font-medium mb-2">Loading Profile</p>
-            <p className="text-sm opacity-60">Please wait while we fetch the profile...</p>
+            <p className="text-lg font-medium mb-2 text-gray-900 dark:text-white">Loading Profile</p>
+            <p className="text-sm opacity-60 text-gray-600 dark:text-gray-400">Please wait while we fetch the profile...</p>
           </div>
         </div>
       </div>
@@ -75,7 +61,7 @@ const UserProfilePage = () => {
   }
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${themeClass}`}>
+    <div className="min-h-screen bg-gray-50 dark:bg-black text-gray-900 dark:text-white transition-colors duration-300">
       {/* Desktop Layout */}
       <div className="hidden lg:flex">
         {/* SidebarLeft for main navigation - desktop only */}

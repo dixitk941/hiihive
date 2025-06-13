@@ -6,30 +6,15 @@ import SidebarLeft from '../components/SidebarLeft';
 import ChatListPage from '../components/ChatList'; // Updated import name
 import BottomBar from '../components/BottomBar';
 import loaderGif from '../assets/normload.gif';
+import { useTheme } from '../context/ThemeContext'; // Import the theme context
 
 const ChatList = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  // Use the theme context instead of local state and system preference detection
+  const { isDarkMode } = useTheme();
 
-  // Theme detection and management
-  useEffect(() => {
-    const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    setIsDarkMode(prefersDarkMode);
-    document.documentElement.classList.toggle('dark', prefersDarkMode);
-
-    const handleThemeChange = (e) => {
-      setIsDarkMode(e.matches);
-      document.documentElement.classList.toggle('dark', e.matches);
-    };
-
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    mediaQuery.addEventListener('change', handleThemeChange);
-
-    return () => {
-      mediaQuery.removeEventListener('change', handleThemeChange);
-    };
-  }, []);
+  // Remove the theme detection useEffect completely!
 
   // User authentication and data fetching
   useEffect(() => {
@@ -115,7 +100,7 @@ const ChatList = () => {
   }
 
   return (
-    <div className={`flex flex-col min-h-screen ${isDarkMode ? 'bg-black text-white' : 'bg-white text-gray-900'}`}>
+    <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-black">
       {/* Main Layout */}
       <div className="flex flex-1">
         {/* Left Sidebar - Desktop Only */}

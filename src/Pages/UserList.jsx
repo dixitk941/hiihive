@@ -6,11 +6,13 @@ import SidebarLeft from '../components/SidebarLeft';
 import UsersList from '../components/UserList';
 import BottomBar from '../components/BottomBar';
 import loaderGif from '../assets/normload.gif';
+import { useTheme } from '../context/ThemeContext'; // Import the theme context
 
 function UserList() {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  // Use theme context instead of local state and system preference
+  const { isDarkMode } = useTheme();
 
   // Fetch current user data
   useEffect(() => {
@@ -50,34 +52,6 @@ function UserList() {
 
     return () => unsubscribe();
   }, []);
-
-  // Detect system theme preference
-  useEffect(() => {
-    const matchDarkMode = window.matchMedia('(prefers-color-scheme: dark)');
-    const updateTheme = () => {
-      setIsDarkMode(matchDarkMode.matches);
-    };
-    
-    // Set the initial theme based on system preference
-    updateTheme();
-
-    // Listen for changes to system theme preference
-    matchDarkMode.addEventListener('change', updateTheme);
-
-    // Clean up event listener
-    return () => {
-      matchDarkMode.removeEventListener('change', updateTheme);
-    };
-  }, []);
-
-  // Apply dark or light class to the body based on the system preference
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [isDarkMode]);
 
   // Loading state
   if (loading) {

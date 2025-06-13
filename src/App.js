@@ -15,6 +15,7 @@ import KnowledgeHub from "./components/KnowledgeHub/KnowledgeHub";
 import PopUp from "./components/PopUp"; // Import your PopUp component
 import Communities from './components/Communities';
 import SocialConnect from './Pages/SocialConnect';
+import { ThemeProvider } from './context/ThemeContext';
 
 const HomePage = React.lazy(() => import("./Pages/HomePage"));
 const HiveePage = React.lazy(() => import("./components/Hivee"));
@@ -34,8 +35,6 @@ const MarketPlacePage = React.lazy(() => import("./Pages/MarketPlacePage"));
 function AppWrapper() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
-
-  // State to control PopUp visibility
   const [showPopUp, setShowPopUp] = useState(true);
 
   useEffect(() => {
@@ -57,9 +56,11 @@ function AppWrapper() {
   }
 
   return (
-    <Router>
-      <AppContent user={user} showPopUp={showPopUp} setShowPopUp={setShowPopUp} />
-    </Router>
+    <ThemeProvider>
+      <Router>
+        <AppContent user={user} showPopUp={showPopUp} setShowPopUp={setShowPopUp} />
+      </Router>
+    </ThemeProvider>
   );
 }
 
@@ -196,28 +197,26 @@ const App = ({ children }) => {
 
   useEffect(() => {
     startTransition(() => {
-      // Check system preference
-      const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      setIsDarkMode(prefersDarkMode);
+      // Only check localStorage, ignore system preference
+      const savedTheme = localStorage.getItem('theme');
+      
+      // Default to light mode if no preference is saved
+      const initialDarkMode = savedTheme === 'dark';
+      
+      setIsDarkMode(initialDarkMode);
 
-      // Update body class based on the theme
-      document.body.classList.toggle('dark', prefersDarkMode);
+      // Apply theme to HTML element for Tailwind
+      if (initialDarkMode) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+      
+      // Also update body class for your custom CSS
+      document.body.classList.toggle('dark', initialDarkMode);
     });
 
-    // Listener for theme change
-    const handleThemeChange = (e) => {
-      startTransition(() => {
-        setIsDarkMode(e.matches);
-        document.body.classList.toggle('dark', e.matches);
-      });
-    };
-
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    mediaQuery.addEventListener('change', handleThemeChange);
-
-    return () => {
-      mediaQuery.removeEventListener('change', handleThemeChange);
-    };
+    // Remove system preference listener
   }, []);
 
   return (
