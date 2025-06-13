@@ -310,40 +310,128 @@ const Feeds = () => {
   // Update content filtering when feed mode or content changes
   useEffect(() => {
     if (posts.length > 0 || polls.length > 0) {
-      const combinedContent = [...posts, ...polls.map(poll => ({ ...poll, isPoll: true }))];
-      
-      // Apply filtering based on current feed mode
-      const filteredContent = filterContentByMode(combinedContent);
-      
-      if (!initialLoadComplete) {
-        setShuffledContent(shuffle(filteredContent));
-        setInitialLoadComplete(true);
-      } else {
-        // When feed mode changes, re-filter and update content
-        const updatedContent = shuffledContent.map(item => {
-          if (item.isPoll) {
-            const updatedPoll = polls.find(poll => poll.id === item.id);
-            return updatedPoll ? { ...updatedPoll, isPoll: true } : item;
-          } else {
-            const updatedPost = posts.find(post => post.id === item.id);
-            return updatedPost || item;
-          }
-        });
+      try {
+        // First, properly tag all content types
+        const postsWithTag = posts.map(post => ({ ...post, isPoll: false, contentType: 'post' }));
+        const pollsWithTag = polls.map(poll => ({ ...poll, isPoll: true, contentType: 'poll' }));
         
-        // Re-filter based on current mode
-        const filteredUpdatedContent = filterContentByMode([...posts, ...polls.map(poll => ({ ...poll, isPoll: true }))]);
-        setShuffledContent(filteredUpdatedContent);
+        // Combine content
+        const combinedContent = [...postsWithTag, ...pollsWithTag];
+        
+        // Apply filtering based on current feed mode
+        const filteredContent = filterContentByMode(combinedContent);
+        
+        if (!initialLoadComplete) {
+          // Initial load - do a proper shuffle using Fisher-Yates algorithm
+          const shuffleArray = (array) => {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+              const j = Math.floor(Math.random() * (i + 1));
+              [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+          };
+          
+          console.log("Initial shuffling:", filteredContent.length, "items");
+          const shuffled = shuffleArray(filteredContent);
+          
+          // Store the initial content order IDs to maintain order during updates
+          const contentOrder = shuffled.map(item => ({
+            id: item.id,
+            contentType: item.contentType
+          }));
+          
+          // Save this order to localStorage for persistence
+          localStorage.setItem('contentOrder', JSON.stringify(contentOrder));
+          
+          setShuffledContent(shuffled);
+          setInitialLoadComplete(true);
+        } else {
+          // On subsequent updates (like adding a like), maintain the same order
+          try {
+            // Get the saved content order
+            const savedOrderString = localStorage.getItem('contentOrder');
+            let orderedContent = [...filteredContent];
+            
+            if (savedOrderString) {
+              const savedOrder = JSON.parse(savedOrderString);
+              
+              // Create a map of current content
+              const contentMap = {};
+              filteredContent.forEach(item => {
+                contentMap[`${item.contentType}-${item.id}`] = item;
+              });
+              
+              // Reorder content based on saved order, and add any new content at the end
+              orderedContent = savedOrder
+                .map(orderItem => contentMap[`${orderItem.contentType}-${orderItem.id}`])
+                .filter(item => item !== undefined);
+              
+              // Add any new items that weren't in the original order
+              const orderedIds = new Set(savedOrder.map(item => `${item.contentType}-${item.id}`));
+              const newItems = filteredContent.filter(
+                item => !orderedIds.has(`${item.contentType}-${item.id}`)
+              );
+              
+              if (newItems.length > 0) {
+                // Shuffle just the new items before adding them
+                const shuffleArray = (array) => {
+                  const newArray = [...array];
+                  for (let i = newArray.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+                  }
+                  return newArray;
+                };
+                orderedContent = [...orderedContent, ...shuffleArray(newItems)];
+                
+                // Update the saved order to include new items
+                const updatedOrder = [
+                  ...savedOrder,
+                  ...newItems.map(item => ({
+                    id: item.id,
+                    contentType: item.contentType
+                  }))
+                ];
+                localStorage.setItem('contentOrder', JSON.stringify(updatedOrder));
+              }
+            }
+            
+            setShuffledContent(orderedContent);
+          } catch (error) {
+            console.error("Error maintaining content order:", error);
+            // Fallback to unshuffled content
+            setShuffledContent(filteredContent);
+          }
+        }
+      } catch (error) {
+        console.error("Error processing content:", error);
+        // Fallback in case of error
+        const combinedContent = [
+          ...posts.map(post => ({ ...post, isPoll: false })), 
+          ...polls.map(poll => ({ ...poll, isPoll: true }))
+        ];
+        setShuffledContent(filterContentByMode(combinedContent));
       }
     }
   }, [posts, polls, feedMode, userCollege, initialLoadComplete]);
 
-  // Add a separate useEffect to handle feed mode changes
+  // Also update this effect for feed mode changes
   useEffect(() => {
-    // When feed mode changes, immediately re-filter content
+    // When feed mode changes, re-filter and reshuffle content
     if (initialLoadComplete && (posts.length > 0 || polls.length > 0)) {
-      const combinedContent = [...posts, ...polls.map(poll => ({ ...poll, isPoll: true }))];
-      const filteredContent = filterContentByMode(combinedContent);
-      setShuffledContent(filteredContent);
+      try {
+        const combinedContent = [...posts, ...polls.map(poll => ({ ...poll, isPoll: true }))];
+        const filteredContent = filterContentByMode(combinedContent);
+        
+        // Use a simple built-in shuffle algorithm
+        const reshuffled = [...filteredContent].sort(() => Math.random() - 0.5);
+        
+        console.log("Re-shuffling after feed mode change:", reshuffled.length, "items");
+        setShuffledContent(reshuffled);
+      } catch (error) {
+        console.error("Error re-shuffling content:", error);
+      }
     }
   }, [feedMode]); // Only trigger when feedMode changes
 
@@ -620,592 +708,721 @@ const Feeds = () => {
     await update(userVoteRef, { voted: true });
   };
 
-  const Poll = ({ poll, onVote }) => {
-    const data = {
-      labels: poll.options,
-      datasets: [
-        {
-          label: 'Votes',
-          data: poll.votes,
-          backgroundColor: 'rgba(59, 130, 246, 0.6)',
-          borderColor: 'rgba(59, 130, 246, 1)',
-          borderWidth: 1,
-          borderRadius: 8,
-        },
-      ],
-    };
+  // Define renderPost function outside of Poll component
+  const renderPost = (post) => (
+    <div key={post.id} className="bg-white dark:bg-black rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden mb-6 hover:shadow-md dark:hover:shadow-xl transition-shadow duration-300">
+      {/* Post Header */}
+      <div className="flex items-center justify-between p-6 pb-4">
+        <div className="flex items-center space-x-3 flex-1 min-w-0">
+          <div className="relative flex-shrink-0">
+            <img
+              src={post.userDetails?.avatar || "/default-avatar.png"}
+              alt="Avatar"
+              className="w-12 h-12 rounded-full object-cover ring-2 ring-blue-100 dark:ring-blue-900"
+            />
+            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white dark:border-black"></div>
+          </div>
+          <div className="flex-1 min-w-0">
+            <h4 className="font-semibold text-gray-900 dark:text-white text-sm truncate">
+              {post.userDetails?.fullName || "Unknown User"}
+            </h4>
+            <div className="flex items-center space-x-2">
+              <p className="text-gray-500 dark:text-gray-400 text-xs truncate">
+                @{post.userDetails?.username || "unknown"} • 2h ago
+              </p>
+              {post.userDetails?.college && (
+                <CollegeBadge 
+                  college={post.userDetails.college} 
+                  isUserCollege={post.userDetails.college === userCollege}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+        <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors duration-200 flex-shrink-0">
+          <FiMoreHorizontal className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+        </button>
+      </div>
 
-    const options = {
-      responsive: true,
-      plugins: {
-        legend: {
-          display: false,
-        },
-        tooltip: {
-          backgroundColor: 'rgba(0, 0, 0, 0.8)',
-          titleColor: 'white',
-          bodyColor: 'white',
-          cornerRadius: 8,
-        },
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          grid: {
-            color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-          },
-          ticks: {
-            color: isDarkMode ? '#9CA3AF' : '#374151',
-          },
-        },
-        x: {
-          grid: {
-            display: false,
-          },
-          ticks: {
-            color: isDarkMode ? '#9CA3AF' : '#374151',
-          },
-        },
-      },
+      {/* Post Content */}
+      <div className="px-6 pb-4">
+        {post.caption && (
+          <p className="text-gray-900 dark:text-white mb-4 leading-relaxed">
+            {renderCaptionWithusernames(post.caption)}
+          </p>
+        )}
+        
+        {/* Media Content */}
+        {post.fileUrl && (
+          <div className="mb-4 rounded-xl overflow-hidden bg-black">
+            {post.fileType === 'video' ? (
+              <CustomVideoPlayer src={post.fileUrl} />
+            ) : (
+              <img 
+                src={post.fileUrl} 
+                alt="Post content" 
+                className="w-full h-auto object-cover max-h-96"
+                onError={(e) => {
+                  console.error('Image load error:', e);
+                  e.target.src = '/placeholder-image.png';
+                }}
+              />
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Post Actions */}
+      <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 dark:border-gray-800">
+        <div className="flex items-center space-x-6">
+          <button
+            onClick={() => handleLike(post)}
+            className={`flex items-center space-x-2 transition-colors duration-200 ${
+              post.likes?.[user?.uid] 
+                ? 'text-red-600 dark:text-red-400' 
+                : 'text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400'
+            }`}
+          >
+            <FiHeart className={`w-5 h-5 ${post.likes?.[user?.uid] ? 'fill-current' : ''}`} />
+            <span className="text-sm font-medium">
+              {Object.keys(post.likes || {}).length}
+            </span>
+          </button>
+          
+          <button
+            onClick={() => handleCommentButtonClick(post.id)}
+            className="flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
+          >
+            <FiMessageCircle className="w-5 h-5" />
+            <span className="text-sm font-medium">
+              {comments[post.id]?.length || 0}
+            </span>
+          </button>
+          
+          <button
+            onClick={() => handleShare(post.id)}
+            className="flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors duration-200"
+          >
+            <FiShare className="w-5 h-5" />
+            <span className="text-sm font-medium">Share</span>
+          </button>
+        </div>
+        <button
+          onClick={() => handleSavePost(post.id)}
+          className={`p-2 rounded-full transition-colors duration-200 ${
+            savedPosts.has(post.id)
+              ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30'
+              : 'text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30'
+          }`}
+        >
+          <FiBookmark className={`w-5 h-5 ${savedPosts.has(post.id) ? 'fill-current' : ''}`} />
+        </button>
+      </div>
+
+      {/* Comments Section */}
+      {activeCommentPostId === post.id && (
+        <div className="border-t border-gray-100 dark:border-gray-800 p-6">
+          {/* Add Comment Input */}
+          <div className="flex space-x-3 mb-6">
+            <img
+              src={user?.photoURL || "/default-avatar.png"}
+              alt="Your Avatar"
+              className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+            />
+            <div className="flex-1 space-y-3">
+              <textarea
+                className="w-full p-3 border border-gray-200 dark:border-gray-800 bg-white dark:bg-black text-gray-900 dark:text-white rounded-xl resize-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all duration-200 placeholder-gray-500 dark:placeholder-gray-400"
+                placeholder="Write a comment..."
+                rows="3"
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+              />
+              <div className="flex justify-end">
+                <button
+                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white rounded-full font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={() => handleAddComment(post.id)}
+                  disabled={!commentText.trim()}
+                >
+                  Comment
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Comments List */}
+          <div className="space-y-4">
+            {comments[post.id]?.map((comment) => (
+              <div key={comment.id} className="flex space-x-3">
+                <img
+                  src={comment.userDetails?.avatar || "/default-avatar.png"}
+                  alt="Commenter Avatar"
+                  className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-3">
+                    <p className="font-medium text-gray-900 dark:text-white text-sm">
+                      {comment.userDetails?.fullName || "Unknown User"}
+                    </p>
+                    <p className="text-gray-700 dark:text-gray-300 text-sm mt-1">
+                      {comment.text}
+                    </p>
+                  </div>
+                  <div className="flex items-center space-x-4 mt-2 ml-3">
+                    <button
+                      onClick={() => handleReplyButtonClick(comment.id)}
+                      className="text-xs text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 font-medium"
+                    >
+                      Reply
+                    </button>
+                  </div>
+                  
+                  {/* Reply Input */}
+                  {activeReplyCommentId === comment.id && (
+                    <div className="mt-3 ml-3">
+                      <div className="flex space-x-2">
+                        <img
+                          src={user?.photoURL || "/default-avatar.png"}
+                          alt="Your Avatar"
+                          className="w-6 h-6 rounded-full object-cover flex-shrink-0"
+                        />
+                        <div className="flex-1">
+                          <textarea
+                            className="w-full p-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-black text-gray-900 dark:text-white rounded-lg resize-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-sm"
+                            placeholder="Write a reply..."
+                            rows="2"
+                            value={replyText}
+                            onChange={(e) => setReplyText(e.target.value)}
+                          />
+                          <div className="flex justify-end mt-2">
+                            <button
+                              className="px-4 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xs font-medium"
+                              onClick={() => handleAddReply(post.id, comment.id)}
+                              disabled={!replyText.trim()}
+                            >
+                              Reply
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Replies */}
+                  {comment.replies && comment.replies.length > 0 && (
+                    <div className="mt-3 ml-3 space-y-2">
+                      {comment.replies.map((reply) => (
+                        <div key={reply.id} className="flex space-x-2">
+                          <img
+                            src={reply.userDetails?.avatar || "/default-avatar.png"}
+                            alt="Reply Avatar"
+                            className="w-6 h-6 rounded-full object-cover flex-shrink-0"
+                          />
+                          <div className="flex-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-2">
+                            <p className="font-medium text-gray-900 dark:text-white text-xs">
+                              {reply.userDetails?.fullName || "Unknown User"}
+                            </p>
+                            <p className="text-gray-700 dark:text-gray-300 text-xs mt-1">
+                              {reply.text}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  const Poll = ({ poll, onVote }) => {
+    // State for managing poll interactions
+    const [votedOption, setVotedOption] = useState(null);
+    const [isExpanded, setIsExpanded] = useState(false);
+    const [showConfetti, setShowConfetti] = useState(false);
+    
+    // Calculate total votes for percentage
+    const totalVotes = poll.votes ? Object.values(poll.votes).reduce((sum, count) => sum + count, 0) : 0;
+    
+    // Get user vote status from local storage to persist UI state
+    const pollVoteKey = `poll_${poll.id}_voted`;
+    const [hasVoted, setHasVoted] = useState(() => {
+      return localStorage.getItem(pollVoteKey) !== null;
+    });
+
+    const handleVoteClick = (index) => {
+      if (hasVoted) return;
+      
+      setVotedOption(index);
+      setHasVoted(true);
+      localStorage.setItem(pollVoteKey, index);
+      onVote(poll.id, index);
+      
+      // Trigger confetti effect
+      setShowConfetti(true);
+      setTimeout(() => {
+        setShowConfetti(false);
+      }, 2000);
     };
 
     const { userDetails = { fullName: "Unknown", username: "unknown", avatar: "", college: null } } = poll;
 
     return (
-      <div className="bg-white dark:bg-black rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden mb-6 hover:shadow-md dark:hover:shadow-xl transition-shadow duration-300">
-        {/* Poll Header - Simplified */}
-        <div className="flex items-center justify-between p-6 pb-4">
-          <div className="flex items-center space-x-3 flex-1 min-w-0">
-            <div className="relative flex-shrink-0">
-              <img
-                src={userDetails.avatar || "/default-avatar.png"}
-                alt="Avatar"
-                className="w-12 h-12 rounded-full object-cover ring-2 ring-blue-100 dark:ring-blue-900"
-              />
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white dark:border-black"></div>
-            </div>
-            <div className="flex-1 min-w-0">
-              <h4 className="font-semibold text-gray-900 dark:text-white text-sm truncate">{userDetails.fullName}</h4>
-              <div className="flex items-center space-x-2">
-                <p className="text-gray-500 dark:text-gray-400 text-xs truncate">@{userDetails.username} • 2h ago</p>
-                {/* Removed CollegeBadge component */}
+      <div className={`bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-md border border-gray-100 dark:border-gray-700 overflow-hidden mb-6 transition-all duration-300 ${
+        isExpanded ? 'scale-[1.02] shadow-xl' : 'hover:shadow-lg'
+      }`}>
+        {/* Confetti Effect (shows when user votes) */}
+        {showConfetti && (
+          <div className="absolute inset-0 z-10 pointer-events-none">
+            <div className="absolute top-0 left-1/4 w-2 h-2 bg-blue-500 rounded-full animate-confetti-1"></div>
+            <div className="absolute top-0 left-1/2 w-3 h-3 bg-green-500 rounded-full animate-confetti-2"></div>
+            <div className="absolute top-0 right-1/4 w-2 h-2 bg-yellow-500 rounded-full animate-confetti-3"></div>
+            <div className="absolute top-0 left-1/3 w-2 h-2 bg-purple-500 rounded-full animate-confetti-4"></div>
+            <div className="absolute top-0 right-1/3 w-3 h-3 bg-pink-500 rounded-full animate-confetti-5"></div>
+          </div>
+        )}
+        
+        {/* Poll Header - Unique design with accent line */}
+        <div className="border-l-4 border-purple-500 dark:border-purple-400">
+          <div className="flex items-center justify-between p-4 pl-3">
+            <div className="flex items-center space-x-3 flex-1 min-w-0">
+              <div className="relative flex-shrink-0">
+                <img
+                  src={userDetails.avatar || "/default-avatar.png"}
+                  alt="Avatar"
+                  className="w-10 h-10 rounded-full object-cover ring-2 ring-purple-100 dark:ring-purple-900"
+                />
+                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white dark:border-gray-800"></div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center flex-wrap gap-2">
+                  <h4 className="font-semibold text-gray-900 dark:text-white text-sm truncate">{userDetails.fullName}</h4>
+                  <div className="flex space-x-2 items-center">
+                    <span className="inline-flex items-center gap-1 bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-300 text-xs px-2 py-0.5 rounded-full">
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                      </svg>
+                      Poll
+                    </span>
+                    {totalVotes > 10 && (
+                      <span className="inline-flex items-center gap-1 bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300 text-xs px-2 py-0.5 rounded-full">
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                        </svg>
+                        Trending
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <p className="text-gray-500 dark:text-gray-400 text-xs truncate">@{userDetails.username} • 2h ago</p>
+                  {userDetails.college && (
+                    <CollegeBadge 
+                      college={userDetails.college} 
+                      isUserCollege={userDetails.college === userCollege}
+                    />
+                  )}
+                </div>
               </div>
             </div>
+            <button 
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors duration-200 flex-shrink-0"
+            >
+              {isExpanded ? (
+                <svg className="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              )}
+            </button>
           </div>
-          <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors duration-200 flex-shrink-0">
-            <FiMoreHorizontal className="w-5 h-5 text-gray-400 dark:text-gray-500" />
-          </button>
         </div>
 
-        {/* Poll Content */}
-        <div className="px-6 pb-6">
+        {/* Poll Content - Enhanced with UI tricks */}
+        <div className="px-5 pb-5">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 leading-relaxed">{poll.question}</h3>
           
-          {/* Poll Chart */}
-          <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-900 rounded-xl">
-            <Bar data={data} options={options} />
-          </div>
-
-          {/* Poll Options */}
-          <div className="space-y-3">
-            {poll.options.map((option, index) => (
-              <button
-                key={index}
-                onClick={() => onVote(poll.id, index)}
-                className="w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 dark:from-blue-600 dark:to-blue-700 dark:hover:from-blue-700 dark:hover:to-blue-800 text-white rounded-xl font-medium shadow-sm hover:shadow-md transition-all duration-200 transform hover:scale-[1.02]"
-              >
-                {option}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // Component to render a single comment with replies
-  const CommentThread = ({ comment, postId, depth = 0 }) => {
-    const maxDepth = 3; // Limit nesting depth to prevent infinite threads
-    const indentClass = depth > 0 ? 'ml-8 border-l-2 border-gray-200 dark:border-gray-700 pl-4' : '';
-
-    return (
-      <div className={`${indentClass} space-y-3`}>
-        {/* Main Comment */}
-        <div className="flex space-x-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-900 rounded-xl transition-colors duration-200">
-          <img
-            src={comment.userDetails?.avatar || "/default-avatar.png"}
-            alt="Commenter Avatar"
-            className="w-8 h-8 rounded-full object-cover cursor-pointer flex-shrink-0"
-            onClick={() => handleUserProfileClick(comment.userId)}
-          />
-          <div className="flex-1">
-            <div className="bg-gray-100 dark:bg-gray-900 rounded-xl p-3">
-              <p
-                className="text-sm font-semibold cursor-pointer text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
-                onClick={() => handleUserProfileClick(comment.userId)}
-              >
-                {comment.userDetails?.fullName || "Unknown"}
-              </p>
-              <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">{comment.text}</p>
-            </div>
-            <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
-              <button className="hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-200">Like</button>
-              {depth < maxDepth && (
-                <button 
-                  onClick={() => handleReplyButtonClick(comment.id)}
-                  className="hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-200"
+          {/* Poll Options - Unique glass-morphism design with interactive elements */}
+          <div className="space-y-3 mb-4">
+            {poll.options.map((option, index) => {
+              // Calculate percentage for this option
+              const voteCount = poll.votes?.[index] || 0;
+              const percentage = totalVotes > 0 ? Math.round((voteCount / totalVotes) * 100) : 0;
+              const isUserVote = parseInt(localStorage.getItem(pollVoteKey)) === index;
+              
+              return (
+                <button
+                  key={index}
+                  onClick={() => handleVoteClick(index)}
+                  disabled={hasVoted}
+                  className={`relative w-full py-4 px-4 rounded-xl font-medium text-sm text-left transition-all duration-500 overflow-hidden group
+                    ${hasVoted 
+                      ? 'backdrop-blur-sm' 
+                      : 'hover:shadow-md hover:shadow-purple-100 dark:hover:shadow-purple-900/20 border border-transparent hover:border-purple-200 dark:hover:border-purple-700'
+                    }
+                    ${isUserVote ? 'bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700' : 
+                      hasVoted ? 'bg-gray-50/80 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700' :
+                      'bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm'
+                    }
+                  `}
                 >
-                  Reply
+                  {/* Background progress bar with animated entrance */}
+                  {hasVoted && (
+                    <div 
+                      className={`absolute top-0 left-0 h-full transition-all duration-1000 ease-out ${
+                        isUserVote
+                          ? 'bg-gradient-to-r from-purple-100 to-purple-50 dark:from-purple-900/40 dark:to-purple-800/20' 
+                          : 'bg-gradient-to-r from-gray-100 to-white dark:from-gray-700/40 dark:to-gray-800/20'
+                      }`} 
+                      style={{ 
+                        width: `${percentage}%`,
+                        animationDelay: `${index * 0.2}s` 
+                      }}
+                    />
+                  )}
+                  
+                  {/* Option content with interactive elements */}
+                  <div className="relative flex justify-between items-center">
+                    <div className="flex items-center space-x-3">
+                      {!hasVoted && (
+                        <div className="w-5 h-5 rounded-full border-2 border-purple-300 dark:border-purple-600 flex items-center justify-center group-hover:bg-purple-100 dark:group-hover:bg-purple-900/30 transition-colors duration-200">
+                          {votedOption === index && (
+                            <div className="w-3 h-3 bg-purple-500 rounded-full animate-ping-once"></div>
+                          )}
+                        </div>
+                      )}
+                      {hasVoted && isUserVote && (
+                        <div className="w-5 h-5 rounded-full bg-purple-500 flex items-center justify-center">
+                          <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      )}
+                      {hasVoted && !isUserVote && (
+                        <div className="w-5 h-5 rounded-full border-2 border-gray-300 dark:border-gray-600"></div>
+                      )}
+                      <span className={`${isUserVote ? 'text-purple-800 dark:text-purple-300 font-medium' : ''}`}>{option}</span>
+                    </div>
+                    
+                    {hasVoted && (
+                      <div className="flex items-center space-x-2">
+                        <span className={`text-sm font-bold ${
+                          isUserVote
+                            ? 'text-purple-600 dark:text-purple-400' 
+                            : 'text-gray-600 dark:text-gray-400'
+                        }`}>
+                          {percentage}%
+                        </span>
+                        {isUserVote && (
+                          <span className="hidden md:inline-block ml-2 bg-purple-600 text-white text-xs px-2 py-0.5 rounded-full">
+                            Your vote
+                          </span>
+                        )}
+                        {voteCount > 0 && (
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            ({voteCount} {voteCount === 1 ? 'vote' : 'votes'})
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </button>
-              )}
-              <span>2h ago</span>
-              {comment.replies && comment.replies.length > 0 && (
-                <span className="text-blue-600 dark:text-blue-400">
-                  {comment.replies.length} {comment.replies.length === 1 ? 'reply' : 'replies'}
-                </span>
-              )}
-            </div>
-
-            {/* Reply Input */}
-            {activeReplyCommentId === comment.id && (
-              <div className="mt-3 flex space-x-2">
-                <img
-                  src={user?.photoURL || "/default-avatar.png"}
-                  alt="Your Avatar"
-                  className="w-6 h-6 rounded-full object-cover flex-shrink-0"
-                />
-                <div className="flex-1 space-y-2">
-                  <textarea
-                    className="w-full p-2 border border-gray-200 dark:border-gray-800 bg-white dark:bg-black text-gray-900 dark:text-white rounded-lg resize-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all duration-200 placeholder-gray-500 dark:placeholder-gray-400 text-sm"
-                    placeholder="Write a reply..."
-                    rows="2"
-                    value={replyText}
-                    onChange={(e) => setReplyText(e.target.value)}
-                  />
-                  <div className="flex justify-end space-x-2">
-                    <button
-                      onClick={() => setActiveReplyCommentId(null)}
-                      className="px-3 py-1 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 text-sm transition-colors duration-200"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      className="px-4 py-1 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white rounded-full text-sm font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                      onClick={() => handleAddReply(postId, comment.id)}
-                      disabled={!replyText.trim()}
-                    >
-                      Reply
-                    </button>
+              );
+            })}
+          </div>
+          
+          {/* Expanded Content - Additional information and interactions */}
+          {isExpanded && (
+            <div className="mt-4 space-y-4 animate-fade-in">
+              {/* Poll Graph Visualization */}
+              <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
+                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Vote Distribution</h4>
+                <div className="h-32 flex items-end space-x-2">
+                  {poll.options.map((option, index) => {
+                    const voteCount = poll.votes?.[index] || 0;
+                    const percentage = totalVotes > 0 ? Math.round((voteCount / totalVotes) * 100) : 0;
+                    const isUserVote = parseInt(localStorage.getItem(pollVoteKey)) === index;
+                    
+                    return (
+                      <div key={index} className="flex-1 flex flex-col items-center justify-end">
+                        <div 
+                          className={`w-full rounded-t-lg transition-all duration-1000 ${
+                            isUserVote ? 'bg-purple-500 dark:bg-purple-600' : 'bg-gray-300 dark:bg-gray-600'
+                          }`} 
+                          style={{height: `${Math.max(percentage, 5)}%`}} 
+                        />
+                        <div className="text-xs text-gray-600 dark:text-gray-400 mt-1 w-full text-center truncate" title={option}>
+                          {option.length > 10 ? option.substring(0, 10) + '...' : option}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              
+              {/* Demographics (mock data) */}
+              <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
+                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Top Voters</h4>
+                <div className="flex -space-x-2 overflow-hidden">
+                  {[1,2,3,4,5].map(i => (
+                    <div key={i} className="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-800 overflow-hidden bg-gray-200 dark:bg-gray-700">
+                      <img 
+                        src={`https://ui-avatars.com/api/?name=User+${i}&background=random`} 
+                        alt={`Voter ${i}`}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                  ))}
+                  <div className="flex items-center justify-center h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-800 bg-gray-100 dark:bg-gray-700 text-xs text-gray-500 dark:text-gray-400">
+                    +{totalVotes > 5 ? totalVotes - 5 : 0}
                   </div>
                 </div>
               </div>
-            )}
-          </div>
-        </div>
-
-        {/* Replies */}
-        {comment.replies && comment.replies.length > 0 && (
-          <div className="space-y-2">
-            {comment.replies.map((reply) => (
-              <CommentThread 
-                key={reply.id} 
-                comment={reply} 
-                postId={postId} 
-                depth={depth + 1} 
-              />
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  // INNOVATIVE FEATURE 1: Smart Study Groups & Academic Collaboration
-  const StudyGroupCard = ({ group }) => (
-    <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-2xl p-6 border border-purple-200 dark:border-purple-800 mb-6">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center">
-            <FiBook className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-gray-900 dark:text-white">{group.subject}</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">{group.members.length} members studying</p>
-          </div>
-        </div>
-        <div className="flex items-center space-x-2">
-          <span className="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full text-xs font-medium">
-            {group.difficulty}
-          </span>
-          <button className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors">
-            Join Study Session
-          </button>
-        </div>
-      </div>
-      <p className="text-gray-700 dark:text-gray-300 mb-4">{group.description}</p>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
-          <span className="flex items-center space-x-1">
-            <FiClock className="w-4 h-4" />
-            <span>Next session: {group.nextSession}</span>
-          </span>
-          <span className="flex items-center space-x-1">
-            <FiTarget className="w-4 h-4" />
-            <span>Goal: {group.goal}</span>
-          </span>
-        </div>
-        <div className="flex -space-x-2">
-          {group.members.slice(0, 3).map((member, idx) => (
-            <img key={idx} src={member.avatar} alt="" className="w-8 h-8 rounded-full border-2 border-white dark:border-black" />
-          ))}
-          {group.members.length > 3 && (
-            <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-700 border-2 border-white dark:border-black flex items-center justify-center text-xs font-medium">
-              +{group.members.length - 3}
             </div>
           )}
-        </div>
-      </div>
-    </div>
-  );
-
-  // INNOVATIVE FEATURE 2: Knowledge Exchange & Skill Swap
-  const KnowledgeExchangeCard = ({ exchange }) => (
-    <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-2xl p-6 border border-emerald-200 dark:border-emerald-800 mb-6">
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center space-x-3">
-          <img src={exchange.userAvatar} alt="" className="w-10 h-10 rounded-full" />
-          <div>
-            <h4 className="font-semibold text-gray-900 dark:text-white">{exchange.userName}</h4>
-            <p className="text-sm text-gray-600 dark:text-gray-400">{exchange.userCollege}</p>
-          </div>
-        </div>
-        <span className="px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-full text-xs font-medium">
-          Skill Swap
-        </span>
-      </div>
-      
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        <div className="text-center p-3 bg-white dark:bg-black rounded-lg border border-emerald-200 dark:border-emerald-800">
-          <FiCpu className="w-6 h-6 mx-auto mb-2 text-emerald-600" />
-          <p className="font-medium text-gray-900 dark:text-white">Teaching</p>
-          <p className="text-sm text-gray-600 dark:text-gray-400">{exchange.teaching}</p>
-        </div>
-        <div className="text-center p-3 bg-white dark:bg-black rounded-lg border border-emerald-200 dark:border-emerald-800">
-          <FiTarget className="w-6 h-6 mx-auto mb-2 text-blue-600" />
-          <p className="font-medium text-gray-900 dark:text-white">Learning</p>
-          <p className="text-sm text-gray-600 dark:text-gray-400">{exchange.learning}</p>
-        </div>
-      </div>
-      
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <span className="flex items-center space-x-1 text-sm text-gray-600 dark:text-gray-400">
-            <FiStar className="w-4 h-4" />
-            <span>{exchange.rating}/5.0</span>
-          </span>
-          <span className="text-sm text-gray-600 dark:text-gray-400">{exchange.completedExchanges} exchanges</span>
-        </div>
-        <button className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors">
-          Connect
-        </button>
-      </div>
-    </div>
-  );
-
-  // INNOVATIVE FEATURE 3: Time-Based Contextual Feed
-  const getTimeBasedGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 6) return { greeting: "Late night study session? 🌙", mood: "focus", color: "indigo" };
-    if (hour < 12) return { greeting: "Good morning, scholar! ☀️", mood: "energetic", color: "yellow" };
-    if (hour < 17) return { greeting: "Afternoon learning time! 📚", mood: "productive", color: "blue" };
-    if (hour < 21) return { greeting: "Evening wind-down 🌅", mood: "social", color: "orange" };
-    return { greeting: "Night owl mode activated 🦉", mood: "calm", color: "purple" };
-  };
-
-  // INNOVATIVE FEATURE 4: Study Mood & Learning Analytics
-  // INNOVATIVE FEATURE 5: Learning Streak & Gamification
-  // INNOVATIVE FEATURE 6: Smart Academic Events
-  const AcademicEventCard = ({ event }) => (
-    <div className="bg-gradient-to-r from-rose-50 to-pink-50 dark:from-rose-900/20 dark:to-pink-900/20 rounded-2xl p-6 border border-rose-200 dark:border-rose-800 mb-6">
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 bg-rose-500 rounded-full flex items-center justify-center">
-            <FiCalendar className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-gray-900 dark:text-white">{event.title}</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">{event.organizer}</p>
-          </div>
-        </div>
-        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-          event.type === 'workshop' 
-            ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-            : event.type === 'seminar'
-            ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
-            : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
-        }`}>
-          {event.type}
-        </span>
-      </div>
-      
-      <p className="text-gray-700 dark:text-gray-300 mb-4">{event.description}</p>
-      
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
-          <span>{event.date}</span>
-          <span>{event.time}</span>
-          <span>{event.attending} attending</span>
-        </div>
-        <div className="flex space-x-2">
-          <button className="px-3 py-1 border border-rose-300 dark:border-rose-700 text-rose-600 dark:text-rose-400 rounded-lg text-sm hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors">
-            Remind Me
-          </button>
-          <button className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-medium transition-colors">
-            Join Event
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
-  // INNOVATIVE FEATURE 7: Contextual Feed Tabs
-  const ContextualFeedTabs = () => {
-    const tabs = [
-      { id: 'social', label: 'Social', icon: FiUsers, color: 'green' },
-      { id: 'career', label: 'Career', icon: FiTrendingUp, color: 'purple' },
-      { id: 'events', label: 'Events', icon: FiCalendar, color: 'rose' },
-      // Study tab removed
-    ];
-
-    return (
-      <div className="flex space-x-1 mb-6 bg-gray-100 dark:bg-gray-900 rounded-full p-1">
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setContextualFeed(tab.id)}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-full font-medium transition-all ${
-                contextualFeed === tab.id
-                  ? `bg-${tab.color}-600 text-white shadow-lg`
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              <span className="text-sm">{tab.label}</span>
-            </button>
-          );
-        })}
-      </div>
-    );
-  };
-
-  // Enhanced render method with contextual content
-  const renderContextualContent = () => {
-    // Helper function to render a single post
-    const renderPost = (post) => (
-      <div key={post.id} className="bg-white dark:bg-black rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden mb-6 hover:shadow-md dark:hover:shadow-xl transition-shadow duration-300">
-        {/* Post Header */}
-        <div className="flex items-center justify-between p-6 pb-4">
-          <div className="flex items-center space-x-3 flex-1 min-w-0">
-            <div className="relative flex-shrink-0">
-              <img
-                src={post.userDetails?.avatar || "/default-avatar.png"}
-                alt="Avatar"
-                className="w-12 h-12 rounded-full object-cover ring-2 ring-blue-100 dark:ring-blue-900"
-              />
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white dark:border-black"></div>
-            </div>
-            <div className="flex-1 min-w-0">
-              <h4 className="font-semibold text-gray-900 dark:text-white text-sm truncate">
-                {post.userDetails?.fullName || "Unknown User"}
-              </h4>
-              <div className="flex items-center space-x-2">
-                <p className="text-gray-500 dark:text-gray-400 text-xs truncate">
-                  @{post.userDetails?.username || "unknown"} • 2h ago
-                </p>
-                {post.userDetails?.college && (
-                  <CollegeBadge 
-                    college={post.userDetails.college} 
-                    isUserCollege={post.userDetails.college === userCollege}
-                  />
+          
+          {/* Poll Stats and Actions */}
+          <div className="flex items-center justify-between text-xs pt-4 border-t border-gray-100 dark:border-gray-800 mt-4">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-1 text-gray-500 dark:text-gray-400">
+                <FiUsers className="w-3.5 h-3.5" />
+                <span>{totalVotes} {totalVotes === 1 ? 'vote' : 'votes'}</span>
+              </div>
+              <div className="flex items-center space-x-1 text-gray-500 dark:text-gray-400">
+                {hasVoted ? (
+                  <>
+                    <svg className="w-3.5 h-3.5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="text-green-600 dark:text-green-400">Voted</span>
+                  </>
+                ) : (
+                  <>
+                    <FiClock className="w-3.5 h-3.5" />
+                    <span>Vote now</span>
+                  </>
                 )}
               </div>
             </div>
-          </div>
-          <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors duration-200 flex-shrink-0">
-            <FiMoreHorizontal className="w-5 h-5 text-gray-400 dark:text-gray-500" />
-          </button>
-        </div>
-
-        {/* Post Content */}
-        <div className="px-6 pb-4">
-          {post.caption && (
-            <p className="text-gray-900 dark:text-white mb-4 leading-relaxed">
-              {renderCaptionWithusernames(post.caption)}
-            </p>
-          )}
-          
-          {/* Media Content - Fixed Video Player */}
-          {post.fileUrl && (
-            <div className="mb-4 rounded-xl overflow-hidden bg-black">
-              {post.fileType === 'video' ? (
-                <CustomVideoPlayer src={post.fileUrl} />
-              ) : (
-                <img 
-                  src={post.fileUrl} 
-                  alt="Post content" 
-                  className="w-full h-auto object-cover max-h-96"
-                  onError={(e) => {
-                    console.error('Image load error:', e);
-                    e.target.src = '/placeholder-image.png';
-                  }}
-                />
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Post Actions */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 dark:border-gray-800">
-          <div className="flex items-center space-x-6">
-            <button
-              onClick={() => handleLike(post)}
-              className={`flex items-center space-x-2 transition-colors duration-200 ${
-                post.likes?.[user?.uid] 
-                  ? 'text-red-600 dark:text-red-400' 
-                  : 'text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400'
-              }`}
-            >
-              <FiHeart className={`w-5 h-5 ${post.likes?.[user?.uid] ? 'fill-current' : ''}`} />
-              <span className="text-sm font-medium">
-                {Object.keys(post.likes || {}).length}
-              </span>
-            </button>
             
-            <button
-              onClick={() => handleCommentButtonClick(post.id)}
-              className="flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
-            >
-              <FiMessageCircle className="w-5 h-5" />
-              <span className="text-sm font-medium">
-                {comments[post.id]?.length || 0}
-              </span>
-            </button>
-            
-            <button
-              onClick={() => handleShare(post.id)}
-              className="flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition-colors duration-200"
-            >
-              <FiShare className="w-5 h-5" />
-              <span className="text-sm font-medium">Share</span>
-            </button>
-          </div
-          >
-          <button
-            onClick={() => handleSavePost(post.id)}
-            className={`p-2 rounded-full transition-colors duration-200 ${
-              savedPosts.has(post.id)
-                ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30'
-                : 'text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30'
-            }`}
-          >
-            <FiBookmark className={`w-5 h-5 ${savedPosts.has(post.id) ? 'fill-current' : ''}`} />
-          </button>
-        </div>
-
-        {/* Comments Section */}
-        {activeCommentPostId === post.id && (
-          <div className="border-t border-gray-100 dark:border-gray-800 p-6">
-            {/* Add Comment Input */}
-            <div className="flex space-x-3 mb-6">
-              <img
-                src={user?.photoURL || "/default-avatar.png"}
-                alt="Your Avatar"
-                className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-              />
-              <div className="flex-1 space-y-3">
-                <textarea
-                  className="w-full p-3 border border-gray-200 dark:border-gray-800 bg-white dark:bg-black text-gray-900 dark:text-white rounded-xl resize-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all duration-200 placeholder-gray-500 dark:placeholder-gray-400"
-                  placeholder="Write a comment..."
-                  rows="3"
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                />
-                <div className="flex justify-end">
-                  <button
-                    className="px-6 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white rounded-full font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                    onClick={() => handleAddComment(post.id)}
-                    disabled={!commentText.trim()}
-                  >
-                    Comment
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Comments List */}
-            <div className="space-y-4">
-              {comments[post.id]?.map((comment) => (
-                <CommentThread 
-                  key={comment.id} 
-                  comment={comment} 
-                  postId={post.id} 
-                />
-              ))}
+            <div className="flex space-x-2">
+              <button 
+                className="flex items-center space-x-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+                onClick={() => {
+                  // Handle repost functionality
+                  alert("Feature coming soon: Repost this poll");
+                }}
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span>Repost</span>
+              </button>
+              
+              <button 
+                className="flex items-center space-x-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
+                onClick={() => {
+                  // Handle share poll
+                  const pollLink = `https://hiihive.vercel.app/poll/${poll.id}`;
+                  navigator.clipboard.writeText(pollLink);
+                  alert("Poll link copied to clipboard!");
+                }}
+              >
+                <FiShare className="w-3.5 h-3.5" />
+                <span>Share</span>
+              </button>
             </div>
           </div>
-        )}
+        </div>
       </div>
     );
+  };
 
+  // Add a Poll Filter component
+  const PollFilter = () => {
+    const [pollFilter, setPollFilter] = useState('all');
+    
+    return (
+      <div className="mb-6 p-4 bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800">
+        <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3">Poll Filters</h3>
+        <div className="flex flex-wrap gap-2">
+          {['all', 'trending', 'voted', 'not-voted', 'college'].map(filter => (
+            <button
+              key={filter}
+              onClick={() => setPollFilter(filter)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
+                pollFilter === filter
+                  ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-300 ring-1 ring-purple-200 dark:ring-purple-700'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+              }`}
+            >
+              {filter === 'all' && 'All Polls'}
+              {filter === 'trending' && 'Trending'}
+              {filter === 'voted' && 'Voted'}
+              {filter === 'not-voted' && 'Not Voted'}
+              {filter === 'college' && 'My College'}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // Add Academic Event Card component
+  const AcademicEventCard = ({ event }) => (
+    <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden mb-6 hover:shadow-md dark:hover:shadow-xl transition-shadow duration-300">
+      <div className="p-6">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex-1">
+            <h3 className="font-semibold text-gray-900 dark:text-white text-lg mb-2">{event.title}</h3>
+            <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">by {event.organizer}</p>
+            <p className="text-gray-700 dark:text-gray-300 text-sm mb-4">{event.description}</p>
+          </div>
+          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+            event.type === 'seminar' ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200' :
+            event.type === 'workshop' ? 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-200' :
+            'bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-200'
+          }`}>
+            {event.type}
+          </span>
+        </div>
+        
+        <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-1">
+              <FiCalendar className="w-4 h-4" />
+              <span>{event.date}</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <FiClock className="w-4 h-4" />
+              <span>{event.time}</span>
+            </div>
+          </div>
+          <div className="flex items-center space-x-1">
+            <FiUsers className="w-4 h-4" />
+            <span>{event.attending} attending</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Add greeting function
+  const getTimeBasedGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) {
+      return { greeting: "Good morning! Start your day with some inspiration." };
+    } else if (hour < 17) {
+      return { greeting: "Good afternoon! What's happening in your college?" };
+    } else {
+      return { greeting: "Good evening! Catch up on today's highlights." };
+    }
+  };
+
+  // Add Contextual Feed Tabs component
+  const ContextualFeedTabs = () => (
+    <div className="flex justify-center mb-6 overflow-x-auto">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl p-1 shadow-sm border border-gray-100 dark:border-gray-800">
+        {['social', 'polls', 'career', 'events'].map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setContextualFeed(tab)}
+            className={`px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200 ${
+              contextualFeed === tab
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800'
+            }`}
+          >
+            {tab === 'polls' ? (
+              <div className="flex items-center space-x-1">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                <span>Polls</span>
+              </div>
+            ) : (
+              tab.charAt(0).toUpperCase() + tab.slice(1)
+            )}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  // Move the contextual content logic outside of Poll component
+  const renderContextualContent = () => {
     const contextualContent = {
-      // Remove the 'study' entry
       social: [
-        // Render social posts (non-academic, non-poll content)
         ...shuffledContent
           .filter(item => !item.isPoll && item.category !== 'academic' && !item.tags?.includes('career'))
           .map(item => renderPost(item))
       ],
-      career: [
-        // Render career-related posts
+      polls: [
+        // Dedicated polls section - shows only polls
         ...shuffledContent
-          .filter(item => item.tags?.includes('career') || item.tags?.includes('internship'))
-          .map(item => {
-            if (item.isPoll) {
-              return <Poll key={`poll-${item.id}`} poll={item} onVote={handleVote} />;
-            }
-            return renderPost(item);
-          })
+          .filter(item => item.isPoll)
+          .map(item => <Poll key={`poll-${item.id}`} poll={item} onVote={handleVote} />)
+      ],
+      career: [
+        ...shuffledContent
+          .filter(item => !item.isPoll && (item.tags?.includes('career') || item.tags?.includes('internship')))
+          .map(item => renderPost(item))
       ],
       events: [
-        ...academicEvents.map(event => <AcademicEventCard key={`event-${event.id}`} event={event} />),
-        // Render event-related posts
+        ...(academicEvents.length === 0 ? [
+          {
+            id: 'event-1',
+            title: 'Tech Talk: AI in Education',
+            organizer: 'Computer Science Club',
+            type: 'seminar',
+            description: 'Join us for an exciting discussion about AI applications in modern education.',
+            date: 'Dec 15, 2024',
+            time: '3:00 PM',
+            attending: 45
+          },
+          {
+            id: 'event-2', 
+            title: 'Career Fair 2024',
+            organizer: 'Placement Cell',
+            type: 'workshop',
+            description: 'Meet top recruiters and explore career opportunities.',
+            date: 'Dec 20, 2024',
+            time: '10:00 AM',
+            attending: 120
+          }
+        ] : academicEvents).map(event => <AcademicEventCard key={`event-${event.id}`} event={event} />),
         ...shuffledContent
-          .filter(item => item.tags?.includes('event'))
-          .map(item => {
-            if (item.isPoll) {
-              return <Poll key={`poll-${item.id}`} poll={item} onVote={handleVote} />;
-            }
-            return renderPost(item);
-          })
+          .filter(item => !item.isPoll && item.tags?.includes('event'))
+          .map(item => renderPost(item))
       ],
     };
 
-    // If study is the active feed, redirect to social
     if (contextualFeed === 'study') {
       setContextualFeed('social');
     }
 
-    // If no specific content for the current tab, show all content
     const currentContent = contextualContent[contextualFeed];
     if (!currentContent || currentContent.length === 0) {
-      return shuffledContent.map(item => {
-        if (item.isPoll) {
-          return <Poll key={`poll-${item.id}`} poll={item} onVote={handleVote} />;
-        }
-        return renderPost(item);
-      });
+      return (
+        <div className="p-8 text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 mb-4">
+            <svg className="w-8 h-8 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">No content found</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {contextualFeed === 'polls' ? 'No polls available at the moment.' : 'Nothing to show here right now.'}
+          </p>
+        </div>
+      );
     }
 
     return currentContent;
@@ -1225,6 +1442,9 @@ const Feeds = () => {
 
       {/* Feed Mode Toggle - Enhanced */}
       <FeedModeToggle />
+      
+      {/* Show Poll Filter only when viewing the polls tab */}
+      {contextualFeed === 'polls' && <PollFilter />}
       
       <div className="space-y-6">
         {renderContextualContent()}
