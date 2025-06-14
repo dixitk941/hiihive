@@ -34,20 +34,39 @@ const MarketPlacePage = () => {
       mediaQuery.removeEventListener('change', handleThemeChange);
       clearTimeout(timer);
     };
-  }, []);
-  if (loading) {
+  }, []);  if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-50 dark:bg-black transition-colors duration-300">
-        <div className="text-center">
-          <div className="relative w-16 h-16 mx-auto mb-4">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-16 h-16 border-8 border-gray-200 dark:border-gray-700 rounded-full"></div>
-            </div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-16 h-16 border-8 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-            </div>
+      <div className="min-h-screen bg-gray-50 dark:bg-black transition-colors duration-300 p-4">
+        <div className="max-w-7xl mx-auto">
+          {/* Marketplace header skeleton */}
+          <div className="flex items-center justify-between mb-6 animate-pulse">
+            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-40"></div>
+            <div className="w-40 h-10 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
           </div>
-          <p className="text-gray-600 dark:text-gray-300 text-sm font-medium">Loading marketplace...</p>
+          
+          {/* Search and filter skeleton */}
+          <div className="flex flex-col md:flex-row gap-4 mb-8 animate-pulse">
+            <div className="flex-1 h-12 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+            <div className="w-32 h-12 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+          </div>
+          
+          {/* Products grid skeleton */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm animate-pulse">
+                <div className="aspect-square w-full bg-gray-200 dark:bg-gray-700"></div>
+                <div className="p-4">
+                  <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-3"></div>
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-3"></div>
+                  <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-4"></div>
+                  <div className="flex justify-between items-center">
+                    <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-20"></div>
+                    <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );

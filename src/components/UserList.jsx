@@ -401,17 +401,19 @@ const UsersList = ({ currentUser }) => {
             dataLength={users.length}
             next={() => fetchUsers(true)}
             hasMore={hasMore}            loader={
-              <div className="flex justify-center py-12">
-                <div className="flex flex-col items-center space-y-4">
-                  <div className="relative w-16 h-16">
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-16 h-16 border-8 border-gray-200 dark:border-gray-700 rounded-full"></div>
+              <div className="flex justify-center py-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 w-full max-w-3xl animate-pulse">
+                  {[...Array(2)].map((_, i) => (
+                    <div key={i} className="bg-white dark:bg-gray-900 rounded-xl p-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+                        <div className="flex-1">
+                          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
+                          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                        </div>
+                      </div>
                     </div>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-16 h-16 border-8 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                    </div>
-                  </div>
-                  <p className="text-base text-gray-500 dark:text-gray-400">Loading more amazing people...</p>
+                  ))}
                 </div>
               </div>
             }

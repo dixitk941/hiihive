@@ -11,9 +11,7 @@ const UploadPost = () => {
   const [fileType, setFileType] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [hashtags, setHashtags] = useState([]);
-  const [filteredHashtags, setFilteredHashtags] = useState([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [filteredHashtags, setFilteredHashtags] = useState([]);  const [showSuggestions, setShowSuggestions] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   
@@ -25,23 +23,6 @@ const UploadPost = () => {
   
   const fileInputRefs = useRef([]);
   const textareaRef = useRef(null);
-
-  // Dark mode detection
-  useEffect(() => {
-    const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    setIsDarkMode(prefersDarkMode);
-
-    const handleThemeChange = (e) => {
-      setIsDarkMode(e.matches);
-    };
-
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    mediaQuery.addEventListener('change', handleThemeChange);
-
-    return () => {
-      mediaQuery.removeEventListener('change', handleThemeChange);
-    };
-  }, []);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -368,20 +349,14 @@ const UploadPost = () => {
   ];
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${
-      isDarkMode ? 'bg-black' : 'bg-gray-50'
-    }`}>
+    <div className="min-h-screen transition-colors duration-300 bg-gray-50 dark:bg-black">
       <div className="max-w-lg mx-auto px-4 py-6">
         {/* Header */}
         <div className="mb-8">
-          <h1 className={`text-2xl font-bold mb-2 ${
-            isDarkMode ? 'text-white' : 'text-gray-900'
-          }`}>
+          <h1 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">
             Create Post
           </h1>
-          <p className={`text-sm ${
-            isDarkMode ? 'text-gray-400' : 'text-gray-500'
-          }`}>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             Share your thoughts with the community
           </p>
         </div>
@@ -389,11 +364,7 @@ const UploadPost = () => {
         {/* Main Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Caption Input */}
-          <div className={`relative rounded-3xl transition-all duration-200 border ${
-            isDarkMode 
-              ? 'bg-gray-900 border-gray-700' 
-              : 'bg-white border-gray-200'
-          }`}>
+          <div className="relative rounded-3xl transition-all duration-200 border bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
             <textarea
               ref={textareaRef}
               value={caption}
@@ -401,32 +372,20 @@ const UploadPost = () => {
               onKeyUp={handleCaptionChange}
               onMouseUp={handleCaptionChange}
               placeholder="What's on your mind? Use # for hashtags and @ to mention users..."
-              className={`w-full p-6 rounded-3xl resize-none transition-all duration-200 ${
-                isDarkMode 
-                  ? 'bg-transparent text-white placeholder-gray-500' 
-                  : 'bg-transparent text-gray-900 placeholder-gray-500'
-              } focus:outline-none`}
+              className="w-full p-6 rounded-3xl resize-none transition-all duration-200 bg-transparent text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none"
               rows={3}
               style={{ minHeight: '120px' }}
             />
 
             {/* Hashtag Suggestions */}
             {showSuggestions && filteredHashtags.length > 0 && (
-              <div className={`absolute top-full left-0 right-0 mt-2 rounded-2xl shadow-lg border z-10 ${
-                isDarkMode 
-                  ? 'bg-gray-900 border-gray-700' 
-                  : 'bg-white border-gray-200'
-              }`}>
+              <div className="absolute top-full left-0 right-0 mt-2 rounded-2xl shadow-lg border z-10 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
                 {filteredHashtags.map((hashtag, index) => (
                   <button
                     key={index}
                     type="button"
                     onClick={() => handleHashtagClick(hashtag)}
-                    className={`w-full text-left px-4 py-3 transition-colors first:rounded-t-2xl last:rounded-b-2xl ${
-                      isDarkMode 
-                        ? 'hover:bg-gray-800 text-gray-300' 
-                        : 'hover:bg-gray-50 text-gray-700'
-                    }`}
+                    className="w-full text-left px-4 py-3 transition-colors first:rounded-t-2xl last:rounded-b-2xl hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
                   >
                     <span className="text-blue-500">#</span>{hashtag}
                   </button>
@@ -436,34 +395,22 @@ const UploadPost = () => {
 
             {/* User Mention Suggestions */}
             {showUserSuggestions && filteredUsers.length > 0 && (
-              <div className={`absolute top-full left-0 right-0 mt-2 rounded-2xl shadow-lg border z-10 ${
-                isDarkMode 
-                  ? 'bg-gray-900 border-gray-700' 
-                  : 'bg-white border-gray-200'
-              }`}>
+              <div className="absolute top-full left-0 right-0 mt-2 rounded-2xl shadow-lg border z-10 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
                 {filteredUsers.map((user, index) => (
                   <button
                     key={index}
                     type="button"
                     onClick={() => handleUserClick(user)}
-                    className={`w-full text-left px-4 py-3 transition-colors first:rounded-t-2xl last:rounded-b-2xl flex items-center gap-3 ${
-                      isDarkMode 
-                        ? 'hover:bg-gray-800 text-gray-300' 
-                        : 'hover:bg-gray-50 text-gray-700'
-                    }`}
+                    className="w-full text-left px-4 py-3 transition-colors first:rounded-t-2xl last:rounded-b-2xl flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
                   >
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${
-                      isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-600'
-                    }`}>
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
                       {(user.displayName || user.username || user.email)[0].toUpperCase()}
                     </div>
                     <div>
                       <span className="text-blue-500">@</span>
                       <span>{user.username || user.displayName || user.email.split('@')[0]}</span>
                       {user.displayName && user.username && (
-                        <span className={`text-xs ml-2 ${
-                          isDarkMode ? 'text-gray-500' : 'text-gray-400'
-                        }`}>
+                        <span className="text-xs ml-2 text-gray-400 dark:text-gray-500">
                           {user.displayName}
                         </span>
                       )}
@@ -479,9 +426,7 @@ const UploadPost = () => {
             className={`relative rounded-3xl border-2 border-dashed transition-all duration-300 ${
               dragActive 
                 ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/10' 
-                : isDarkMode 
-                  ? 'border-gray-700 bg-gray-900' 
-                  : 'border-gray-300 bg-white'
+                : 'border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900'
             }`}
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
@@ -490,23 +435,15 @@ const UploadPost = () => {
           >
             {!previewUrl ? (
               <div className="p-8 text-center">
-                <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
-                  isDarkMode ? 'bg-gray-800' : 'bg-gray-100'
-                }`}>
-                  <svg className={`w-8 h-8 ${
-                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                  }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-800">
+                  <svg className="w-8 h-8 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                   </svg>
                 </div>
-                <p className={`text-lg font-medium mb-2 ${
-                  isDarkMode ? 'text-white' : 'text-gray-900'
-                }`}>
+                <p className="text-lg font-medium mb-2 text-gray-900 dark:text-white">
                   Drop files here or click to browse
                 </p>
-                <p className={`text-sm ${
-                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                }`}>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   Support for images, videos, and audio files
                 </p>
               </div>
@@ -529,17 +466,13 @@ const UploadPost = () => {
                     />
                   )}
                   {fileType?.startsWith('audio/') && (
-                    <div className={`p-8 text-center ${
-                      isDarkMode ? 'bg-gray-800' : 'bg-gray-100'
-                    }`}>
+                    <div className="p-8 text-center bg-gray-100 dark:bg-gray-800">
                       <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-orange-500 flex items-center justify-center">
                         <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                         </svg>
                       </div>
-                      <p className={`font-medium ${
-                        isDarkMode ? 'text-white' : 'text-gray-900'
-                      }`}>
+                      <p className="font-medium text-gray-900 dark:text-white">
                         {file?.name}
                       </p>
                       <audio src={previewUrl} controls className="w-full mt-4" />
@@ -566,18 +499,12 @@ const UploadPost = () => {
             {mediaTypes.map((media, index) => (
               <label
                 key={index}
-                className={`relative flex flex-col items-center p-4 rounded-2xl cursor-pointer transition-all duration-200 border group ${
-                  isDarkMode 
-                    ? 'bg-gray-900 border-gray-700 hover:bg-gray-800' 
-                    : 'bg-white border-gray-200 hover:bg-gray-50'
-                }`}
+                className="relative flex flex-col items-center p-4 rounded-2xl cursor-pointer transition-all duration-200 border group bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
               >
                 <div className={`${media.color} mb-2 group-hover:scale-110 transition-transform duration-200`}>
                   {media.icon}
                 </div>
-                <span className={`text-sm font-medium ${
-                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                }`}>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   {media.label}
                 </span>
                 <input
@@ -593,26 +520,16 @@ const UploadPost = () => {
 
           {/* Upload Progress */}
           {isUploading && (
-            <div className={`rounded-2xl p-4 border ${
-              isDarkMode 
-                ? 'bg-gray-900 border-gray-700' 
-                : 'bg-white border-gray-200'
-            }`}>
+            <div className="rounded-2xl p-4 border bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between mb-2">
-                <span className={`text-sm font-medium ${
-                  isDarkMode ? 'text-white' : 'text-gray-900'
-                }`}>
+                <span className="text-sm font-medium text-gray-900 dark:text-white">
                   Uploading...
                 </span>
-                <span className={`text-sm ${
-                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                }`}>
+                <span className="text-sm text-gray-500 dark:text-gray-400">
                   {uploadProgress}%
                 </span>
               </div>
-              <div className={`w-full rounded-full h-2 ${
-                isDarkMode ? 'bg-gray-800' : 'bg-gray-200'
-              }`}>
+              <div className="w-full rounded-full h-2 bg-gray-200 dark:bg-gray-800">
                 <div
                   className="bg-blue-500 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${uploadProgress}%` }}
@@ -627,25 +544,16 @@ const UploadPost = () => {
             disabled={isUploading || (!caption.trim() && !file)}
             className={`w-full py-4 px-6 rounded-2xl font-semibold text-lg transition-all duration-200 ${
               isUploading || (!caption.trim() && !file)
-                ? isDarkMode 
-                  ? 'bg-gray-800 text-gray-500 cursor-not-allowed' 
-                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                ? 'bg-gray-200 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed'
                 : 'bg-blue-500 text-white hover:bg-blue-600 active:scale-95 shadow-lg shadow-blue-500/25'
             }`}
           >
             {isUploading ? (
               <div className="flex items-center justify-center space-x-2">
-                <div className="relative w-5 h-5">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-5 h-5 border-2 border-white/30 rounded-full"></div>
-                  </div>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  </div>
-                </div>
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 <span>Posting...</span>
               </div>
-            ) : (
+            ): (
               'Share Post'
             )}
           </button>

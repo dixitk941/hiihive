@@ -81,20 +81,37 @@ const Communities = () => {
         return <FaHashtag className="text-gray-500" />;
     }
   };
-
   if (loading) {
     return (
-      <div className={`min-h-screen ${isDarkMode ? 'bg-black' : 'bg-gray-50'} flex items-center justify-center`}>
-        <div className="text-center">
-          <div className="relative w-16 h-16 mx-auto mb-4">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-16 h-16 border-8 border-gray-200 dark:border-gray-700 rounded-full"></div>
-            </div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-16 h-16 border-8 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-            </div>
+      <div className={`min-h-screen ${isDarkMode ? 'bg-black' : 'bg-gray-50'} p-4`}>
+        <div className="max-w-5xl mx-auto">
+          {/* Header skeleton */}
+          <div className="flex justify-between items-center mb-6 animate-pulse">
+            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-48"></div>
+            <div className="w-32 h-10 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
           </div>
-          <p className={`text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Loading communities...</p>
+          
+          {/* Communities grid skeleton */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(9)].map((_, i) => (
+              <div key={i} className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} p-6 rounded-xl shadow-sm animate-pulse`}>
+                <div className="flex items-center mb-4">
+                  <div className="w-14 h-14 rounded-full bg-gray-200 dark:bg-gray-700 mr-4"></div>
+                  <div className="flex-1">
+                    <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                  </div>
+                </div>
+                
+                <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded-lg mb-4"></div>
+                
+                <div className="flex justify-between items-center">
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+                  <div className="w-24 h-8 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );

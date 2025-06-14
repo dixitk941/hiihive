@@ -650,22 +650,21 @@ const ChatListPage = ({ currentUser, isSidebar = false }) => {
           </div>
 
           {showCommunities && (
-            <AnimatePresence>
-              {loadingCommunities ? (
-                <div className={`${isSidebar ? 'py-4' : 'py-6'} text-center`}>
-                  <div className="relative w-6 h-6 mx-auto">
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-6 h-6 border-4 border-gray-200 dark:border-gray-700 rounded-full"></div>
-                    </div>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                    </div>
+            <AnimatePresence>              {loadingCommunities ? (
+                <div className={`${isSidebar ? 'py-4' : 'py-6'}`}>
+                  <div className="space-y-3 animate-pulse">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="flex items-center">
+                        <div className="w-8 h-8 rounded-lg bg-gray-200 dark:bg-gray-700 mr-3"></div>
+                        <div className="flex-1">
+                          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3 mb-1"></div>
+                          <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <p className={`${isSidebar ? 'text-xs' : 'text-sm'} text-gray-500 dark:text-gray-400 mt-2`}>
-                    Loading communities...
-                  </p>
                 </div>
-              ) : communities.length > 0 ? (
+              ): communities.length > 0 ? (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
@@ -838,4 +837,4 @@ const ChatListPage = ({ currentUser, isSidebar = false }) => {
   );
 };
 
-export default ChatListPage;
+export default React.memo(ChatListPage);

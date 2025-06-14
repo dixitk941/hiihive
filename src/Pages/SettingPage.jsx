@@ -36,16 +36,40 @@ const SettingPage = () => {
 
     return () => unsubscribe();
   }, []);
-
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-50 dark:bg-black">
-        <div className="relative w-12 h-12">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-12 h-12 border-4 border-gray-200 dark:border-gray-700 rounded-full"></div>
+      <div className="min-h-screen bg-gray-50 dark:bg-black p-4">
+        <div className="max-w-4xl mx-auto">
+          {/* Settings header skeleton */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm mb-6 animate-pulse">
+            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-48 mb-2"></div>
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-64"></div>
           </div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          
+          {/* Settings tabs skeleton */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden mb-6 animate-pulse">
+            <div className="flex border-b border-gray-200 dark:border-gray-700">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="flex-1 py-4 px-2">
+                  <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-20 mx-auto"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Settings form skeleton */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm animate-pulse">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="mb-6">
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32 mb-2"></div>
+                <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
+              </div>
+            ))}
+            
+            <div className="flex gap-4 mt-8">
+              <div className="w-32 h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
+              <div className="w-32 h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            </div>
           </div>
         </div>
       </div>

@@ -19,15 +19,11 @@ const LoadingPage = () => {
           }}
         />
       </div>
-      
-      {/* Android-style loading spinner */}
-      <div className="z-10 relative w-16 h-16">
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-16 h-16 border-8 border-gray-200 dark:border-gray-700 rounded-full"></div>
-        </div>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-16 h-16 border-8 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-        </div>
+        {/* Skeleton loader instead of spinner */}
+      <div className="z-10 flex flex-col items-center space-y-3 w-64 animate-pulse">
+        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
+        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
+        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-4/6"></div>
       </div>
 
       {/* Made in India Section */}

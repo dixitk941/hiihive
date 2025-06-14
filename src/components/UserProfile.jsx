@@ -193,9 +193,7 @@ const UserProfile = () => {
     if (userDetails.following.length > 0) {
       fetchUserListDetails(userDetails.following, setFollowingData);
     }
-  }, [userDetails.followers, userDetails.following]);
-
-  const handleFollowToggle = async () => {
+  }, [userDetails.followers, userDetails.following]);  const handleFollowToggle = async () => {
     const currentUserRef = doc(db, 'users', currentUserId);
     const followedUserRef = doc(db, 'users', userId);
   
@@ -371,19 +369,49 @@ const UserProfile = () => {
     if (!dateString) return 'Recently joined';
     const date = new Date(dateString);
     return `Joined ${date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`;
-  };
-  if (loading) {
+  };  if (loading) {
     return (
-      <div className={`h-screen flex flex-col justify-center items-center ${isDarkMode ? 'bg-black' : 'bg-gray-50'}`}>
-        <div className="relative w-16 h-16">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-16 h-16 border-8 border-gray-200 dark:border-gray-700 rounded-full"></div>
+      <div className={`h-screen p-4 ${isDarkMode ? 'bg-black' : 'bg-gray-50'}`}>
+        <div className="max-w-4xl mx-auto">
+          {/* Profile header skeleton */}
+          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-6 shadow-sm mb-6`}>
+            <div className="flex flex-col md:flex-row items-center animate-pulse">
+              <div className="w-32 h-32 rounded-full bg-gray-200 dark:bg-gray-700 mb-6 md:mb-0 md:mr-8"></div>
+              
+              <div className="flex-1 w-full text-center md:text-left">
+                <div className="h-7 bg-gray-200 dark:bg-gray-700 rounded w-48 mb-4 mx-auto md:mx-0"></div>
+                <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-40 mb-4 mx-auto md:mx-0"></div>
+                
+                <div className="flex flex-wrap justify-center md:justify-start gap-3 mb-4">
+                  <div className="h-9 bg-gray-200 dark:bg-gray-700 rounded-full w-28"></div>
+                  <div className="h-9 bg-gray-200 dark:bg-gray-700 rounded-full w-28"></div>
+                </div>
+                
+                <div className="flex justify-center md:justify-start space-x-6 mb-4">
+                  <div className="text-center">
+                    <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-10 mx-auto mb-1"></div>
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+                  </div>
+                  <div className="text-center">
+                    <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-10 mx-auto mb-1"></div>
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+                  </div>
+                  <div className="text-center">
+                    <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-10 mx-auto mb-1"></div>
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-16 h-16 border-8 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          
+          {/* Profile content skeleton - Grid of posts */}
+          <div className="grid grid-cols-3 gap-2 md:gap-4 animate-pulse">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="aspect-square bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+            ))}
           </div>
         </div>
-        <p className={`mt-4 text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Loading profile...</p>
       </div>
     );
   }
@@ -899,4 +927,4 @@ const UserProfile = () => {
   );
 };
 
-export default UserProfile;
+export default React.memo(UserProfile);

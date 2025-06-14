@@ -34,22 +34,58 @@ const UserProfilePage = () => {
       setLoading(false);
     });
 
-    return () => unsubscribe();  }, []);
-  if (loading) {
+    return () => unsubscribe();  }, []);  if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-50 dark:bg-black">
-        <div className="relative flex flex-col items-center">          <div className="relative w-16 h-16">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-16 h-16 border-8 border-gray-200 dark:border-gray-700 rounded-full"></div>
+      <div className="min-h-screen bg-gray-50 dark:bg-black p-4">
+        <div className="max-w-4xl mx-auto">
+          {/* Profile header skeleton */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm mb-6">
+            <div className="flex flex-col md:flex-row items-center animate-pulse">
+              <div className="w-32 h-32 rounded-full bg-gray-200 dark:bg-gray-700 mb-6 md:mb-0 md:mr-8"></div>
+              
+              <div className="flex-1 w-full text-center md:text-left">
+                <div className="h-7 bg-gray-200 dark:bg-gray-700 rounded w-48 mb-4 mx-auto md:mx-0"></div>
+                <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-40 mb-4 mx-auto md:mx-0"></div>
+                
+                <div className="flex flex-wrap justify-center md:justify-start gap-3 mb-4">
+                  <div className="h-9 bg-gray-200 dark:bg-gray-700 rounded-full w-28"></div>
+                  <div className="h-9 bg-gray-200 dark:bg-gray-700 rounded-full w-28"></div>
+                </div>
+                
+                <div className="flex justify-center md:justify-start space-x-6 mb-4">
+                  <div className="text-center">
+                    <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-10 mx-auto mb-1"></div>
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+                  </div>
+                  <div className="text-center">
+                    <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-10 mx-auto mb-1"></div>
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+                  </div>
+                  <div className="text-center">
+                    <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-10 mx-auto mb-1"></div>
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-16 h-16 border-8 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-blue-600 rounded-full opacity-20 animate-pulse" />
           </div>
-          <div className="mt-6 text-center">
-            <p className="text-lg font-medium mb-2 text-gray-900 dark:text-white">Loading Profile</p>
-            <p className="text-sm opacity-60 text-gray-600 dark:text-gray-400">Please wait while we fetch the profile...</p>
+          
+          {/* Profile tabs skeleton */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden mb-6">
+            <div className="flex border-b border-gray-200 dark:border-gray-700 animate-pulse">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="flex-1 py-4 px-2">
+                  <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-20 mx-auto"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Profile content skeleton - Grid of posts */}
+          <div className="grid grid-cols-3 gap-2 md:gap-4 animate-pulse">
+            {[...Array(9)].map((_, i) => (
+              <div key={i} className="aspect-square bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+            ))}
           </div>
         </div>
       </div>

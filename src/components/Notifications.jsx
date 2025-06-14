@@ -190,20 +190,32 @@ const NotificationsPage = () => {
   });
 
   const unreadCount = notifications.filter(n => !n.seen).length;
-
   if (loading) {
     return (
-      <div className={`min-h-screen ${isDarkMode ? 'bg-black' : 'bg-gray-50'} flex items-center justify-center`}>
-        <div className="text-center">
-          <div className="relative w-16 h-16 mx-auto mb-4">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-16 h-16 border-8 border-gray-200 dark:border-gray-700 rounded-full"></div>
-            </div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-16 h-16 border-8 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-            </div>
+      <div className={`min-h-screen ${isDarkMode ? 'bg-black' : 'bg-gray-50'} p-4`}>
+        <div className="max-w-3xl mx-auto">
+          {/* Header skeleton */}
+          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-4 shadow-sm flex justify-between items-center mb-4 animate-pulse`}>
+            <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-40"></div>
+            <div className="w-24 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
           </div>
-          <p className={`text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Loading notifications...</p>
+          
+          {/* Notification items skeleton */}
+          <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-sm overflow-hidden`}>
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="p-4 border-b border-gray-100 dark:border-gray-700 animate-pulse">
+                <div className="flex">
+                  <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 mr-4"></div>
+                  <div className="flex-1">
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
+                    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-2"></div>
+                    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+                  </div>
+                  <div className="w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded-full ml-2"></div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );

@@ -48,21 +48,34 @@ function UserList() {
     });
 
     return () => unsubscribe();
-  }, []);
-  // Loading state
+  }, []);  // Loading state
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-black">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="relative w-16 h-16">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-16 h-16 border-8 border-gray-200 dark:border-gray-700 rounded-full"></div>
-            </div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-16 h-16 border-8 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-            </div>
+      <div className="min-h-screen bg-gray-50 dark:bg-black p-4">
+        <div className="max-w-4xl mx-auto">
+          {/* Search bar skeleton */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm mb-6 animate-pulse">
+            <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-full w-full"></div>
           </div>
-          <p className="text-gray-500 dark:text-gray-400">Loading users...</p>
+          
+          {/* User list skeleton */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="flex items-center p-4 border-b border-gray-100 dark:border-gray-700 animate-pulse">
+                <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 mr-4"></div>
+                <div className="flex-1">
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-2"></div>
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                </div>
+                <div className="w-20 h-8 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+              </div>
+            ))}
+          </div>
+          
+          {/* Load more skeleton */}
+          <div className="flex justify-center mt-6 animate-pulse">
+            <div className="w-32 h-10 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+          </div>
         </div>
       </div>
     );

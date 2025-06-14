@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import {
   getDatabase,
   get,
@@ -47,9 +47,7 @@ const Feeds = () => {
   const [contextualFeed, setContextualFeed] = useState('social'); // Changed default to social
   
   const db = getDatabase();
-  const firestore = getFirestore();
-
-  // Dark mode detection
+  const firestore = getFirestore();  // Dark mode detection
   useEffect(() => {
     const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
     setIsDarkMode(prefersDarkMode);
@@ -92,9 +90,8 @@ const Feeds = () => {
     });
     return () => unsubscribe();
   }, [initialLoadComplete]); // Added initialLoadComplete as dependency
-
-  // Filter content based on feed mode
-  const filterContentByMode = (content) => {
+  // Filter content based on feed mode - memoized to prevent recalculation on every render
+  const filterContentByMode = useCallback((content) => {
     if (feedMode === 'global') {
       // Global mode should show ALL content regardless of college
       return content;
@@ -107,7 +104,7 @@ const Feeds = () => {
     }
     // If no college is set, default to showing all content
     return content;
-  };
+  }, [feedMode, userCollege]);
 
   // ...existing useEffect for posts...
   useEffect(() => {
@@ -307,20 +304,24 @@ const Feeds = () => {
     }
   };
 
-  // Update content filtering when feed mode or content changes
+  // Update content filtering when feed mode or content changes  // Memoized combined content to prevent unnecessary recalculations
+  const combinedContent = useMemo(() => {
+    // First, properly tag all content types
+    const postsWithTag = posts.map(post => ({ ...post, isPoll: false, contentType: 'post' }));
+    const pollsWithTag = polls.map(poll => ({ ...poll, isPoll: true, contentType: 'poll' }));
+    
+    // Combine content
+    return [...postsWithTag, ...pollsWithTag];
+  }, [posts, polls]);
+
+  // Memoized filtered content based on feed mode
+  const filteredContent = useMemo(() => {
+    return filterContentByMode(combinedContent);
+  }, [filterContentByMode, combinedContent]);
+
   useEffect(() => {
     if (posts.length > 0 || polls.length > 0) {
       try {
-        // First, properly tag all content types
-        const postsWithTag = posts.map(post => ({ ...post, isPoll: false, contentType: 'post' }));
-        const pollsWithTag = polls.map(poll => ({ ...poll, isPoll: true, contentType: 'poll' }));
-        
-        // Combine content
-        const combinedContent = [...postsWithTag, ...pollsWithTag];
-        
-        // Apply filtering based on current feed mode
-        const filteredContent = filterContentByMode(combinedContent);
-        
         if (!initialLoadComplete) {
           // Initial load - do a proper shuffle using Fisher-Yates algorithm
           const shuffleArray = (array) => {
@@ -434,14 +435,14 @@ const Feeds = () => {
       }
     }
   }, [feedMode]); // Only trigger when feedMode changes
-
   // Feed Mode Toggle Component with Samsung OneUI 7 design - Horizontal Layout
+  // Memoized mode change handler
+  const handleModeChange = useCallback((newMode) => {
+    console.log('Switching feed mode to:', newMode); // Debug log
+    setFeedMode(newMode);
+  }, []);
+  
   const FeedModeToggle = () => {
-    const handleModeChange = (newMode) => {
-      console.log('Switching feed mode to:', newMode); // Debug log
-      setFeedMode(newMode);
-    };
-
     return (
       <div className="sticky top-0 z-10 bg-white/90 dark:bg-black/90 backdrop-blur-xl border-b border-gray-100/50 dark:border-gray-800/50 mb-6">
         <div className="max-w-2xl mx-auto px-6 py-4">
@@ -550,10 +551,10 @@ const Feeds = () => {
       </div>
     );
   };
-
   // ...existing handlers remain the same...
 
-  const handleLike = async (post) => {
+  // Memoized event handlers to prevent recreation on each render
+  const handleLike = useCallback(async (post) => {
     if (!user) return alert("You must be logged in to like posts.");
     const postRef = ref(db, `feeds/${post.id}/likes`);
     const isLiked = post.likes?.[user.uid];
@@ -567,9 +568,8 @@ const Feeds = () => {
     } catch (error) {
       console.error("Failed to update likes:", error);
     }
-  };
-
-  const handleSavePost = (postId) => {
+  }, [user, db]);
+  const handleSavePost = useCallback((postId) => {
     setSavedPosts(prev => {
       const newSaved = new Set(prev);
       if (newSaved.has(postId)) {
@@ -579,9 +579,7 @@ const Feeds = () => {
       }
       return newSaved;
     });
-  };
-
-  const handleAddComment = async (postId) => {
+  }, []);  const handleAddComment = useCallback(async (postId) => {
     if (!commentText.trim()) return;
     if (!user) return alert("You must be logged in to comment.");
 
@@ -600,9 +598,8 @@ const Feeds = () => {
     } catch (error) {
       console.error("Failed to add comment:", error);
     }
-  };
-
-  const handleAddReply = async (postId, commentId) => {
+  }, [user, db, commentText]);
+  const handleAddReply = useCallback(async (postId, commentId) => {
     if (!replyText.trim()) return;
     if (!user) return alert("You must be logged in to reply.");
 
@@ -622,30 +619,28 @@ const Feeds = () => {
     } catch (error) {
       console.error("Failed to add reply:", error);
     }
-  };
+  }, [user, db, replyText]);
 
-  const handleShare = (postId) => {
+  const handleShare = useCallback((postId) => {
     const shareableLink = `https://hiihive.vercel.app/post/${postId}`;
     navigator.clipboard.writeText(shareableLink).then(() => {
       alert("Post link copied to clipboard!");
     }).catch((error) => {
       console.error("Failed to copy the link:", error);
     });
-  };
+  }, []);
 
-  const handleUserProfileClick = (userId) => {
+  const handleUserProfileClick = useCallback((userId) => {
     window.location.href = `/user/${userId}`;
-  };
+  }, []);
 
-  const handleCommentButtonClick = (postId) => {
+  const handleCommentButtonClick = useCallback((postId) => {
     setActiveCommentPostId(activeCommentPostId === postId ? null : postId);
-  };
-
-  const handleReplyButtonClick = (commentId) => {
+  }, [activeCommentPostId]);
+  const handleReplyButtonClick = useCallback((commentId) => {
     setActiveReplyCommentId(activeReplyCommentId === commentId ? null : commentId);
-  };
-
-  const fetchUserIdByusername = async (username) => {
+  }, [activeReplyCommentId]);
+  const fetchUserIdByusername = useCallback(async (username) => {
     const usersRef = collection(firestore, 'users');
     const q = query(usersRef, where('username', '==', username));
     const querySnapshot = await getDocs(q);
@@ -654,9 +649,9 @@ const Feeds = () => {
       return userDoc.id;
     }
     return null;
-  };
+  }, [firestore]);
 
-  const renderCaptionWithusernames = (caption) => {
+  const renderCaptionWithusernames = useCallback((caption) => {
     const words = caption.split(' ');
     return words.map((word, index) => {
       if (word.startsWith('@')) {
@@ -676,19 +671,16 @@ const Feeds = () => {
           >
             {word}
           </span>
-        );
-      }
+        );      }
       return <span key={index}>{word} </span>;
     });
-  };
+  }, [fetchUserIdByusername, handleUserProfileClick]);
 
-  const handleVote = async (pollId, optionIndex) => {
+  const handleVote = useCallback(async (pollId, optionIndex) => {
     if (!user) {
       alert("You need to be logged in to vote.");
       return;
-    }
-
-    const userVoteRef = ref(db, `polls/${pollId}/userVotes/${user.uid}`);
+    }    const userVoteRef = ref(db, `polls/${pollId}/userVotes/${user.uid}`);
     const userVoteSnapshot = await get(userVoteRef);
 
     if (userVoteSnapshot.exists()) {
@@ -706,10 +698,9 @@ const Feeds = () => {
 
     await update(pollRef, updatedVotes);
     await update(userVoteRef, { voted: true });
-  };
-
-  // Define renderPost function outside of Poll component
-  const renderPost = (post) => (
+  }, [user, db]);
+  // Define renderPost function outside of Poll component with memoization
+  const renderPost = useCallback((post) => (
     <div key={post.id} className="bg-white dark:bg-black rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden mb-6 hover:shadow-md dark:hover:shadow-xl transition-shadow duration-300">
       {/* Post Header */}
       <div className="flex items-center justify-between p-6 pb-4">
@@ -930,13 +921,12 @@ const Feeds = () => {
                     </div>
                   )}
                 </div>
-              </div>
-            ))}
+              </div>            ))}
           </div>
         </div>
       )}
     </div>
-  );
+  ), [handleLike, handleCommentButtonClick, handleShare, handleSavePost, handleUserProfileClick, renderCaptionWithusernames, savedPosts, user, activeCommentPostId]);
 
   const Poll = ({ poll, onVote }) => {
     // State for managing poll interactions
@@ -1453,4 +1443,4 @@ const Feeds = () => {
   );
 };
 
-export default Feeds;
+export default React.memo(Feeds);

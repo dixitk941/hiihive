@@ -3,24 +3,12 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from './firebaseConfig';
 import UploadPost from '../components/UploadPost';
-import UploadHivee from '../components/UploadHivee';
+// import UploadHivee from '../components/UploadHivee';
 import UploadPoll from '../components/UploadPoll';
 
-const UploadPage = () => {
-  const [currentUser, setCurrentUser] = useState(null);
+const UploadPage = () => {  const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [uploadType, setUploadType] = useState('Post');
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  // Dark mode detection
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    setIsDarkMode(mediaQuery.matches);
-
-    const handleChange = (e) => setIsDarkMode(e.matches);
-    mediaQuery.addEventListener('change', handleChange);
-
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
 
   // Authentication state management
   useEffect(() => {
@@ -45,52 +33,64 @@ const UploadPage = () => {
       setLoading(false);
     });
     return () => unsubscribe();
-  }, []);
-
-  if (loading) {
+  }, []);  if (loading) {
     return (
-      <div className={`flex items-center justify-center h-screen ${
-        isDarkMode ? 'bg-black' : 'bg-gray-50'
-      }`}>
-        <div className="text-center">
-          <div className="relative w-8 h-8 mx-auto mb-4">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-8 h-8 border-4 border-gray-200 dark:border-gray-700 rounded-full"></div>
-            </div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-gray-50 dark:bg-black p-4">
+        <div className="max-w-2xl mx-auto">
+          {/* Header skeleton */}
+          <div className="flex items-center justify-between mb-6 animate-pulse">
+            <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-40"></div>
+            <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+          </div>
+          
+          {/* Upload type selector skeleton */}
+          <div className="rounded-2xl p-2 mb-6 bg-white dark:bg-gray-900 shadow-sm animate-pulse">
+            <div className="grid grid-cols-3 gap-2">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="h-12 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
+              ))}
             </div>
           </div>
-          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            Loading...
-          </p>
+          
+          {/* Upload form skeleton */}
+          <div className="rounded-2xl p-6 bg-white dark:bg-gray-900 shadow-sm animate-pulse">
+            <div className="flex items-center mb-4">
+              <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 mr-3"></div>
+              <div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32 mb-2"></div>
+                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+              </div>
+            </div>
+            
+            <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded-xl mb-4"></div>
+            
+            <div className="flex justify-between items-center">
+              <div className="flex space-x-2">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+                ))}
+              </div>
+              <div className="w-24 h-10 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+            </div>
+          </div>
         </div>
       </div>
     );
-  }
-  return (
-    <div className={`flex flex-col h-screen transition-colors duration-300 ${
-      isDarkMode ? 'bg-black text-white' : 'bg-gray-50 text-gray-900'
-    }`}>
+  }  return (
+    <div className="flex flex-col h-screen transition-colors duration-300 bg-gray-50 dark:bg-black text-gray-900 dark:text-white">
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto pt-16">
         <div className="max-w-2xl mx-auto p-6">
           {/* Upload Type Selector */}
-          <div className={`rounded-2xl p-2 mb-6 ${
-            isDarkMode ? 'bg-gray-900' : 'bg-white'
-          } shadow-sm border ${
-            isDarkMode ? 'border-gray-800' : 'border-gray-200'
-          }`}>
-            <div className="grid grid-cols-3 gap-2">
-              {['Post', 'Hivee', 'Poll'].map((type) => (
+          <div className="rounded-2xl p-2 mb-6 bg-white dark:bg-gray-900 shadow-sm border border-gray-200 dark:border-gray-800">
+            <div className="grid grid-cols-2 gap-2">
+              {['Post', 'Poll'].map((type) => (
                 <button
                   key={type}
                   className={`py-3 px-4 rounded-xl font-semibold text-sm transition-all duration-200 ${
                     uploadType === type
                       ? 'bg-blue-500 text-white shadow-md'
-                      : isDarkMode
-                        ? 'text-gray-400 hover:text-white hover:bg-gray-800'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800'
                   }`}
                   onClick={() => setUploadType(type)}
                 >
@@ -103,7 +103,7 @@ const UploadPage = () => {
           {/* Upload Component */}
           <div className="transition-opacity duration-300">
             {uploadType === 'Post' && <UploadPost currentUser={currentUser} />}
-            {uploadType === 'Hivee' && <UploadHivee currentUser={currentUser} />}
+            {/* {uploadType === 'Hivee' && <UploadHivee currentUser={currentUser} />} */}
             {uploadType === 'Poll' && <UploadPoll currentUser={currentUser} />}
           </div>
         </div>

@@ -64,14 +64,44 @@ const ChatList = () => {
     });
 
     return () => unsubscribe();
-  }, []);
-  // Loading state
+  }, []);  // Loading state with skeleton loader
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-black">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-gray-500 dark:text-gray-400">Loading messages...</p>
+      <div className="min-h-screen bg-gray-50 dark:bg-black p-4">
+        <div className="max-w-6xl mx-auto">
+          {/* Header skeleton */}
+          <div className="flex items-center justify-between p-4 mb-4 animate-pulse">
+            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-40"></div>
+            <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+          </div>
+          
+          {/* Search bar skeleton */}
+          <div className="mb-6 animate-pulse">
+            <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-full w-full"></div>
+          </div>
+          
+          {/* Chat list skeleton */}
+          <div className="space-y-3 animate-pulse">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="flex items-center p-4 bg-white dark:bg-gray-800 rounded-xl">
+                <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 mr-3"></div>
+                <div className="flex-1">
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-2"></div>
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
+                </div>
+                <div className="w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+              </div>
+            ))}
+          </div>
+          
+          {/* Tab bar skeleton */}
+          <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 p-2 animate-pulse">
+            <div className="flex justify-around">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     );

@@ -41,20 +41,71 @@ const SocialConnect = () => {
       clearTimeout(timer);
     };
   }, []);
-
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-50 dark:bg-black transition-colors duration-300">
-        <div className="text-center">
-          <div className="relative w-12 h-12 mx-auto mb-3">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-12 h-12 border-4 border-gray-200 dark:border-gray-700 rounded-full"></div>
-            </div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-12 h-12 border-4 bg-gradient-to-r from-blue-600 to-purple-600 border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-gray-50 dark:bg-black transition-colors duration-300 p-4">
+        <div className="max-w-6xl mx-auto">
+          {/* Header skeleton */}
+          <div className="flex items-center justify-between mb-8 animate-pulse">
+            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-64"></div>
+            <div className="flex space-x-3">
+              <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+              <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700"></div>
             </div>
           </div>
-          <p className="text-gray-600 dark:text-gray-300 text-sm">Loading...</p>
+          
+          {/* Social connect content */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Friend suggestions skeleton */}
+            <div className="md:col-span-2 bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm animate-pulse">
+              <div className="flex justify-between items-center mb-6">
+                <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-48"></div>
+                <div className="w-24 h-8 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+              </div>
+              
+              <div className="space-y-6">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="flex items-center p-3 border-b border-gray-100 dark:border-gray-700">
+                    <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 mr-4"></div>
+                    <div className="flex-1">
+                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-2"></div>
+                      <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                    </div>
+                    <div className="w-24 h-8 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Activity & events skeleton */}
+            <div className="space-y-6">
+              <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm animate-pulse">
+                <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-32 mb-4"></div>
+                
+                <div className="space-y-3">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="flex items-center">
+                      <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 mr-3"></div>
+                      <div className="flex-1">
+                        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-full mb-1"></div>
+                        <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm animate-pulse">
+                <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-40 mb-4"></div>
+                
+                <div className="space-y-4">
+                  {[...Array(2)].map((_, i) => (
+                    <div key={i} className="rounded-lg bg-gray-200 dark:bg-gray-700 h-24"></div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );

@@ -910,4 +910,4 @@ const ChatInterface = ({ currentUser }) => {
   );
 };
 
-export default ChatInterface;
+export default React.memo(ChatInterface);

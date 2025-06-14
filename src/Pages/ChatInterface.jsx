@@ -69,16 +69,44 @@ const ChatPage = () => {
   // Loading state
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-black dark:via-gray-900 dark:to-gray-900">
-        <div className="flex flex-col items-center space-y-4">          <div className="relative w-16 h-16 flex items-center justify-center">
-            <div className="absolute inset-0">
-              <div className="w-16 h-16 border-8 border-gray-200 dark:border-gray-800 rounded-full"></div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-black dark:via-gray-900 dark:to-gray-900 p-4 md:p-6">
+        {/* Skeleton loader for chat interface */}
+        <div className="max-w-6xl mx-auto">
+          {/* Header skeleton */}
+          <div className="bg-white dark:bg-gray-800 rounded-t-xl p-4 shadow-sm animate-pulse mb-1 flex items-center">
+            <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 mr-3"></div>
+            <div className="flex-1">
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-2"></div>
+              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/5"></div>
             </div>
-            <div className="absolute inset-0">
-              <div className="w-16 h-16 border-8 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+          </div>
+          
+          {/* Messages skeleton */}
+          <div className="bg-white dark:bg-gray-800 h-[calc(100vh-12rem)] p-4 overflow-y-auto space-y-4">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className={`flex ${i % 2 === 0 ? 'justify-start' : 'justify-end'}`}>
+                <div className={`flex max-w-[75%] ${i % 2 === 0 ? 'flex-row' : 'flex-row-reverse'}`}>
+                  {i % 2 === 0 && <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 mr-2 flex-shrink-0"></div>}
+                  <div className={`p-3 rounded-xl ${i % 2 === 0 ? 'bg-gray-200 dark:bg-gray-700 rounded-tl-none' : 'bg-blue-100 dark:bg-blue-900 rounded-tr-none'}`}>
+                    <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-full mb-2"></div>
+                    <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-3/4"></div>
+                    <div className="h-3 mt-1 bg-gray-300 dark:bg-gray-600 rounded w-1/2"></div>
+                  </div>
+                  {i % 2 !== 0 && <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 ml-2 flex-shrink-0"></div>}
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {/* Input box skeleton */}
+          <div className="bg-white dark:bg-gray-800 rounded-b-xl p-4 shadow-sm">
+            <div className="flex items-center">
+              <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 mr-2"></div>
+              <div className="flex-1 h-10 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+              <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 ml-2"></div>
             </div>
           </div>
-          <p className="text-gray-500 dark:text-gray-400 font-medium">Loading your conversations...</p>
         </div>
       </div>
     );
