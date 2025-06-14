@@ -428,7 +428,14 @@ const FriendDiscovery = ({ currentUser: passedUser }) => {
           {/* Search Loading Indicator */}
           {searchLoading && (
             <div className="absolute right-10 top-1/2 transform -translate-y-1/2">
-              <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              <div className="relative w-4 h-4">
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-4 h-4 border-2 border-gray-200 dark:border-gray-700 rounded-full"></div>
+                </div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -688,7 +695,14 @@ const UserCard = ({ user, mode, onConnect, onMessage, onWave, isConnecting, curr
           >
             {isConnecting ? (
               <>
-                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                <div className="relative w-4 h-4">
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-4 h-4 border-2 border-current/30 rounded-full"></div>
+                  </div>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  </div>
+                </div>
                 <span>Processing...</span>
               </>
             ) : (

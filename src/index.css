@@ -214,3 +214,15 @@ body.dark {
 .dark .bg-blue-600 {
   background-color: #1e40af !important;
 }
+/* Layout adjustments for navigation */
+@media (max-width: 640px) {
+  .content-container {
+    padding-bottom: 80px; /* Add padding for bottom bar */
+  }
+}
+
+@media (min-width: 1024px) {
+  .content-container {
+    margin-left: 18rem; /* 72px (sidebar width) */
+  }
+}

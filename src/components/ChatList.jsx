@@ -653,7 +653,14 @@ const ChatListPage = ({ currentUser, isSidebar = false }) => {
             <AnimatePresence>
               {loadingCommunities ? (
                 <div className={`${isSidebar ? 'py-4' : 'py-6'} text-center`}>
-                  <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                  <div className="relative w-6 h-6 mx-auto">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-6 h-6 border-4 border-gray-200 dark:border-gray-700 rounded-full"></div>
+                    </div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  </div>
                   <p className={`${isSidebar ? 'text-xs' : 'text-sm'} text-gray-500 dark:text-gray-400 mt-2`}>
                     Loading communities...
                   </p>

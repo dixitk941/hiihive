@@ -14,28 +14,14 @@ const Header = () => {
   });
   const [currentUserId, setCurrentUserId] = useState(null);
   const [unreadNotifications, setUnreadNotifications] = useState(0); 
-  const [unreadMessages, setUnreadMessages] = useState(0); 
-  const [scrolling, setScrolling] = useState(false); 
+  const [unreadMessages, setUnreadMessages] = useState(0);   const [scrolling, setScrolling] = useState(false); 
   const [darkMode, setDarkMode] = useState(false); 
   const navigate = useNavigate();
 
-  // Detect system theme preference on initial load
+  // Dark mode setting with default value (can be modified later as needed)
   useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-
-    // Function to update the dark mode state based on the system preference
-    const updateDarkMode = () => {
-      setDarkMode(mediaQuery.matches);
-    };
-
-    // Set the initial dark mode state based on system preference
-    updateDarkMode();
-
-    // Listen for changes in system theme preference
-    mediaQuery.addEventListener('change', updateDarkMode);
-
-    // Cleanup the listener on component unmount
-    return () => mediaQuery.removeEventListener('change', updateDarkMode);
+    // You can set a default dark mode value here if needed
+    setDarkMode(false);
   }, []);
 
   useEffect(() => {

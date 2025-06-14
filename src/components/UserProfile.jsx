@@ -7,7 +7,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { arrayUnion, arrayRemove } from 'firebase/firestore';
 import Avatar from '@mui/material/Avatar';
 import Modal from '@mui/material/Modal';
-import loaderGif from '../assets/normload.gif';
 
 const UserProfile = () => {
   const { userId } = useParams();
@@ -51,21 +50,14 @@ const UserProfile = () => {
   const [recentActivity, setRecentActivity] = useState([]);
   const [mutualFollowers, setMutualFollowers] = useState([]);
   const [isBlocked, setIsBlocked] = useState(false);
-
   useEffect(() => {
-    const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    setIsDarkMode(prefersDarkMode);
-
-    const handleThemeChange = (e) => {
-      setIsDarkMode(e.matches);
-    };
-
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    mediaQuery.addEventListener('change', handleThemeChange);
-
-    return () => {
-      mediaQuery.removeEventListener('change', handleThemeChange);
-    };
+    // Only check localStorage, ignore system preference
+    const savedTheme = localStorage.getItem('theme');
+    
+    // Default to light mode if no preference is saved
+    const initialDarkMode = savedTheme === 'dark';
+    
+    setIsDarkMode(initialDarkMode);
   }, []);
 
   useEffect(() => {
@@ -380,11 +372,17 @@ const UserProfile = () => {
     const date = new Date(dateString);
     return `Joined ${date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`;
   };
-
   if (loading) {
     return (
       <div className={`h-screen flex flex-col justify-center items-center ${isDarkMode ? 'bg-black' : 'bg-gray-50'}`}>
-        <img src={loaderGif} alt="Loading" className="w-16 h-16 opacity-60" />
+        <div className="relative w-16 h-16">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-16 h-16 border-8 border-gray-200 dark:border-gray-700 rounded-full"></div>
+          </div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-16 h-16 border-8 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        </div>
         <p className={`mt-4 text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Loading profile...</p>
       </div>
     );

@@ -7,9 +7,7 @@ const LoadingPage = () => {
       {/* Animated Background Circles */}
       <div className="absolute w-72 h-72 bg-gray-200 dark:bg-gray-700 rounded-full opacity-30 animate-pulse" style={{ top: '10%', left: '10%' }}></div>
       <div className="absolute w-96 h-96 bg-gray-300 dark:bg-gray-600 rounded-full opacity-20 animate-pulse" style={{ top: '50%', left: '60%' }}></div>
-      <div className="absolute w-64 h-64 bg-gray-400 dark:bg-gray-500 rounded-full opacity-10 animate-pulse" style={{ top: '80%', left: '30%' }}></div>
-
-      {/* HiiHive Logo in the center with lighting effect */}
+      <div className="absolute w-64 h-64 bg-gray-400 dark:bg-gray-500 rounded-full opacity-10 animate-pulse" style={{ top: '80%', left: '30%' }}></div>      {/* HiiHive Logo in the center with lighting effect */}
       <div className="flex items-center justify-center mb-6 z-10">
         <img 
           src={logo} 
@@ -21,9 +19,19 @@ const LoadingPage = () => {
           }}
         />
       </div>
+      
+      {/* Android-style loading spinner */}
+      <div className="z-10 relative w-16 h-16">
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-16 h-16 border-8 border-gray-200 dark:border-gray-700 rounded-full"></div>
+        </div>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-16 h-16 border-8 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      </div>
 
       {/* Made in India Section */}
-      <div className="relative flex flex-col items-center justify-center z-20">
+      <div className="relative flex flex-col items-center justify-center z-20 mt-6">
         {/* Simple Light Box */}
         <div className="relative bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md border border-gray-200 dark:border-gray-600">
           <p className="text-2xl font-bold text-gray-800 dark:text-white text-center">

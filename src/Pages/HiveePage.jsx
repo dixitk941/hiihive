@@ -7,7 +7,6 @@ import SidebarRight from "../components/SidebarRight";
 import Hivee from "../components/Hivee";
 import ChatInterface from "../components/ChatInterface";
 import BottomBar from "../components/BottomBar";
-import loaderGif from "../assets/normload.gif";
 
 const HiveePage = () => {
   const [currentUser, setCurrentUser] = useState(null);
@@ -67,18 +66,23 @@ const HiveePage = () => {
   const handleBackToSidebar = () => {
     setSelectedChat(null);
   };
-
   const toggleSidebarRight = () => {
     setIsSidebarRightVisible(!isSidebarRightVisible);
   };
 
-  // if (loading) {
-  //   return (
-  //     <div className="flex justify-center items-center h-screen">
-  //       <img src={loaderGif} alt="Loading" className="w-32 h-32" />
-  //     </div>
-  //   );
-  // }
+  if (loading) {
+    return (      <div className="flex justify-center items-center h-screen">
+        <div className="relative w-16 h-16">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-16 h-16 border-8 border-gray-200 dark:border-gray-700 rounded-full"></div>
+          </div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-16 h-16 border-8 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-screen">

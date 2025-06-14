@@ -195,7 +195,14 @@ const NotificationsPage = () => {
     return (
       <div className={`min-h-screen ${isDarkMode ? 'bg-black' : 'bg-gray-50'} flex items-center justify-center`}>
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="relative w-16 h-16 mx-auto mb-4">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-16 h-16 border-8 border-gray-200 dark:border-gray-700 rounded-full"></div>
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-16 h-16 border-8 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          </div>
           <p className={`text-lg ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Loading notifications...</p>
         </div>
       </div>

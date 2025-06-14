@@ -4,7 +4,6 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from './firebaseConfig';
 import ChatListPage from '../components/ChatList';
 import ChatInterface from '../components/ChatInterface';
-import loaderGif from '../assets/normload.gif';
 import { useTheme } from '../context/ThemeContext'; // Import the theme context
 
 const ChatPage = () => {
@@ -67,15 +66,17 @@ const ChatPage = () => {
 
     return () => unsubscribe();
   }, []);
-
   // Loading state
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-black dark:via-gray-900 dark:to-gray-900">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="relative">
-            <img src={loaderGif} alt="Loading" className="w-16 h-16 opacity-75" />
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full opacity-20 animate-pulse"></div>
+        <div className="flex flex-col items-center space-y-4">          <div className="relative w-16 h-16 flex items-center justify-center">
+            <div className="absolute inset-0">
+              <div className="w-16 h-16 border-8 border-gray-200 dark:border-gray-800 rounded-full"></div>
+            </div>
+            <div className="absolute inset-0">
+              <div className="w-16 h-16 border-8 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
           </div>
           <p className="text-gray-500 dark:text-gray-400 font-medium">Loading your conversations...</p>
         </div>

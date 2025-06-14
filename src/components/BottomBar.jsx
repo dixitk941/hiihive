@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { 
   HomeIcon, 
   ChatBubbleLeftIcon, 
   ArrowUpTrayIcon, 
-  UserGroupIcon, // Changed from MagnifyingGlassIcon to UserGroupIcon for Social Connect
+  UserGroupIcon,
   ShoppingBagIcon, 
   UserIcon 
 } from '@heroicons/react/24/outline';
@@ -12,31 +12,26 @@ import {
   HomeIcon as HomeIconSolid, 
   ChatBubbleLeftIcon as ChatIconSolid, 
   ArrowUpTrayIcon as UploadIconSolid, 
-  UserGroupIcon as SocialConnectIconSolid, // Changed from ExploreIconSolid to SocialConnectIconSolid
+  UserGroupIcon as SocialConnectIconSolid,
   ShoppingBagIcon as ShoppingBagIconSolid, 
   UserIcon as UserIconSolid 
 } from '@heroicons/react/24/solid';
+import { useTheme } from '../context/ThemeContext';
 
 const BottomBar = ({ toggleSidebarRight, isStoryActive }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const { isDarkMode } = useTheme();
 
-  useEffect(() => {
-    const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    setIsDarkMode(prefersDarkMode);
+  // Skip rendering bottom bar for login page
+  if (location.pathname === "/login") {
+    return null;
+  }
 
-    const handleThemeChange = (e) => {
-      setIsDarkMode(e.matches);
-    };
-
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    mediaQuery.addEventListener('change', handleThemeChange);
-
-    return () => {
-      mediaQuery.removeEventListener('change', handleThemeChange);
-    };
-  }, []);
+  // Skip rendering for story view
+  if (isStoryActive) {
+    return null;
+  }
 
   const isActive = (path) => {
     if (path === '/') {
@@ -59,12 +54,12 @@ const BottomBar = ({ toggleSidebarRight, isStoryActive }) => {
       label: 'Home'
     },
     {
-      id: 'social-connect', // Changed from 'explore' to 'social-connect'
+      id: 'social-connect',
       path: '/social-connect',
-      icon: UserGroupIcon, // Changed icon
-      iconSolid: SocialConnectIconSolid, // Changed icon
+      icon: UserGroupIcon,
+      iconSolid: SocialConnectIconSolid,
       action: () => navigate('/social-connect'),
-      label: 'Connect' // Added label for accessibility
+      label: 'Connect'
     },
     {
       id: 'upload',
@@ -92,10 +87,6 @@ const BottomBar = ({ toggleSidebarRight, isStoryActive }) => {
       label: 'Chat'
     }
   ];
-
-  if (isStoryActive) {
-    return null;
-  }
 
   return (
     <>
@@ -140,7 +131,7 @@ const BottomBar = ({ toggleSidebarRight, isStoryActive }) => {
                 className={`relative flex items-center justify-center p-2.5 rounded-xl transition-all duration-200 group ${
                   active 
                     ? isDarkMode
-                      ? 'text-purple-400 bg-purple-500/20' // Changed to purple for social connect theme
+                      ? 'text-purple-400 bg-purple-500/20'
                       : 'text-purple-600 bg-purple-50'
                     : isDarkMode 
                       ? 'text-gray-400 hover:text-white hover:bg-gray-800/50' 
@@ -152,7 +143,7 @@ const BottomBar = ({ toggleSidebarRight, isStoryActive }) => {
                 {active && (
                   <div className={`absolute -top-0.5 w-1 h-1 rounded-full ${
                     tab.id === 'social-connect' 
-                      ? isDarkMode ? 'bg-purple-400' : 'bg-purple-600' // Purple for social connect
+                      ? isDarkMode ? 'bg-purple-400' : 'bg-purple-600'
                       : isDarkMode ? 'bg-blue-400' : 'bg-blue-600'
                   }`} />
                 )}

@@ -15,7 +15,6 @@ import { useNavigate } from 'react-router-dom';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import SearchBar from './SearchBar';
 import { FiUser, FiUserPlus, FiMessageCircle, FiMoreVertical, FiMapPin, FiCalendar } from 'react-icons/fi';
-import loaderGif from '../assets/normload.gif';
 
 const UsersList = ({ currentUser }) => {
   const [users, setUsers] = useState([]);
@@ -401,11 +400,17 @@ const UsersList = ({ currentUser }) => {
           <InfiniteScroll
             dataLength={users.length}
             next={() => fetchUsers(true)}
-            hasMore={hasMore}
-            loader={
+            hasMore={hasMore}            loader={
               <div className="flex justify-center py-12">
                 <div className="flex flex-col items-center space-y-4">
-                  <img src={loaderGif} alt="Loading" className="w-16 h-16 opacity-75" />
+                  <div className="relative w-16 h-16">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-16 h-16 border-8 border-gray-200 dark:border-gray-700 rounded-full"></div>
+                    </div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-16 h-16 border-8 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  </div>
                   <p className="text-base text-gray-500 dark:text-gray-400">Loading more amazing people...</p>
                 </div>
               </div>

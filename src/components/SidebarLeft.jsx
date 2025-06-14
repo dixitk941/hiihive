@@ -7,17 +7,19 @@ import {
   FiHome, 
   FiMessageSquare, 
   FiUpload, 
-  FiUsers, // Changed from FiCompass to FiUsers for Social Connect
+  FiUsers, 
   FiUser,
-  FiShoppingBag  // Import shopping bag icon for marketplace
+  FiShoppingBag
 } from 'react-icons/fi';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
 import { auth } from './firebaseConfig';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import { useTheme } from '../context/ThemeContext'; // Import the theme context
 
-const SidebarLeft = ({ currentUser }) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+const SidebarLeft = ({ currentUser, isCollapsed, toggleCollapse }) => {
+  // Use props if provided, otherwise use local state
+  const [localIsCollapsed, setLocalIsCollapsed] = useState(false);
   const [showLogoutWarning, setShowLogoutWarning] = useState(false);
   const [activeItem, setActiveItem] = useState('home');
   const [hoveredItem, setHoveredItem] = useState(null);
@@ -30,8 +32,25 @@ const SidebarLeft = ({ currentUser }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const firestore = getFirestore();
+  // Use the theme context instead of local state and system preference
+  const { isDarkMode } = useTheme();
+  
+  // Skip rendering sidebar for login page
+  const shouldRenderSidebar = location.pathname !== "/login";
+  
+  // Determine if we're using local or parent-controlled collapse state
+  const effectiveIsCollapsed = isCollapsed !== undefined ? isCollapsed : localIsCollapsed;
+  
+  // Function to toggle collapse - use passed function if available
+  const handleToggleCollapse = () => {
+    if (toggleCollapse) {
+      toggleCollapse();
+    } else {
+      setLocalIsCollapsed(!localIsCollapsed);
+    }
+  };
 
-  // Updated navigation items - replaced explore with social-connect
+  // Updated navigation items
   const navigationItems = [
     { 
       id: 'home', 
@@ -63,7 +82,7 @@ const SidebarLeft = ({ currentUser }) => {
     }
   ];
 
-  // Fetch user details from Firestore like in Header component
+  // Fetch user details from Firestore
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
@@ -143,22 +162,26 @@ const SidebarLeft = ({ currentUser }) => {
     }
   };
 
+  // Return null early without breaking hooks rules
+  if (!shouldRenderSidebar) {
+    return null;
+  }
+
   return (
     <>
-      {/* Main Sidebar - Updated positioning */}
-      <aside
+      {/* Main Sidebar - Updated positioning */}      <aside
         className={`hidden lg:flex fixed left-0 h-full 
           bg-white dark:bg-black
           flex-col shadow-xl border-r border-gray-200 dark:border-gray-800
           transition-all duration-300 ease-in-out z-30
-          ${isCollapsed ? 'w-20' : 'w-72'}
+          ${effectiveIsCollapsed ? 'w-20' : 'w-72'}
           pt-16`}
         style={{ top: '0px' }}
       >
         {/* Header Section */}
         <div className="p-6 pb-6 border-b border-gray-200 dark:border-gray-800">
           <div className="flex items-center justify-between">
-            {!isCollapsed && (
+            {!effectiveIsCollapsed && (
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
                   <span className="text-white font-bold text-lg">H</span>
@@ -173,16 +196,16 @@ const SidebarLeft = ({ currentUser }) => {
             )}
             
             <button
-              onClick={() => setIsCollapsed(!isCollapsed)}
+              onClick={handleToggleCollapse}
               className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
             >
-              {isCollapsed ? <FiChevronRight size={20} /> : <FiChevronLeft size={20} />}
+              {effectiveIsCollapsed ? <FiChevronRight size={20} /> : <FiChevronLeft size={20} />}
             </button>
           </div>
         </div>
 
         {/* Enhanced User Profile Section - Similar to Header */}
-        {!isCollapsed && currentUserId && (
+        {!effectiveIsCollapsed && currentUserId && (
           <div className="p-6 border-b border-gray-200 dark:border-gray-800">
             <div 
               onClick={handleProfileClick}
@@ -212,10 +235,8 @@ const SidebarLeft = ({ currentUser }) => {
               </div>
             </div>
           </div>
-        )}
-
-        {/* Collapsed Profile Section */}
-        {isCollapsed && currentUserId && (
+        )}        {/* Collapsed Profile Section */}
+        {effectiveIsCollapsed && currentUserId && (
           <div className="p-4 border-b border-gray-200 dark:border-gray-800">
             <div 
               onClick={handleProfileClick}
@@ -248,9 +269,8 @@ const SidebarLeft = ({ currentUser }) => {
         {/* Create Post Button */}
         <div className="p-4">
           <Link to="/upload" onClick={() => handleItemClick('upload')}>
-            <button className="w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200 flex items-center justify-center space-x-2">
-              <FiUpload size={18} />
-              {!isCollapsed && <span>Create Post</span>}
+            <button className="w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200 flex items-center justify-center space-x-2">              <FiUpload size={18} />
+              {!effectiveIsCollapsed && <span>Create Post</span>}
             </button>
           </Link>
         </div>
@@ -276,8 +296,7 @@ const SidebarLeft = ({ currentUser }) => {
                   ${isActive 
                     ? 'bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/30 dark:to-purple-900/30 text-blue-600 dark:text-blue-400 shadow-sm' 
                     : item.hoverColor + ' text-gray-700 dark:text-gray-300'
-                  }
-                  ${isCollapsed ? 'justify-center' : ''}
+                  }                  ${effectiveIsCollapsed ? 'justify-center' : ''}
                 `}>
                   
                   {/* Active indicator */}
@@ -297,12 +316,12 @@ const SidebarLeft = ({ currentUser }) => {
                   </div>
                   
                   {/* Label */}
-                  {!isCollapsed && (
+                  {!effectiveIsCollapsed && (
                     <span className="ml-3 font-medium">{item.label}</span>
                   )}
                   
                   {/* Hover tooltip for collapsed mode */}
-                  {isCollapsed && isHovered && (
+                  {effectiveIsCollapsed && isHovered && (
                     <div className="absolute left-16 bg-gray-900 dark:bg-gray-700 text-white px-3 py-2 rounded-lg shadow-lg z-50 whitespace-nowrap">
                       {item.label}
                       <div className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-900 dark:bg-gray-700 rotate-45"></div>
@@ -317,16 +336,15 @@ const SidebarLeft = ({ currentUser }) => {
         {/* Bottom Section */}
         <div className="p-4 border-t border-gray-200 dark:border-gray-800 space-y-2">
           {/* Settings */}
-          <Link to="/settings">
-            <button className={`
+          <Link to="/settings">            <button className={`
               w-full flex items-center p-3 rounded-xl transition-all duration-200
               hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300
-              ${isCollapsed ? 'justify-center' : ''}
+              ${effectiveIsCollapsed ? 'justify-center' : ''}
             `}>
               <div className="p-2 rounded-lg">
                 <FiSettings size={18} />
               </div>
-              {!isCollapsed && <span className="ml-3 font-medium">Settings</span>}
+              {!effectiveIsCollapsed && <span className="ml-3 font-medium">Settings</span>}
             </button>
           </Link>
 
@@ -336,18 +354,18 @@ const SidebarLeft = ({ currentUser }) => {
             className={`
               w-full flex items-center p-3 rounded-xl transition-all duration-200
               hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400
-              ${isCollapsed ? 'justify-center' : ''}
+              ${effectiveIsCollapsed ? 'justify-center' : ''}
             `}
           >
             <div className="p-2 rounded-lg">
               <FiLogOut size={18} />
             </div>
-            {!isCollapsed && <span className="ml-3 font-medium">Logout</span>}
+            {!effectiveIsCollapsed && <span className="ml-3 font-medium">Logout</span>}
           </button>
         </div>
       </aside>
 
-      {/* Clean Logout Confirmation Modal */}
+      {/* Logout Confirmation Modal */}
       {showLogoutWarning && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50">
           <div className="bg-white dark:bg-black p-8 rounded-2xl shadow-2xl max-w-md w-full mx-4 border border-gray-200 dark:border-gray-800">

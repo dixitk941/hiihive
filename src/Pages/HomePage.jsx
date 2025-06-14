@@ -2,11 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from './firebaseConfig';
-import SidebarLeft from '../components/SidebarLeft';
 import Feeds from '../components/Feeds';
 import ChatInterface from '../components/ChatInterface';
-import BottomBar from '../components/BottomBar';
-import loaderGif from '../assets/normload.gif';
 
 const HomePage = () => {
   const [currentUser, setCurrentUser] = useState(null);
@@ -71,12 +68,18 @@ const HomePage = () => {
   const handleBackToSidebar = () => {
     setSelectedChat(null);
   };
-
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-50 dark:bg-black transition-colors duration-300">
         <div className="text-center">
-          <img src={loaderGif} alt="Loading..." className="w-16 h-16 mx-auto mb-4 rounded-lg" />
+          <div className="relative w-16 h-16 mx-auto mb-4">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-16 h-16 border-8 border-gray-200 dark:border-gray-700 rounded-full"></div>
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-16 h-16 border-8 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          </div>
           <p className="text-gray-600 dark:text-gray-300 text-sm font-medium">Loading your feed...</p>
         </div>
       </div>
@@ -85,14 +88,7 @@ const HomePage = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-black transition-colors duration-300">
-      <div className="flex flex-1 pt-16 lg:pt-20">
-        {/* SidebarLeft for main navigation */}
-        <div className="hidden lg:block w-64 xl:w-72 border-r border-gray-200 dark:border-gray-800">
-          <div className="fixed h-full w-64 xl:w-72 pt-4 bg-white dark:bg-black overflow-y-auto">
-            <SidebarLeft currentUser={currentUser} />
-          </div>
-        </div>
-        
+      <div className="flex flex-1">
         {/* Main content section with Feeds */}
         {!selectedChat && (
           <main className="flex-1 min-h-0 overflow-auto">
@@ -113,11 +109,6 @@ const HomePage = () => {
           </main>
         )}
       </div>
-
-      {/* Bottom Bar for mobile */}
-      {!selectedChat && (
-        <BottomBar />
-      )}
     </div>
   );
 };

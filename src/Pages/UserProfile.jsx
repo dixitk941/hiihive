@@ -2,17 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from './firebaseConfig';
-import SidebarLeft from '../components/SidebarLeft';
 import UserProfileComponent from '../components/UserProfile';
-import BottomBar from '../components/BottomBar';
-import loaderGif from '../assets/normload.gif';
 import { useTheme } from '../context/ThemeContext'; // Import the theme context
 
 const UserProfilePage = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  // Use theme context instead of local state and system preference
-  const { isDarkMode } = useTheme();
+  // Just initialize theme context, no need to extract values
+  useTheme();
 
   useEffect(() => {
     const auth = getAuth();
@@ -37,18 +34,17 @@ const UserProfilePage = () => {
       setLoading(false);
     });
 
-    return () => unsubscribe();
-  }, []);
-
-  // Replace themeClass with Tailwind dark mode classes
-  // const themeClass = isDarkMode ? 'bg-black text-white' : 'bg-gray-50 text-black';
-
+    return () => unsubscribe();  }, []);
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-50 dark:bg-black">
-        <div className="relative flex flex-col items-center">
-          <div className="relative">
-            <img src={loaderGif} alt="Loading..." className="w-16 h-16 opacity-80" />
+        <div className="relative flex flex-col items-center">          <div className="relative w-16 h-16">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-16 h-16 border-8 border-gray-200 dark:border-gray-700 rounded-full"></div>
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-16 h-16 border-8 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
             <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-blue-600 rounded-full opacity-20 animate-pulse" />
           </div>
           <div className="mt-6 text-center">
@@ -59,36 +55,14 @@ const UserProfilePage = () => {
       </div>
     );
   }
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black text-gray-900 dark:text-white transition-colors duration-300">
-      {/* Desktop Layout */}
-      <div className="hidden lg:flex">
-        {/* SidebarLeft for main navigation - desktop only */}
-        <div className="w-[280px] flex-shrink-0 h-screen sticky top-0">
-          <SidebarLeft currentUser={currentUser} />
-        </div>
-        
-        {/* Main content section - takes remaining space */}
-        <main className="flex-1 min-h-screen overflow-auto">
-          <div className="max-w-6xl mx-auto">
-            <UserProfileComponent currentUser={currentUser} />
-          </div>
-        </main>
-      </div>
-
-      {/* Mobile Layout */}
-      <div className="lg:hidden">
-        {/* Main content for mobile */}
-        <main className="pb-20"> {/* Add bottom padding for BottomBar */}
+      {/* Main content section */}
+      <main className="min-h-screen">
+        <div className="max-w-6xl mx-auto">
           <UserProfileComponent currentUser={currentUser} />
-        </main>
-
-        {/* Bottom Bar for mobile navigation */}
-        <div className="fixed bottom-0 left-0 right-0 z-50">
-          <BottomBar currentUser={currentUser} />
         </div>
-      </div>
+      </main>
     </div>
   );
 };

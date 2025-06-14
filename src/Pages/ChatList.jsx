@@ -2,10 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from './firebaseConfig';
-import SidebarLeft from '../components/SidebarLeft';
 import ChatListPage from '../components/ChatList'; // Updated import name
-import BottomBar from '../components/BottomBar';
-import loaderGif from '../assets/normload.gif';
 import { useTheme } from '../context/ThemeContext'; // Import the theme context
 
 const ChatList = () => {
@@ -13,8 +10,6 @@ const ChatList = () => {
   const [loading, setLoading] = useState(true);
   // Use the theme context instead of local state and system preference detection
   const { isDarkMode } = useTheme();
-
-  // Remove the theme detection useEffect completely!
 
   // User authentication and data fetching
   useEffect(() => {
@@ -70,13 +65,12 @@ const ChatList = () => {
 
     return () => unsubscribe();
   }, []);
-
   // Loading state
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-black">
         <div className="flex flex-col items-center space-y-4">
-          <img src={loaderGif} alt="Loading" className="w-16 h-16 opacity-75" />
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
           <p className="text-gray-500 dark:text-gray-400">Loading messages...</p>
         </div>
       </div>
@@ -101,26 +95,11 @@ const ChatList = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-black">
-      {/* Main Layout */}
-      <div className="flex flex-1">
-        {/* Left Sidebar - Desktop Only */}
-        <SidebarLeft currentUser={currentUser} />
-        
-        {/* Main Content Area */}
-        <main 
-          className={`
-            flex-1 transition-all duration-300 ease-in-out
-            ${/* Account for sidebar width on desktop */ ''}
-            lg:ml-72
-          `}
-        >
-          {/* ChatListPage Component - This handles its own layout and styling */}
-          <ChatListPage currentUser={currentUser} />
-        </main>
-      </div>
-
-      {/* Bottom Navigation - Mobile Only */}
-      <BottomBar currentUser={currentUser} />
+      {/* Main Content Area */}
+      <main className="flex-1 transition-all duration-300 ease-in-out">
+        {/* ChatListPage Component - This handles its own layout and styling */}
+        <ChatListPage currentUser={currentUser} />
+      </main>
     </div>
   );
 };
