@@ -15,6 +15,7 @@ import KnowledgeHub from "./components/KnowledgeHub/KnowledgeHub";
 import Communities from './components/Communities';
 import SocialConnect from './Pages/SocialConnect';
 import { ThemeProvider } from './context/ThemeContext';
+import { UserProvider } from './contexts/UserContext';
 // Import navigation components
 import SidebarLeft from "./components/SidebarLeft";
 import BottomBar from "./components/BottomBar";
@@ -54,12 +55,13 @@ function AppWrapper() {
   if (authLoading) {
     return <Loading />;
   }
-
   return (
     <ThemeProvider>
-      <Router>
-        <AppContent user={user} />
-      </Router>
+      <UserProvider>
+        <Router>
+          <AppContent user={user} />
+        </Router>
+      </UserProvider>
     </ThemeProvider>
   );
 }

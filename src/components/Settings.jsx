@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc } from "firebase/firestore";
 import { auth, db, storage } from "./firebaseConfig";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { Link } from "react-router-dom";
@@ -30,6 +30,7 @@ import {
   FiHelpCircle
 } from "react-icons/fi";
 import { useTheme } from '../context/ThemeContext';
+import { useUserContext } from '../contexts/UserContext';
 
 const colleges = [
   "Rajiv Academy For Technology and Management, Mathura",
@@ -89,7 +90,6 @@ const ModernPopUp = ({ onClose }) => {
 };
 
 const Settings = () => {
-  const [user, setUser] = useState(null);
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarUrl, setAvatarUrl] = useState("/default-profile.jpg");
   const [username, setUsername] = useState("");
@@ -100,31 +100,22 @@ const Settings = () => {
   const [loading, setLoading] = useState(false);
   const [popupVisible, setPopupVisible] = useState(false);
   const { isDarkMode, toggleDarkMode } = useTheme();
+  const { currentUser, updateUser, refreshUserData } = useUserContext();
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      if (!auth.currentUser) return;
-      
-      const userRef = doc(db, "users", auth.currentUser.uid);
-      const docSnap = await getDoc(userRef);
+    // Use data from context instead of fetching directly
+    if (currentUser) {
+      setAvatarUrl(currentUser.avatar || currentUser.photoURL || "/default-profile.jpg");
+      setUsername(currentUser.username || "");
+      setFullName(currentUser.fullName || currentUser.displayName || "");
+      setBio(currentUser.bio || "");
+      setCollege(currentUser.college || "");
 
-      if (docSnap.exists()) {
-        const userData = docSnap.data();
-        setUser(userData);
-        setAvatarUrl(userData.avatar || "/default-profile.jpg");
-        setUsername(userData.username || "");
-        setFullName(userData.fullName || "");
-        setBio(userData.bio || "");
-        setCollege(userData.college || "");
-
-        if (!userData.college || !userData.fullName) {
-          setPopupVisible(true);
-        }
+      if (!currentUser.college || !currentUser.fullName) {
+        setPopupVisible(true);
       }
-    };
-
-    fetchUserData();
-  }, []);
+    }
+  }, [currentUser]);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -137,9 +128,8 @@ const Settings = () => {
       reader.readAsDataURL(file);
     }
   };
-
   const handleSaveProfile = async () => {
-    if (!auth.currentUser) return;
+    if (!auth.currentUser || !currentUser) return;
     
     setLoading(true);
 
@@ -152,6 +142,7 @@ const Settings = () => {
         uploadedAvatarUrl = await getDownloadURL(snapshot.ref);
       }
 
+      // Update in Firestore
       const userRef = doc(db, "users", auth.currentUser.uid);
       await updateDoc(userRef, {
         avatar: uploadedAvatarUrl,
@@ -161,16 +152,19 @@ const Settings = () => {
         college,
       });
 
-      setUser(prev => ({
-        ...prev,
+      // Update in context & local storage (this will update UI instantly)
+      updateUser({
         avatar: uploadedAvatarUrl,
         username,
         fullName,
         bio,
         college,
-      }));
+      });
 
       setIsEditing(false);
+      
+      // Refresh user data in the background if needed
+      setTimeout(() => refreshUserData(), 1000);
     } catch (error) {
       console.error("Error updating profile:", error);
       alert("Failed to update profile. Please try again.");

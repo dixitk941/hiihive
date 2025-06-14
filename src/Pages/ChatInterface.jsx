@@ -1,16 +1,50 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from './firebaseConfig';
 import ChatListPage from '../components/ChatList';
 import ChatInterface from '../components/ChatInterface';
-import { useTheme } from '../context/ThemeContext'; // Import the theme context
+
+// Memoized ChatList wrapper to prevent unnecessary re-renders
+// This component will only re-render when currentUser.uid or selectedChatId changes
+const MemoizedChatList = memo(({ currentUser, selectedChatId, onChatSelect }) => {
+  return (
+    <ChatListPage 
+      currentUser={currentUser} 
+      isSidebar={true}
+      selectedChatId={selectedChatId}
+      onChatSelect={onChatSelect}
+    />
+  );
+}, (prevProps, nextProps) => {
+  // Custom comparison function - only re-render if currentUser or selectedChatId changes
+  return prevProps.currentUser?.uid === nextProps.currentUser?.uid &&
+         prevProps.selectedChatId === nextProps.selectedChatId;
+});
 
 const ChatPage = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  // Use the theme context instead of local state
-  const { isDarkMode } = useTheme();
+  const [selectedChatId, setSelectedChatId] = useState(null);
+
+  // Callback to handle chat selection without re-rendering ChatList
+  const handleChatSelect = useCallback((chatId) => {
+    setSelectedChatId(chatId);
+  }, []);
+  // Memoize ChatList to prevent re-renders when chat switches
+  // This ensures ChatList only re-renders when currentUser or selectedChatId actually changes
+  // preventing expensive re-fetching of chat data on every interaction
+  const memoizedChatList = useMemo(() => {
+    if (!currentUser) return null;
+    
+    return (
+      <MemoizedChatList 
+        currentUser={currentUser} 
+        selectedChatId={selectedChatId}
+        onChatSelect={handleChatSelect}
+      />
+    );
+  }, [currentUser, selectedChatId, handleChatSelect]);
 
   // User authentication and data fetching
   useEffect(() => {
@@ -139,14 +173,13 @@ const ChatPage = () => {
   return (
     <div className="flex flex-col h-screen bg-white dark:bg-black overflow-hidden">
       {/* Main Layout - Instagram Style */}
-      <div className="flex flex-1 h-full">
-        {/* ChatList Sidebar - Desktop Only with Independent Scrolling */}
+      <div className="flex flex-1 h-full">        {/* ChatList Sidebar - Desktop Only with Independent Scrolling */}
         <div className="hidden lg:flex lg:w-80 xl:w-96 lg:flex-shrink-0 flex-col h-full">
           {/* ChatList Container with Full Height and Independent Scroll */}
           <div className="flex-1 h-full overflow-hidden border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
             {/* Custom scrollbar styles for Instagram-like experience */}
             <div className="h-full overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-gray-500 transition-colors">
-              <ChatListPage currentUser={currentUser} isSidebar={true} />
+              {memoizedChatList}
             </div>
           </div>
         </div>
@@ -155,7 +188,11 @@ const ChatPage = () => {
         <main className="flex-1 flex flex-col h-full min-w-0">
           {/* ChatInterface Container with Full Height and Independent Scroll */}
           <div className="flex-1 h-full overflow-hidden bg-gray-50 dark:bg-black">
-            <ChatInterface currentUser={currentUser} />
+            <ChatInterface 
+              currentUser={currentUser} 
+              selectedChatId={selectedChatId}
+              onChatSelect={handleChatSelect}
+            />
           </div>
         </main>
       </div>
