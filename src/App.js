@@ -76,10 +76,14 @@ function AppContent({ user }) {
     setIsStoryActive(location.pathname === "/stories");
   }, [location.pathname]);
 
+  // Check if current route is a chat interface page
+  const isChatInterface = location.pathname.startsWith('/chat/') || 
+                          location.pathname.startsWith('/community/');
+
   // Toggle sidebar collapsed state
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
-  };  
+  };
   
   return (
     <>
@@ -173,11 +177,10 @@ function AppContent({ user }) {
                 element={user ? <AnimatedPage><MarketPlacePage /></AnimatedPage> : <Navigate to="/login" />}
               />
             </Routes>
-          </AnimatePresence>
-      </div>
+          </AnimatePresence>      </div>
       
-      {/* Always include BottomBar for mobile */}
-      {user && <BottomBar isStoryActive={isStoryActive} />}
+      {/* Always include BottomBar for mobile, but hide on chat interfaces */}
+      {user && !isChatInterface && <BottomBar isStoryActive={isStoryActive} />}
     </>
   );
 }
