@@ -1,3 +1,44 @@
+# HiiHive - College Social Network Platform
 # https://www.robotstxt.org/robotstxt.html
+
 User-agent: *
-Disallow:
+Allow: /
+Allow: /login
+Allow: /explore
+Allow: /knowledgehub
+Allow: /communities
+Allow: /marketplace
+Allow: /about
+Allow: /privacy
+Allow: /terms
+Allow: /help
+Allow: /colleges/*
+
+# Disallow private/user-specific areas
+Disallow: /chat/
+Disallow: /user/
+Disallow: /settings
+Disallow: /notifications
+Disallow: /upload
+Disallow: /chatlist
+Disallow: /stories
+
+# Disallow API endpoints and admin areas
+Disallow: /api/
+Disallow: /admin/
+Disallow: /_next/
+Disallow: /static/
+
+# Allow important assets
+Allow: /static/css/
+Allow: /static/js/
+Allow: /static/images/
+Allow: /favicon.ico
+Allow: /logo*.png
+Allow: /manifest.json
+
+# Sitemap location
+Sitemap: https://hiihive.com/sitemap.xml
+
+# Crawl delay for respectful crawling
+Crawl-delay: 1

@@ -1,53 +1,130 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" prefix="og: https://ogp.me/ns#">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-    <meta name="theme-color" content="#000000" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#3B82F6" />
+    <meta name="color-scheme" content="light dark" />
     
-    <!-- Meta Description -->
-    <meta name="description" content="HiiHive is a community-driven social platform designed to connect students, professionals, and like-minded individuals to collaborate, share, and grow together. Developed by Karan Dixit (Dixitk941)." />
+    <!-- Primary Meta Tags -->
+    <title>HiiHive - Connect, Learn, Grow with Your College Community</title>
+    <meta name="title" content="HiiHive - Connect, Learn, Grow with Your College Community" />
+    <meta name="description" content="Join HiiHive, the ultimate social platform for college students. Connect with classmates, share knowledge, discover events, and build lasting friendships in your academic journey." />
+    <meta name="keywords" content="college social network, student community, campus life, study groups, college friends, academic collaboration, student marketplace, college events, university social platform, student networking, campus connections" />
+    <meta name="author" content="HiiHive Team, Karan Dixit, Dixitk941" />
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+    <meta name="language" content="English" />
+    <meta name="geo.region" content="IN" />
+    <meta name="geo.country" content="India" />
     
-    <!-- Author Information -->
-    <meta name="author" content="AINOR, Karan Dixit, Dixitk941" />
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://hiihive.com" />
     
-    <!-- Open Graph (OG) Tags for Social Media Sharing -->
-    <meta property="og:title" content="HiiHive: Build Communities, Connect, and Collaborate - By Karan Dixit (Dixitk941)" />
-    <meta property="og:description" content="Join HiiHive, a social platform that allows you to create and join communities, share knowledge, and collaborate with peers in real-time. Developed by Karan Dixit (Dixitk941)." />
-    <meta property="og:image" content="%PUBLIC_URL%/logo.png" />
-    <meta property="og:url" content="https://hiihive.vercel.app" />
+    <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://hiihive.com" />
+    <meta property="og:title" content="HiiHive - Connect, Learn, Grow with Your College Community" />
+    <meta property="og:description" content="Join HiiHive, the ultimate social platform for college students. Connect with classmates, share knowledge, discover events, and build lasting friendships in your academic journey." />
+    <meta property="og:image" content="https://hiihive.com/logo512.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:image:alt" content="HiiHive Logo - College Social Network" />
     <meta property="og:site_name" content="HiiHive" />
-    <meta property="og:author" content="Karan Dixit, Dixitk941" />
-
-    <!-- Twitter Card Tags -->
+    <meta property="og:locale" content="en_US" />
+    
+    <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://hiihive.com" />
+    <meta name="twitter:title" content="HiiHive - Connect, Learn, Grow with Your College Community" />
+    <meta name="twitter:description" content="Join HiiHive, the ultimate social platform for college students. Connect with classmates, share knowledge, discover events, and build lasting friendships in your academic journey." />
+    <meta name="twitter:image" content="https://hiihive.com/logo512.png" />
+    <meta name="twitter:image:alt" content="HiiHive Logo - College Social Network" />
     <meta name="twitter:creator" content="@dixitk941" />
-    <meta name="twitter:title" content="HiiHive: Build Communities, Connect, and Collaborate - By Karan Dixit (Dixitk941)" />
-    <meta name="twitter:description" content="Join HiiHive, a social platform that allows you to create and join communities, share knowledge, and collaborate with peers in real-time. Developed by Karan Dixit (Dixitk941)." />
-    <meta name="twitter:image" content="%PUBLIC_URL%/logo.png" />
+    <meta name="twitter:site" content="@hiihive" />
 
-    <!-- Google Site Verification for Search Console -->
+    <!-- Favicon and App Icons -->
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="%PUBLIC_URL%/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="%PUBLIC_URL%/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="%PUBLIC_URL%/apple-touch-icon.png" />
+    <link rel="mask-icon" href="%PUBLIC_URL%/safari-pinned-tab.svg" color="#3B82F6" />
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    
+    <!-- Web App Manifest -->
+    <meta name="application-name" content="HiiHive" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="HiiHive" />
+    <meta name="msapplication-TileColor" content="#3B82F6" />
+    <meta name="msapplication-TileImage" content="%PUBLIC_URL%/mstile-144x144.png" />
+    <meta name="msapplication-config" content="%PUBLIC_URL%/browserconfig.xml" />
+    
+    <!-- Performance and Security -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    
+    <!-- Preconnect to external domains for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://firebaseapp.com" />
+    <link rel="preconnect" href="https://storage.googleapis.com" />
+    
+    <!-- DNS Prefetch -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="//firebaseapp.com" />
+    <link rel="dns-prefetch" href="//www.google-analytics.com" />
+    
+    <!-- Google Site Verification -->
     <meta name="google-site-verification" content="kktI1YvU62JWLdcKMgZcKq04WLj9KeEfxsIk2hnhIWw" />
     
-    <!-- Additional SEO Optimizations -->
-    <meta name="robots" content="index, follow" />
-    <meta name="keywords" content="HiiHive, community platform, social network, collaboration, peer connections, student community, professional network, build communities, social groups, knowledge sharing, Dixitk941, Karan Dixit, Karan Dixit Portfolio, Dixit, Karan, developer, entrepreneur" />
-    <meta name="language" content="English" />
-
-    <!-- Canonical URL (to avoid duplicate content issues) -->
-    <link rel="canonical" href="https://hiihive.vercel.app" />
-    <link rel="icon" href="%PUBLIC_URL%/logo.png" />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo.png" />
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2206627570123724"
-     crossorigin="anonymous"></script>
-    <link
-  rel="stylesheet"
-  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
-/>
-    <!-- <link rel="manifest" href="%PUBLIC_URL%/manifest.json" /> -->
-
-    <title>HiiHive</title>
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "HiiHive",
+      "alternateName": "HiiHive College Social Network",
+      "description": "Join HiiHive, the ultimate social platform for college students. Connect with classmates, share knowledge, discover events, and build lasting friendships in your academic journey.",
+      "url": "https://hiihive.com",
+      "applicationCategory": "SocialNetworkingApplication",
+      "operatingSystem": "Web Browser, iOS, Android",
+      "browserRequirements": "Requires JavaScript. Requires HTML5.",
+      "softwareVersion": "1.0",
+      "datePublished": "2025-06-24",
+      "creator": {
+        "@type": "Organization",
+        "name": "HiiHive Team",
+        "url": "https://hiihive.com"
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "audience": {
+        "@type": "Audience",
+        "audienceType": "College Students",
+        "geographicArea": "India"
+      },
+      "featureList": [
+        "Social Networking for College Students",
+        "Knowledge Sharing Platform", 
+        "Campus Event Discovery",
+        "Student Marketplace",
+        "Study Groups and Collaboration",
+        "Real-time Messaging",
+        "Academic Resource Sharing"
+      ]
+    }
+    </script>
+    
+    <!-- External Resources -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2206627570123724" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  </head>
     <!-- Additional Web Font Links (Optional) -->
     <!-- <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet"> -->
     

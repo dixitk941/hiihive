@@ -4,6 +4,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from './firebaseConfig';
 import UsersList from '../components/UserList';
 import { useTheme } from '../context/ThemeContext'; // Import the theme context
+import SEOHead from '../components/SEOHead';
 
 function UserList() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -79,9 +80,14 @@ function UserList() {
         </div>
       </div>
     );
-  }
-  return (
+  }  return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-black">
+      <SEOHead 
+        title="Explore People - Discover Your College Community"
+        description="Discover and connect with amazing people in your college community. Find classmates, make new friends, and expand your social network on HiiHive."
+        url="https://hiihive.com/explore"
+        keywords="discover people, college community, find classmates, student directory, college networking, meet students"
+      />
       {/* Main Content Area */}
       <main className="flex-1 transition-all duration-300 ease-in-out">
         {/* UsersList Component - This handles its own layout and styling */}

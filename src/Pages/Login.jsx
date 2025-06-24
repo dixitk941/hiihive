@@ -15,6 +15,7 @@ import { getFirestore, collection, query, where, getDocs } from "firebase/firest
 import ReactAvatar from 'react-avatar';
 import { createOrJoinCollegeCommunity, addCommunityToUserProfile } from '../utils/communityManager';
 import { useTheme } from '../context/ThemeContext'; // Import the theme context
+import SEOHead from '../components/SEOHead';
 
 const colleges = [
   "Rajiv Academy For Technology and Management, Mathura",
@@ -277,9 +278,14 @@ const LoginPage = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black transition-colors duration-300">
+      <SEOHead 
+        title={isSignUp ? "Join HiiHive - Create Your Account" : "Login to HiiHive - Access Your Account"}
+        description={isSignUp ? "Create your HiiHive account and join the ultimate college social network. Connect with classmates, share knowledge, and build lasting friendships." : "Login to your HiiHive account and reconnect with your college community. Access your social network and stay connected with classmates."}
+        url="https://hiihive.com/login"
+        keywords="college login, student account, HiiHive signup, college social network login, student registration"
+      />
       {/* Header */}
       <div className="w-full bg-white dark:bg-black border-gray-200 dark:border-gray-900 shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">

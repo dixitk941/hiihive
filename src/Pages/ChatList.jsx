@@ -4,6 +4,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from './firebaseConfig';
 import ChatListPage from '../components/ChatList'; // Updated import name
 import { useTheme } from '../context/ThemeContext'; // Import the theme context
+import SEOHead from '../components/SEOHead';
 
 const ChatList = () => {
   const [currentUser, setCurrentUser] = useState(null);
@@ -122,9 +123,14 @@ const ChatList = () => {
       </div>
     );
   }
-
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-black">
+      <SEOHead 
+        title="Messages - Stay Connected with Your Friends"
+        description="Access your conversations and stay connected with friends and classmates on HiiHive. Send messages, share updates, and build stronger relationships."
+        url="https://hiihive.com/chatlist"
+        keywords="college messaging, student chat, campus conversations, stay connected, college friends messages"
+      />
       {/* Main Content Area */}
       <main className="flex-1 transition-all duration-300 ease-in-out">
         {/* ChatListPage Component - This handles its own layout and styling */}

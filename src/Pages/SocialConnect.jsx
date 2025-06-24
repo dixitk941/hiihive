@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import FriendDiscovery from '../components/social/FriendDiscovery';
 import CampusEvents from '../components/social/CampusEvents';
 import SocialStatus from '../components/social/SocialStatus';
+import SEOHead from '../components/SEOHead';
 import { FiUsers, FiCalendar, FiTrendingUp } from 'react-icons/fi';
 
 const SocialConnect = () => {
@@ -110,9 +111,14 @@ const SocialConnect = () => {
       </div>
     );
   }
-
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-black transition-colors duration-300">
+      <SEOHead 
+        title="Social Connect - Meet People at HiiHive"
+        description="Discover new friends, connect with classmates, and build meaningful relationships in your college community. Find people with shared interests and expand your social circle."
+        url="https://hiihive.com/social-connect"
+        keywords="college friends, meet people, social networking, college community, friend discovery, student connections"
+      />
       {/* Main Content */}
       <main className="flex-1 min-h-0 overflow-auto pt-16">
         <div className="max-w-4xl mx-auto">

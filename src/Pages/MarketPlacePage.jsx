@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import MarketPlace from '../components/MarketPlace';
+import SEOHead from '../components/SEOHead';
 
 const MarketPlacePage = () => {
   const [loading, setLoading] = useState(true);
@@ -71,9 +72,14 @@ const MarketPlacePage = () => {
       </div>
     );
   }
-
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-black transition-colors duration-300">
+      <SEOHead 
+        title="Student Marketplace - Buy, Sell & Exchange on HiiHive"
+        description="Buy, sell, and exchange items with your college community. Find textbooks, electronics, furniture, and more in the HiiHive student marketplace."
+        url="https://hiihive.com/marketplace"
+        keywords="student marketplace, college buy sell, textbook exchange, student items, campus marketplace, college trading"
+      />
       {/* Main content section with MarketPlace */}
       <main className="flex-1 px-4 overflow-y-auto">
         <div className="max-w-6xl mx-auto pb-20">

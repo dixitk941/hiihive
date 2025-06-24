@@ -7,6 +7,7 @@ import SidebarRight from "../components/SidebarRight";
 import Hivee from "../components/Hivee";
 import ChatInterface from "../components/ChatInterface";
 import BottomBar from "../components/BottomBar";
+import SEOHead from '../components/SEOHead';
 
 const HiveePage = () => {
   const [currentUser, setCurrentUser] = useState(null);
@@ -145,9 +146,14 @@ const HiveePage = () => {
       </div>
     );
   }
-
   return (
     <div className="flex flex-col h-screen">
+      <SEOHead 
+        title="HiiVee - Short Videos & Stories from Your College"
+        description="Watch and share short videos, stories, and moments from your college community. Discover trending content and connect through engaging videos on HiiHive."
+        url="https://hiihive.com/hivee"
+        keywords="college videos, student stories, campus content, short videos, college entertainment, student creativity"
+      />
       <div className="flex flex-1 pt-16">
         {/* SidebarLeft for main navigation */}
         <div className="hidden lg:block w-[250px] bg-gray-800 text-white">

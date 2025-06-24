@@ -4,6 +4,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from './firebaseConfig';
 import Feeds from '../components/Feeds';
 import ChatInterface from '../components/ChatInterface';
+import SEOHead from '../components/SEOHead';
 
 const HomePage = () => {  const [currentUser, setCurrentUser] = useState(null);
   const [selectedChat, setSelectedChat] = useState(null);
@@ -110,9 +111,14 @@ const HomePage = () => {  const [currentUser, setCurrentUser] = useState(null);
         </div>
       </div>
     );
-  }
-  return (
+  }  return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-black transition-colors duration-300">
+      <SEOHead 
+        title="HiiHive - Your College Social Hub"
+        description="Connect with classmates, share posts, discover events, and build meaningful friendships in your college community on HiiHive."
+        url="https://hiihive.com/"
+        keywords="college social network, student community, campus life, college friends, student posts, academic collaboration"
+      />
       <div className="flex flex-1">
         {/* Main content section with Feeds */}
         {!selectedChat && (

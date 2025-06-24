@@ -8,6 +8,7 @@ import {
   useParams,
   useNavigate,
 } from "react-router-dom";
+import { HelmetProvider } from 'react-helmet-async';
 import { auth } from "./Pages/firebaseConfig";
 import { AnimatePresence, motion } from "framer-motion";
 import Loading from "./components/Loading";
@@ -54,15 +55,16 @@ function AppWrapper() {
 
   if (authLoading) {
     return <Loading />;
-  }
-  return (
-    <ThemeProvider>
-      <UserProvider>
-        <Router>
-          <AppContent user={user} />
-        </Router>
-      </UserProvider>
-    </ThemeProvider>
+  }  return (
+    <HelmetProvider>
+      <ThemeProvider>
+        <UserProvider>
+          <Router>
+            <AppContent user={user} />
+          </Router>
+        </UserProvider>
+      </ThemeProvider>
+    </HelmetProvider>
   );
 }
 
