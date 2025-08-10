@@ -644,7 +644,7 @@ const LoginPage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-center space-x-6">
             <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-              Created by <span className="font-semibold">DixitK941&Mayanks023</span>
+              Created by <span className="font-semibold">DixitK941 & Mayanks023</span>
             </p>
             <div className={`w-px h-4 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-300'}`}></div>
             <div className="flex items-center space-x-2">
